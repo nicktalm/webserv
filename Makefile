@@ -4,7 +4,7 @@ CC := c++
 
 CPPFLAGS := -Wall -Wextra -Werror -std=c++17
 
-SRCS := main.cpp
+SRCS := srcs/main.cpp
 
 OBJ := $(SRCS:.cpp=.o)
 
