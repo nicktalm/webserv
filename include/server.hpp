@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fstream>
+#include <sstream>
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -16,13 +18,22 @@
 class Server
 {
 	private:
-		int socketFd;
-		int port;
+		sockaddr_in	addr;
+		int	socketFd;
+		int	client;
+		int	port;
 
 	public:
-		int get_socketfd(void) {return socketFd;};
-		int get_port(void) {return port;};
-		void initServer(void);
+		~Server(void);
+
+		int		get_socketfd(void) {return socketFd;};
+		int		get_port(void) {return port;};
+		void	initServer(void);
+		void	request(void);
+		void	response(void);
 };
+
+// reads file and return the input as an const std::string
+std::string	readFile(std::string input);
 
 //gerne anpassen, ich glaube wir brauchen die values aber nicht sicher

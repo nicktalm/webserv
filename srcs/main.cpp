@@ -1,4 +1,4 @@
-#include "../include/webserv.hpp"
+#include "../include/server.hpp"
 
 
 bool check_config(std::string config_path)
@@ -32,6 +32,8 @@ int main(int argc, char **argv)
 		Server server;
 		std::cout << GREEN << "Starting server..." << RESET << std::endl;
 		server.initServer(); //Startpunkt fuer alles weitere
+		server.request();
+		server.response();
 	}
 	catch (std::exception &e)
 	{
