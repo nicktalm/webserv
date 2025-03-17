@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	{
 		Server server;
 		std::cout << GREEN << "Starting server..." << RESET << std::endl;
-		server.initServer();//Startpunkt fuer alles weitere
+		server.initServer(); //Startpunkt fuer alles weitere
 	}
 	catch (std::exception &e)
 	{

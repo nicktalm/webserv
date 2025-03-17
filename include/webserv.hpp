@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <netinet/in.h>
+#include <unistd.h>
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -14,11 +16,11 @@
 class Server
 {
 	private:
-		int socketfd;
+		int socketFd;
 		int port;
 
 	public:
-		int get_socketfd(void) {return socketfd;};
+		int get_socketfd(void) {return socketFd;};
 		int get_port(void) {return port;};
 		void initServer(void);
 };
