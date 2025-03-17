@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -9,15 +11,16 @@
 #define RESET   "\033[0m"
 
 
-class Server{
+class Server
+{
 	private:
 		int socketfd;
 		int port;
 
 	public:
-		int get_socketfd(){return socketfd;};
-		int get_port(){return port;};
-		void initServer();
+		int get_socketfd(void) {return socketfd;};
+		int get_port(void) {return port;};
+		void initServer(void);
 };
 
 //gerne anpassen, ich glaube wir brauchen die values aber nicht sicher

@@ -1,33 +1,40 @@
 #include "../include/webserv.hpp"
 
 
-bool check_config(std::string config_path){
+bool check_config(std::string config_path)
+{
 	(void)config_path;
 	return true;
 }
 
-int main(int argc, char **argv){
-	if (argc > 2){
+int main(int argc, char **argv)
+{
+	if (argc > 2)
+	{
 		std::cout << RED << "Wrong number of arguments, try [./webserv configuration_file]" << RESET << std::endl;
 		return EXIT_FAILURE;
 	}
-	else{
+	else
+	{
 		std::string config_file;
 		if (argc == 2)
 			config_file = argv[1];
 		else
 			config_file = "/default/default.conf";
-		if (!check_config(config_file)){
+		if (!check_config(config_file))
+		{
 			std::cout << RED << "Error in config file" << RESET << std::endl;
 			return EXIT_FAILURE;
 		}
 	}
-	try{
+	try
+	{
 		Server server;
 		std::cout << GREEN << "Starting server..." << RESET << std::endl;
 		server.initServer();//Startpunkt fuer alles weitere
 	}
-	catch (std::exception &e){
+	catch (std::exception &e)
+	{
 		std::cout << RED << e.what() << RESET << std::endl;
 		return EXIT_FAILURE;
 	}
