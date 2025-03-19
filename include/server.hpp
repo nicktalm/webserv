@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
+#include <poll.h>
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"

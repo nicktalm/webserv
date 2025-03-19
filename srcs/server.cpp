@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/17 16:19:28 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/19 13:33:28 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,9 +49,12 @@ void	Server::request(void)
 	if (this->client < 0)
 		throw std::runtime_error("accept failed");
 
-	bytesRead = recv(this->client, requestMsg, 10000, 0);
+	poll()
+	bytesRead = recv(this->client, requestMsg, 10000, 0); // muessen poll dazu beutzen sonst grade 0
 	if (bytesRead < 0)
 		throw std::runtime_error("recv failed");
+	else if (bytesRead == 0)
+		throw std::runtime_error("recv no content");
 
 	std::cout << "Msg:" << std::endl;
 	std::cout << requestMsg << std::endl;
@@ -69,7 +72,11 @@ void	Server::response(void)
 		"\r\n" +
 		html_page;
 
-	send(this->client, http_response.c_str(), http_response.length(), 0);
+	int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
+	if (bytesSend == 0)
+		throw std::runtime_error("send is empty");
+	else if (bytesSend < 0)
+		throw std::runtime_error("send failed");
 }
 
 std::string	readFile(std::string input)

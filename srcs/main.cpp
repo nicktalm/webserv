@@ -34,6 +34,7 @@ int main(int argc, char **argv)
 		server.initServer(); //Startpunkt fuer alles weitere
 		server.request();
 		server.response();
+		close(server.get_socketfd()); // wann socket closen?
 	}
 	catch (std::exception &e)
 	{
