@@ -27,14 +27,18 @@ int main(int argc, char **argv)
 			return EXIT_FAILURE;
 		}
 	}
+	
 	try
 	{
-		Server server;
-		std::cout << GREEN << "Starting server..." << RESET << std::endl;
-		server.initServer(); //Startpunkt fuer alles weitere
-		server.request();
-		server.response();
-		close(server.get_socketfd()); // wann socket closen?
+		std::vector<Server> servers;
+		while(run)
+		{
+			for (auto server : servers)
+			{
+				server.Run();
+			}
+		}
+
 	}
 	catch (std::exception &e)
 	{

@@ -3,37 +3,40 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/19 13:33:28 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/03/19 17:32:59 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/server.hpp"
 
+Server::Server(t_config config) : _config(config)
+{
+	std::cout << GREEN << "Starting server on port " << config._port << RESET << std::endl;
+
+	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
+	if (_socketFd == -1)
+		throw std::runtime_error("socket failed");
+
+	// addr struct sollte bereits in der check_confing() hinzugefügt werden
+	_addr.sin_family = AF_INET;
+	_addr.sin_addr.s_addr = INADDR_ANY;
+	_addr.sin_port = htons(_config._port);
+
+	if (bind(_socketFd, (struct sockaddr *)&_addr, sizeof(_addr)) < 0)
+		throw std::runtime_error("bind failed");
+}
+
 Server::~Server(void)
 {
-	close(this->socketFd);
-	close(this->client);
+	close(_socketFd);
 }
 
 void	Server::initServer(void)
 {
-	// port sollte bereits in der check_config() hinzugefügt werden
-	this->port = 8080;
 
-	this->socketFd = socket(AF_INET, SOCK_STREAM, 0);
-	if (this->socketFd == -1)
-		throw std::runtime_error("socket failed");
-
-	// addr struct sollte bereits in der check_confing() hinzugefügt werden
-	this->addr.sin_family = AF_INET;
-	this->addr.sin_addr.s_addr = INADDR_ANY;
-	this->addr.sin_port = htons(this->port);
-
-	if (bind(socketFd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-		throw std::runtime_error("bind failed");
 }
 
 void	Server::request(void)
@@ -42,15 +45,15 @@ void	Server::request(void)
 	char		requestMsg[10000];
 	int			bytesRead;
 
-	if (listen(this->socketFd, 1) < 0)
+	if (listen(_socketFd, 1) < 0)	
 		throw std::runtime_error("listen failed");
 
-	this->client = accept(this->socketFd, (struct sockaddr *)&this->addr, &len);
-	if (this->client < 0)
+	_clients[0].setFd() = accept(_socketFd, (struct sockaddr *)&_addr, &len);
+	if (_clients[0]._Fd < 0)
 		throw std::runtime_error("accept failed");
 
-	poll()
-	bytesRead = recv(this->client, requestMsg, 10000, 0); // muessen poll dazu beutzen sonst grade 0
+	// poll()
+	bytesRead = recv(_clients[0]._Fd, requestMsg, 10000, 0); // muessen poll dazu beutzen sonst grade 0
 	if (bytesRead < 0)
 		throw std::runtime_error("recv failed");
 	else if (bytesRead == 0)
