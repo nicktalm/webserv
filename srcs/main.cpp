@@ -1,14 +1,21 @@
 #include "../include/server.hpp"
 
-
-bool check_config(std::string config_path)
+bool check_config(std::string config_path, std::vector<t_config> &files)
 {
 	(void)config_path;
-	return true;
+	t_config	tmp;
+
+	tmp.port = 8080;
+	tmp.server_name = "localhost";
+
+	files.push_back(tmp);
+	return (true);
 }
 
 int main(int argc, char **argv)
 {
+	std::vector<t_config>	files;
+
 	if (argc > 2)
 	{
 		std::cout << RED << "Wrong number of arguments, try [./webserv configuration_file]" << RESET << std::endl;
@@ -21,7 +28,7 @@ int main(int argc, char **argv)
 			config_file = argv[1];
 		else
 			config_file = "/default/default.conf";
-		if (!check_config(config_file))
+		if (!check_config(config_file, files))
 		{
 			std::cout << RED << "Error in config file" << RESET << std::endl;
 			return EXIT_FAILURE;
@@ -31,11 +38,14 @@ int main(int argc, char **argv)
 	try
 	{
 		std::vector<Server> servers;
-		while(run)
+
+		for (auto config : files)
+			servers.push_back(Server(config));
+		while(true)
 		{
 			for (auto server : servers)
 			{
-				server.Run();
+				server.request();
 			}
 		}
 

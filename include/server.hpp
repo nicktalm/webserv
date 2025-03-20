@@ -10,6 +10,8 @@
 #include <poll.h>
 #include <atomic>
 #include <vector>
+#include <cerrno>
+// #include "client.hpp"
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -17,33 +19,26 @@
 #define YELLOW  "\033[33m"
 #define RESET   "\033[0m"
 
-std::atomic<bool>	run = true;
+// std::atomic<bool>	run = true;
 
-typedef struct s_location {
+typedef struct s_location
+{
 
 }	t_location;
 
-typedef struct s_config {
-	int	fd;
-	t_location location;
-	std::string	server_name;
-	int	_port;
-
-}	t_config;
-class Client
+typedef struct s_config
 {
-	private:
-		int	_Fd;
-	public:
-		int		getFd(void) {return _Fd;};
-		void	setFd(int Fd) {_Fd = Fd;};
-};
+	int			port;
+	std::string	server_name;
+	t_location	location;
+}	t_config;
 
 class Server
 {
 	private:
 		sockaddr_in			_addr;
-		std::vector<Client>	_clients;
+		std::vector<pollfd>	_clientsInfo;
+		// std::vector<Client>	_clients;
 		const t_config		_config;
 		int					_socketFd;
 
@@ -52,10 +47,9 @@ class Server
 		~Server(void);
 
 		int		get_socketfd(void) {return _socketFd;};
-		int		get_port(void) {return _config._port;};
-		void	initServer(void);
+		int		get_port(void) {return _config.port;};
 		void	request(void);
-		void	response(void);
+		// void	response(void);
 };
 
 
