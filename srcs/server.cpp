@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/20 12:15:57 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/03/20 16:59:00 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,12 @@ Server::~Server(void)
 	// close(_socketFd);
 }
 
-void	Server::request(void)
+void	Server::run(void)
 {
+	this->request();
+}
+
+void Server::request(void){
 	socklen_t	len;
 	char		requestMsg[10000];
 	int			bytesRead;
@@ -57,18 +61,16 @@ void	Server::request(void)
 	{
 		for (auto info : _clientsInfo)
 		{
-			if (info.fd == _socketFd)
+			if (info.fd == _socketFd && info.revents & POLLIN) // new client
 			{
-				if (info.revents & POLLIN)
-				{
-					std::cout << "new client" << std::endl;
+					std::cout << BLUE <<"New client" << RESET << std::endl;
 					clientFd = accept(info.fd, (struct sockaddr *)&_addr, &len);
 					std::cout << "client fd = " << clientFd << std::endl;
 					if (clientFd < 0)
 						throw std::runtime_error("accept failed");
 					_clientsInfo.push_back({clientFd, POLLIN, 0});
 
-					std::cout << "client send" << std::endl;
+					std::cout << BLUE << "client send" << RESET << std::endl;
 					bytesRead = recv(clientFd, requestMsg, 10000, 0);
 					if (bytesRead < 0)
 						throw std::runtime_error("recv failed");
@@ -76,14 +78,31 @@ void	Server::request(void)
 						throw std::runtime_error("recv empty - client closed connection");
 					std::cout << "Msg:" << std::endl;
 					std::cout << requestMsg << std::endl;
-				}
 			}
-			else
+			else if (info.revents & POLLIN) // data from existing client
 			{
-				std::cout << "clientFd = " << info.fd << std::endl;
+				char reqestMsg[10000];
+				int bytesRead = recv(_socketFd, reqestMsg, sizeof(reqestMsg), 0);
+				if (bytesRead <= 0)
+				{
+					std::cout << RED << "Client disconnected or error" << RESET << std::endl;
+					close(info.fd);
+				}
+				else
+				{
+					std::cout << GREEN << "Received request:\n" << requestMsg << std::endl;
+					handleRequest(info.fd, requestMsg, bytesRead);
+				}
 			}
 		}
 	}
+}
+
+void Server::handleRequest(int clientfd, const char *requestMsg, int bytesRead)
+{
+	std::string response = parseRequest(requestMsg);
+
+	send(clientfd, response.c_str(), sizeof(response.size()), 0);
 }
 
 // void	Server::response(void)

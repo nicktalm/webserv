@@ -1,5 +1,7 @@
 #include "../include/server.hpp"
 
+std::atomic<bool>	run = true;
+
 bool check_config(std::string config_path, std::vector<t_config> &files)
 {
 	(void)config_path;
@@ -41,11 +43,11 @@ int main(int argc, char **argv)
 
 		for (auto config : files)
 			servers.push_back(Server(config));
-		while(true)
+		while(run)
 		{
 			for (auto server : servers)
 			{
-				server.request();
+				server.run();
 			}
 		}
 
@@ -57,3 +59,6 @@ int main(int argc, char **argv)
 	}
 	return EXIT_SUCCESS;
 }
+
+//TODO: implement signal handler that puts run bool to false
+//TODO: implement better structure for the run function
