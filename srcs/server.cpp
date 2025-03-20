@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/20 11:19:38 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/20 12:15:57 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,8 @@ void	Server::request(void)
 					bytesRead = recv(clientFd, requestMsg, 10000, 0);
 					if (bytesRead < 0)
 						throw std::runtime_error("recv failed");
+					else if (bytesRead == 0)
+						throw std::runtime_error("recv empty - client closed connection");
 					std::cout << "Msg:" << std::endl;
 					std::cout << requestMsg << std::endl;
 				}
