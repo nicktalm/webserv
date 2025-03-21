@@ -46,9 +46,9 @@ class Server
 
 		int		get_socketfd(void) {return _socketFd;};
 		int		get_port(void) {return _config.port;};
-		void	request(void);
+		void	request(pollfd info);
 		void	run(void);
-		// void	response(void);
+		void	response(void);
 };
 
 
