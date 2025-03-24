@@ -8,6 +8,7 @@ VPATH := srcs/
 
 SRCS := main.cpp \
 		server.cpp \
+		config.cpp \
 		client.cpp
 
 OBJ := $(SRCS:.cpp=.o)
