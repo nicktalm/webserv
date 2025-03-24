@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/03/24 12:54:41 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/03/24 15:30:24 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,11 +54,13 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 	while (std::getline(file, line))
 	{
 		line = trim(line);
+		line = line.substr(0, line.find(";")); // Semikolons entfernen
 		if (line.empty() || line[0] == '#')
 			continue;
 		std::string lower_line = to_lower(line); // Groß-/Kleinschreibung ignorieren
 
 		std::cout << "Processing line: " << line << std::endl;
+		
 
 		if (lower_line == "server")
 		{
@@ -119,8 +121,15 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 				else if (key == "error_page")
 				{
 					std::string error_code, error_path;
-					iss >> error_code >> error_path;
-					current_config.location.error_page.insert({error_code, error_path});
+					// Setze den Stream zurück und lese die line erneut.
+					std::istringstream error_page_iss(line);  // Hier erstellen wir einen neuen Stringstream für die error_page-Zeile.
+					// Den ersten Wert überspringen, weil er bereits verarbeitet wurde.
+					error_page_iss >> key; // Wir überspringen den ersten Schlüssel "error_page".
+					while (error_page_iss >> error_code >> error_path)
+					{
+						std::cout << "Adding error page: " << error_code << " -> " << error_path << std::endl;
+						current_config.location.error_page.insert({error_code, error_path});
+					}
 				}
 			}
 			else
@@ -141,16 +150,18 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 	for (size_t i = 0; i < files.size(); ++i)
 	{
 		std::cout << "----------------------------------------\n";
-		std::cout << "Server " << i + 1 << ":\n";
+		std::cout << GREEN <<"Server " << i + 1 << RESET << ":\n";
 		std::cout << "  server_name: " << files[i].server_name << "\n";
 		std::cout << "  index: " << files[i].index << "\n";
 		std::cout << "  port: " << files[i].port << "\n";
 		std::cout << "  root: " << files[i].root << "\n";
+		std::cout << GREEN << "Location:\n" << RESET;
 		std::cout << "  Location index: " << files[i].location.index << "\n";
 		std::cout << "  Location root: " << files[i].location.root << "\n";
-		for (auto &ep : files[i].location.error_page)
+		std::cout << BLUE << "  Error pages:\n" << RESET;
+		for (const auto& entry : current_config.location.error_page)
 		{
-			std::cout << "  Error page " << ep.first << " -> " << ep.second << "\n";
+			std::cout << "    Error code: " << entry.first << " -> File: " << entry.second << std::endl;
 		}
 	}
 	std::cout << "----------------------------------------\n";

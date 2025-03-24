@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/21 14:45:53 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/03/24 13:00:53 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,24 +109,24 @@ void Server::request(pollfd info){
 }
 
 
-// void	Server::response(void)
-// {
-// 	std::string	html_page = readFile("index.html");
+void	Server::response(void)
+{
+	// std::string	html_page = readFile("index.html");
 
-// 	std::string http_response =
-// 		"HTTP/1.1 200 OK\r\n"
-// 		"Content-Type: text/html\r\n"
-// 		"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
-// 		"Connection: close\r\n"
-// 		"\r\n" +
-// 		html_page;
+	// std::string http_response =
+	// 	"HTTP/1.1 200 OK\r\n"
+	// 	"Content-Type: text/html\r\n"
+	// 	"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
+	// 	"Connection: close\r\n"
+	// 	"\r\n" +
+	// 	html_page;
 
-// 	int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
-// 	if (bytesSend == 0)
-// 		throw std::runtime_error("send is empty");
-// 	else if (bytesSend < 0)
-// 		throw std::runtime_error("send failed");
-// }
+	// int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
+	// if (bytesSend == 0)
+	// 	throw std::runtime_error("send is empty");
+	// else if (bytesSend < 0)
+	// 	throw std::runtime_error("send failed");
+}
 
 std::string	readFile(std::string input)
 {
