@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/21 14:45:53 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/03/24 17:11:43 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/server.hpp"
-#include <sys/socket.h>
 
 Server::Server(t_config config) : _config(config)
 {
@@ -21,6 +20,8 @@ Server::Server(t_config config) : _config(config)
 	if (_socketFd == -1)
 		throw std::runtime_error("socket failed");
 	
+	fcntl(_socketFd, F_SETFL, O_NONBLOCK);
+	std::cout << "client fd = " << _socketFd << std::endl;
 	//gut, weil wenn der server restartet kann er den port direkt nutzen, weil der Kernel sonst beim closen bissl braucht bis man wieder dazu binden kann
 	int yes = 1;
 	if (setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
@@ -42,7 +43,7 @@ Server::Server(t_config config) : _config(config)
 		throw std::runtime_error("listen failed");
 	}
 
-	_clientsInfo.push_back({_socketFd, POLLIN, 0});
+	_clientsFd.push_back({_socketFd, POLLIN, 0});
 }
 
 Server::~Server(void)
@@ -52,39 +53,37 @@ Server::~Server(void)
 
 void	Server::run(void)
 {
-	auto eventCount = poll(_clientsInfo.data(), _clientsInfo.size(), 0);
+	auto eventCount = poll(_clientsFd.data(), _clientsFd.size(), 0);
 	if (eventCount < 0)
 		std::cout << RED << "Poll failed" << RESET << std::endl;
 	else if (eventCount > 0)
 	{
-		for (auto info = _clientsInfo.begin(); info != _clientsInfo.end();)
+		for (size_t it = 0; it < _clientsFd.size();)
 		{
-			if (info->revents & POLLIN) //data ready to read
-			{
-				this->request(*info);
-			}
-			else if (info->revents & POLLOUT) //data ready to write
-				this->response();
-			else if (info->revents & POLLHUP) //client disconnected or hung up
+			if (_clientsFd[it].revents & POLLIN) //data ready to read
+				this->request(_clientsFd[it].fd);
+			else if (_clientsFd[it].revents & POLLOUT) //data ready to write
+				this->response(_clientsFd[it].fd);
+			if (_clientsFd[it].revents & POLLHUP) //client disconnected or hung up
 			{
 				std::cout << RED << "Client disconnected or hung up" << RESET << std::endl;
-				close(info->fd);
-				info = _clientsInfo.erase(info);
+				close(_clientsFd[it].fd);
+				_clientsFd.erase(_clientsFd.begin() + it);
 				continue;
 			}
 			else
-			{
-				std::cout << "No event catched?!" << std::endl; //mabye delete, idk if usefull
-			}
-			++info;
+				++it;
 		}
 	}
 }
 
-void Server::request(pollfd info){
-	char		requestMsg[10000];
+void Server::request(int fd)
+{
+	std::string	clientMsg;
+	char		tmp[1024];
 
-	if (info.fd == _socketFd)//new client trys to connect
+	std::cout << "request" << std::endl;
+	if (fd == _socketFd) //new client trys to connect
 	{
 		socklen_t len = sizeof(_addr);
 		int clientFd = accept(_socketFd, (struct sockaddr *)&_addr, &len);
@@ -94,39 +93,52 @@ void Server::request(pollfd info){
 		}
 		else
 		{
-			std::cout << BLUE << "New client connected: " << clientFd << std::endl;
-			_clientsInfo.push_back({clientFd, POLLIN, 0});
+			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
+			fcntl(clientFd, F_SETFL, O_NONBLOCK);
+			_clientsFd.push_back({clientFd, POLLIN, 0});
 		}
 	}
 	else //existing client trys to connect
 	{
-		int bytesRead = recv(_socketFd, requestMsg, strlen(requestMsg), 0);
-		if (bytesRead <= 0)
+		std::cout << BLUE << "msg from client " << fd << RESET << std::endl;
+		while (true)
 		{
-			perror("Client recv empty or failed");
+			int bytesRead = recv(fd, tmp, sizeof(tmp), 0);
+			if (!bytesRead)
+				break ;
+			else if (bytesRead < 0)
+			{
+				if (errno != EAGAIN && errno != EWOULDBLOCK)
+					perror("recv");
+				break ;
+			}
+			else
+				clientMsg.append(tmp);
 		}
+		_clientsInfo.push_back(Client(fd, clientMsg));
 	}
 }
 
 
-// void	Server::response(void)
-// {
-// 	std::string	html_page = readFile("index.html");
+void	Server::response(int fd)
+{
+	std::cout << "response" << std::endl;
+	std::string	html_page = readFile("index.html");
 
-// 	std::string http_response =
-// 		"HTTP/1.1 200 OK\r\n"
-// 		"Content-Type: text/html\r\n"
-// 		"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
-// 		"Connection: close\r\n"
-// 		"\r\n" +
-// 		html_page;
+	// std::string http_response =
+	// 	"HTTP/1.1 200 OK\r\n"
+	// 	"Content-Type: text/html\r\n"
+	// 	"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
+	// 	"Connection: close\r\n"
+	// 	"\r\n" +
+	// 	html_page;
 
-// 	int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
-// 	if (bytesSend == 0)
-// 		throw std::runtime_error("send is empty");
-// 	else if (bytesSend < 0)
-// 		throw std::runtime_error("send failed");
-// }
+	// int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
+	// if (bytesSend == 0)
+	// 	throw std::runtime_error("send is empty");
+	// else if (bytesSend < 0)
+	// 	throw std::runtime_error("send failed");
+}
 
 std::string	readFile(std::string input)
 {

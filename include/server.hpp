@@ -7,11 +7,13 @@
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
+#include <fcntl.h>
 #include <poll.h>
 #include <atomic>
 #include <vector>
 #include <cerrno>
-// #include "client.hpp"
+
+#include "client.hpp"
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -35,8 +37,8 @@ class Server
 {
 	private:
 		sockaddr_in			_addr;
-		std::vector<pollfd>	_clientsInfo;
-		// std::vector<Client>	_clients;
+		std::vector<pollfd>	_clientsFd;
+		std::vector<Client>	_clientsInfo;
 		const t_config		_config;
 		int					_socketFd;
 
@@ -46,9 +48,9 @@ class Server
 
 		int		get_socketfd(void) {return _socketFd;};
 		int		get_port(void) {return _config.port;};
-		void	request(pollfd info);
+		void	request(int fd);
 		void	run(void);
-		void	response(void);
+		void	response(int fd);
 };
 
 

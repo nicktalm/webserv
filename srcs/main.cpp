@@ -45,9 +45,9 @@ int main(int argc, char **argv)
 			servers.push_back(Server(config));
 		while(run)
 		{
-			for (auto server : servers)
+			for (std::vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it)
 			{
-				server.run();
+				it->run();
 			}
 		}
 

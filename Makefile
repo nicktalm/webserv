@@ -7,14 +7,15 @@ CPPFLAGS := -Wall -Wextra -Werror -std=c++17
 VPATH := srcs/
 
 SRCS := main.cpp \
-		server.cpp
+		server.cpp \
+		client.cpp
 
 OBJ := $(SRCS:.cpp=.o)
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CPPFLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(CPPFLAGS) $(OBJ) -o $(NAME) -fsanitize=address
 
 %.o: %.cpp
 	$(CC) $(CPPFLAGS) -c $< -o $@
