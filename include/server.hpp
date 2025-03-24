@@ -20,8 +20,6 @@
 #define YELLOW  "\033[33m"
 #define RESET   "\033[0m"
 
-// std::atomic<bool>	run = true;
-
 typedef struct s_location
 {
 	bool autoindex = false;
@@ -55,8 +53,9 @@ class Server
 
 		int		get_socketfd(void) {return _socketFd;};
 		int		get_port(void) {return _config.port;};
-		void	request(void);
-		// void	response(void);
+		void	request(pollfd info);
+		void	run(void);
+		void	response(void);
 };
 
 
