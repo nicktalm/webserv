@@ -7,7 +7,8 @@ CPPFLAGS := -Wall -Wextra -Werror -std=c++17
 VPATH := srcs/
 
 SRCS := main.cpp \
-		server.cpp
+		server.cpp \
+		config.cpp
 
 OBJ := $(SRCS:.cpp=.o)
 
