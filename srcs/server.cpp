@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/25 13:14:49 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/25 15:10:48 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,6 @@ Server::Server(t_config config) : _config(config)
 
 Server::~Server(void)
 {
-	std::cout << "here" << std::endl;
 	close(_socketFd);
 }
 
@@ -96,6 +95,7 @@ void Server::request(int fd)
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
 			fcntl(clientFd, F_SETFL, O_NONBLOCK);
 			_clientsFd.push_back({clientFd, POLLIN, 0});
+			_clientsMsg.insert(std::pair(clientFd, ""));
 		}
 	}
 	else //existing client trys to connect
@@ -105,14 +105,14 @@ void Server::request(int fd)
 		if (!bytesRead)
 			std::cout << "nothing to read" << std::endl;
 		else if (bytesRead < 0)
-				perror("recv");
+			perror("recv");
 		else
 		{
-			_tmpMsg.append(tmp, bytesRead);
+			_clientsMsg[fd].append(tmp, bytesRead);
 			if (bytesRead < 1024)
 			{
-				_clientsInfo.push_back(Client(fd, _tmpMsg));
-				_tmpMsg.clear();
+				_clientsInfo.emplace_back(Client(fd, _clientsMsg[fd]));
+				_clientsMsg[fd].clear();
 			}
 		}
 	}

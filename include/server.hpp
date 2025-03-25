@@ -12,6 +12,7 @@
 #include <atomic>
 #include <vector>
 #include <cerrno>
+#include <map>
 
 #include "client.hpp"
 
@@ -42,12 +43,12 @@ typedef struct s_config
 class Server
 {
 	private:
-		std::string			_tmpMsg = "";
-		sockaddr_in			_addr;
-		std::vector<pollfd>	_clientsFd;
-		std::vector<Client>	_clientsInfo;
-		const t_config		_config;
-		int					_socketFd;
+		sockaddr_in					_addr;
+		std::vector<pollfd>			_clientsFd;
+		std::map<int, std::string>	_clientsMsg;
+		std::vector<Client>			_clientsInfo;
+		const t_config				_config;
+		int							_socketFd;
 
 	public:
 		Server(t_config config);

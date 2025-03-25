@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 		std::vector<Server> servers;
 
 		for (auto config : files)
-			servers.push_back(Server(config));
+			servers.emplace_back(config);
 		while(run)
 		{
 			for (auto it = servers.begin(); it != servers.end(); ++it)
