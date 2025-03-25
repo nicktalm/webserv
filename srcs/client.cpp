@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/25 12:34:52 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/25 15:27:11 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,28 +39,24 @@ Client::Client(int fd, const std::string &msg)
 
 	_body = msg.substr(headerEnd + 4);
 
-	if (_path == "/")
-		_path = "index.html";
-	else
-		_path = "../error_pages/404.html";
 
+	// std::cout << RED << "statusCode = " << _statusCode << RESET << std::endl;
+	// std::cout << "First Line\n{" << std::endl;
+	// std::cout << RED << "method = " << _method << std::endl;
+	// std::cout << "path = " << _path << std::endl;
+	// std::cout << "protocol = " << _protocol << RESET << std::endl;
+	// std::cout << "}" << std::endl;
+	// std::cout << std::endl;
 
-	std::cout << "First Line\n{" << std::endl;
-	std::cout << RED << "method = " << _method << std::endl;
-	std::cout << "path = " << _path << std::endl;
-	std::cout << "protocol = " << _protocol << RESET << std::endl;
-	std::cout << "}" << std::endl;
-	std::cout << std::endl;
+	// std::cout << "Header\n{" << std::endl;
+	// for (auto head = _header.begin(); head != _header.end(); ++head)
+	// 	std::cout << RED << head->first << " " << head->second << RESET << std::endl;
+	// std::cout << "}" << std::endl;
+	// std::cout << std::endl;
 
-	std::cout << "Header\n{" << std::endl;
-	for (auto head = _header.begin(); head != _header.end(); ++head)
-		std::cout << RED << head->first << " " << head->second << RESET << std::endl;
-	std::cout << "}" << std::endl;
-	std::cout << std::endl;
-
-	std::cout << "Body\n{" << std::endl;
-	std::cout << RED << _body << RESET << std::endl;
-	std::cout << "}" << std::endl;
+	// std::cout << "Body\n{" << std::endl;
+	// std::cout << RED << _body << RESET << std::endl;
+	// std::cout << "}" << std::endl;
 }
 
 // <HTTP-METHODE> <PFAD> <PROTOKOLL>
