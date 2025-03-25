@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 		if (argc == 2)
 			config_file = argv[1];
 		else
-			config_file = "/default/default.conf";
+			config_file = "default/default.conf";
 		if (!check_config(config_file, files))
 		{
 			std::cout << RED << "Error in config file" << RESET << std::endl;

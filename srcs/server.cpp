@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/25 15:36:34 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/25 15:40:47 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,6 @@ void Server::request(int fd)
 {
 	char		tmp[1024];
 
-	std::cout << "request" << std::endl;
 	if (fd == _socketFd) //new client trys to connect
 	{
 		socklen_t len = sizeof(_addr);
@@ -101,7 +100,6 @@ void Server::request(int fd)
 	}
 	else //existing client trys to connect
 	{
-		std::cout << BLUE << "msg from client " << fd << RESET << std::endl;
 		int bytesRead = recv(fd, tmp, sizeof(tmp), 0);
 		if (!bytesRead)
 			std::cout << "nothing to read" << std::endl;

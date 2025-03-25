@@ -23,3 +23,5 @@ class Client
 	public:
 		Client(int fd, const std::string &msg);
 };
+
+bool	checkPath(std::string path);
