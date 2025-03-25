@@ -35,7 +35,7 @@ typedef struct s_config
 	std::string server_name = "";
 	std::string index = "";
 	std::string root = "";
-	t_location location;
+	std::vector<t_location> locations;
 }	t_config;
 
 
@@ -65,6 +65,6 @@ class Server
 std::string	readFile(std::string input);
 
 // checks the config file and returns a vector of t_config
-bool		check_config(std::string config_path, std::vector<t_config> &files);
+bool		check_config(const std::string& config_path, std::vector<t_config>& files);
 
 //gerne anpassen, ich glaube wir brauchen die values aber nicht sicher

@@ -2,18 +2,6 @@
 
 std::atomic<bool>	run = true;
 
-bool check_config(std::string config_path, std::vector<t_config> &files)
-{
-	(void)config_path;
-	t_config	tmp;
-
-	tmp.port = 8080;
-	tmp.server_name = "localhost";
-
-	files.push_back(tmp);
-	return (true);
-}
-
 int main(int argc, char **argv)
 {
 	std::vector<t_config>	files;
@@ -42,7 +30,7 @@ int main(int argc, char **argv)
 		std::vector<Server> servers;
 
 		for (auto config : files)
-			servers.push_back(Server(config));
+			servers.emplace_back(Server(config));
 		while(run)
 		{
 			for (auto it = servers.begin(); it != servers.end(); ++it)

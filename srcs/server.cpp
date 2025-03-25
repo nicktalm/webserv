@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/25 13:14:49 by lbohm            ###   ########.fr       */
+/*   Created: Invalid date        by                   #+#    #+#             */
+/*   Updated: 2025/03/25 15:31:05 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include "../include/server.hpp"
 
@@ -131,6 +132,19 @@ void	Server::response(int fd)
 	// 	"Connection: close\r\n"
 	// 	"\r\n" +
 	// 	html_page;
+	// std::string http_response =
+	// 	"HTTP/1.1 200 OK\r\n"
+	// 	"Content-Type: text/html\r\n"
+	// 	"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
+	// 	"Connection: close\r\n"
+	// 	"\r\n" +
+	// 	html_page;
+
+	// int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
+	// if (bytesSend == 0)
+	// 	throw std::runtime_error("send is empty");
+	// else if (bytesSend < 0)
+	// 	throw std::runtime_error("send failed");
 
 	// int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
 	// if (bytesSend == 0)
