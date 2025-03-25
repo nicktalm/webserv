@@ -11,7 +11,8 @@ OBJDIR = objs/
 SRCS := main.cpp \
 		server.cpp \
 		config.cpp \
-		client.cpp
+		client.cpp \
+		utils.cpp
 
 OBJ = $(SRCS:.cpp=.o)
 OBJS_PATH = $(addprefix $(OBJDIR), $(OBJ))
