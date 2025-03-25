@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/03/24 15:30:24 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/03/25 12:50:41 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,22 +34,20 @@ std::string to_lower(const std::string &str)
 	return lower_str;
 }
 
-bool check_config(std::string config_path, std::vector<t_config> &files)
+bool check_config(const std::string& config_path, std::vector<t_config>& files)
 {
-	std::ifstream	file(config_path);
-	std::string		line;
-	t_config		current_config;
-	t_location		current_location;
-	bool			in_server_block = false;
-	bool			in_location_block = false;
-	bool			expect_server_brace = false;
-	bool			expect_location_brace = false;
-
+	std::ifstream file(config_path);
 	if (!file.is_open())
 	{
-		std::cerr << "Error opening file" << std::endl;
+		std::cerr << "Error: Unable to open file: " << config_path << std::endl;
 		return false;
 	}
+
+	std::string line;
+	t_config current_config;
+	t_location current_location;
+	bool in_server_block = false, in_location_block = false;
+	bool expect_server_brace = false, expect_location_brace = false;
 
 	while (std::getline(file, line))
 	{
@@ -57,26 +55,17 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 		line = line.substr(0, line.find(";")); // Semikolons entfernen
 		if (line.empty() || line[0] == '#')
 			continue;
-		std::string lower_line = to_lower(line); // Groß-/Kleinschreibung ignorieren
+		std::string lower_line = to_lower(line);
 
-		std::cout << "Processing line: " << line << std::endl;
-		
+		// std::cout << "Processing line: " << line << std::endl;
 
-		if (lower_line == "server")
-		{
-			expect_server_brace = true;
-			continue;
-		}
-		if (lower_line.find("location") == 0)
-		{
-			expect_location_brace = true;
-			continue;
-		}
+		if (lower_line == "server") { expect_server_brace = true; continue; }
+		if (lower_line.find("location") == 0) { expect_location_brace = true; continue; }
 
 		if (expect_server_brace && line == "{")
 		{
 			in_server_block = true;
-			current_config = t_config();
+			current_config = t_config();  // Neues Server-Objekt starten
 			std::cout << "Entering server block" << std::endl;
 			expect_server_brace = false;
 			continue;
@@ -85,6 +74,7 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 		if (expect_location_brace && line == "{")
 		{
 			in_location_block = true;
+			current_location = t_location();  // Neue Location starten
 			std::cout << "Entering location block" << std::endl;
 			expect_location_brace = false;
 			continue;
@@ -94,6 +84,7 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 		{
 			if (in_location_block)
 			{
+				current_config.locations.push_back(current_location);
 				in_location_block = false;
 				std::cout << "Exiting location block" << std::endl;
 			}
@@ -109,39 +100,37 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 		if (in_server_block)
 		{
 			std::istringstream iss(line);
-			std::string key, value;
-			iss >> key >> value;
+			std::string key;
+			iss >> key;
 
 			if (in_location_block)
 			{
 				if (key == "index")
-					current_config.location.index = value;
+					iss >> current_location.index;
 				else if (key == "root")
-					current_config.location.root = value;
+					iss >> current_location.root;
 				else if (key == "error_page")
 				{
 					std::string error_code, error_path;
-					// Setze den Stream zurück und lese die line erneut.
-					std::istringstream error_page_iss(line);  // Hier erstellen wir einen neuen Stringstream für die error_page-Zeile.
-					// Den ersten Wert überspringen, weil er bereits verarbeitet wurde.
-					error_page_iss >> key; // Wir überspringen den ersten Schlüssel "error_page".
-					while (error_page_iss >> error_code >> error_path)
-					{
-						std::cout << "Adding error page: " << error_code << " -> " << error_path << std::endl;
-						current_config.location.error_page.insert({error_code, error_path});
-					}
+					while (iss >> error_code >> error_path)
+						current_location.error_page.emplace(error_code, error_path);
 				}
 			}
 			else
 			{
 				if (key == "server_name")
-					current_config.server_name = value;
+					iss >> current_config.server_name;
 				else if (key == "index")
-					current_config.index = value;
+					iss >> current_config.index;
 				else if (key == "listen")
-					current_config.port = std::stoi(value);
+				{
+					std::string value;
+					iss >> value;
+					try { current_config.port = std::stoi(value); }
+					catch (const std::exception&) { std::cerr << "Error: Invalid port number: " << value << std::endl; }
+				}
 				else if (key == "root")
-					current_config.root = value;
+					iss >> current_config.root;
 			}
 		}
 	}
@@ -150,18 +139,21 @@ bool check_config(std::string config_path, std::vector<t_config> &files)
 	for (size_t i = 0; i < files.size(); ++i)
 	{
 		std::cout << "----------------------------------------\n";
-		std::cout << GREEN <<"Server " << i + 1 << RESET << ":\n";
+		std::cout << GREEN << "Server " << i + 1 << RESET << ":\n";
 		std::cout << "  server_name: " << files[i].server_name << "\n";
 		std::cout << "  index: " << files[i].index << "\n";
 		std::cout << "  port: " << files[i].port << "\n";
 		std::cout << "  root: " << files[i].root << "\n";
-		std::cout << GREEN << "Location:\n" << RESET;
-		std::cout << "  Location index: " << files[i].location.index << "\n";
-		std::cout << "  Location root: " << files[i].location.root << "\n";
-		std::cout << BLUE << "  Error pages:\n" << RESET;
-		for (const auto& entry : current_config.location.error_page)
+		for (const auto& loc : files[i].locations)
 		{
-			std::cout << "    Error code: " << entry.first << " -> File: " << entry.second << std::endl;
+			std::cout << GREEN << "Location:\n" << RESET;
+			std::cout << "  Location index: " << loc.index << "\n";
+			std::cout << "  Location root: " << loc.root << "\n";
+			std::cout << BLUE << "  Error pages:\n" << RESET;
+			for (const auto& entry : loc.error_page)
+			{
+				std::cout << "    Error code: " << entry.first << " -> File: " << entry.second << std::endl;
+			}
 		}
 	}
 	std::cout << "----------------------------------------\n";
