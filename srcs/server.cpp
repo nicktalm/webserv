@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/24 17:11:43 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/25 13:14:49 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,12 +48,13 @@ Server::Server(t_config config) : _config(config)
 
 Server::~Server(void)
 {
-	// close(_socketFd);
+	std::cout << "here" << std::endl;
+	close(_socketFd);
 }
 
 void	Server::run(void)
 {
-	auto eventCount = poll(_clientsFd.data(), _clientsFd.size(), 0);
+	int eventCount = poll(_clientsFd.data(), _clientsFd.size(), 0);
 	if (eventCount < 0)
 		std::cout << RED << "Poll failed" << RESET << std::endl;
 	else if (eventCount > 0)
@@ -79,7 +80,6 @@ void	Server::run(void)
 
 void Server::request(int fd)
 {
-	std::string	clientMsg;
 	char		tmp[1024];
 
 	std::cout << "request" << std::endl;
@@ -101,28 +101,27 @@ void Server::request(int fd)
 	else //existing client trys to connect
 	{
 		std::cout << BLUE << "msg from client " << fd << RESET << std::endl;
-		while (true)
+		int bytesRead = recv(fd, tmp, sizeof(tmp), 0);
+		if (!bytesRead)
+			std::cout << "nothing to read" << std::endl;
+		else if (bytesRead < 0)
+				perror("recv");
+		else
 		{
-			int bytesRead = recv(fd, tmp, sizeof(tmp), 0);
-			if (!bytesRead)
-				break ;
-			else if (bytesRead < 0)
+			_tmpMsg.append(tmp, bytesRead);
+			if (bytesRead < 1024)
 			{
-				if (errno != EAGAIN && errno != EWOULDBLOCK)
-					perror("recv");
-				break ;
+				_clientsInfo.push_back(Client(fd, _tmpMsg));
+				_tmpMsg.clear();
 			}
-			else
-				clientMsg.append(tmp);
 		}
-		_clientsInfo.push_back(Client(fd, clientMsg));
 	}
 }
 
 
 void	Server::response(int fd)
 {
-	std::cout << "response" << std::endl;
+	std::cout << "response " << fd << std::endl;
 	std::string	html_page = readFile("index.html");
 
 	// std::string http_response =

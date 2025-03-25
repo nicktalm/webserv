@@ -42,6 +42,7 @@ typedef struct s_config
 class Server
 {
 	private:
+		std::string			_tmpMsg = "";
 		sockaddr_in			_addr;
 		std::vector<pollfd>	_clientsFd;
 		std::vector<Client>	_clientsInfo;

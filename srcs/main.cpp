@@ -45,12 +45,11 @@ int main(int argc, char **argv)
 			servers.push_back(Server(config));
 		while(run)
 		{
-			for (std::vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it)
+			for (auto it = servers.begin(); it != servers.end(); ++it)
 			{
 				it->run();
 			}
 		}
-
 	}
 	catch (std::exception &e)
 	{

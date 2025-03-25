@@ -6,26 +6,33 @@ CPPFLAGS := -Wall -Wextra -Werror -std=c++17
 
 VPATH := srcs/
 
+OBJDIR = objs/
+
 SRCS := main.cpp \
 		server.cpp \
 		config.cpp \
 		client.cpp
 
-OBJ := $(SRCS:.cpp=.o)
+OBJ = $(SRCS:.cpp=.o)
+OBJS_PATH = $(addprefix $(OBJDIR), $(OBJ))
 
-all: $(NAME)
+all: $(OBJDIR) $(NAME)
 
-$(NAME): $(OBJ)
-	$(CC) $(CPPFLAGS) $(OBJ) -o $(NAME) -fsanitize=address
+$(NAME): $(OBJS_PATH)
+		$(CC) $(CPPFLAGS) $(OBJS_PATH) -o $(NAME)
 
-%.o: %.cpp
-	$(CC) $(CPPFLAGS) -c $< -o $@
+$(OBJDIR)%.o: %.cpp | $(OBJDIR)
+		@mkdir -p $(dir $@)
+		$(CC) $(CPPFLAGS) -c $< -o $@
+
+$(OBJDIR):
+		@mkdir -p $(OBJDIR)
 
 clean:
-	@rm -f $(OBJ)
+		@rm -rf $(OBJDIR)
 
 fclean: clean
-	@rm -f $(NAME)
+		@rm -f $(NAME)
 
 re: fclean all
 

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/24 17:11:11 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/25 12:34:52 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,7 @@ Client::Client(int fd, const std::string &msg)
 	_fd = fd;
 	headerEnd = msg.find("\r\n\r\n");
 	if (headerEnd == std::string::npos)
-	{
-		std::cerr << RED << "request header parsing error" << RESET << std::endl;
-		return ;
-	}
+		_statusCode = "400";
 	header << msg.substr(0, headerEnd);
 	std::getline(header, line);
 	firstLine << line;
@@ -36,10 +33,7 @@ Client::Client(int fd, const std::string &msg)
 	{
 		end = line.find(":");
 		if (end == std::string::npos)
-		{
-			std::cerr << RED << "request header parsing error" << RESET << std::endl;
-			return ;
-		}
+			_statusCode = "400";
 		_header.insert(std::pair<std::string, std::string>(line.substr(0, end), line.substr(end + 1)));
 	}
 
@@ -49,6 +43,24 @@ Client::Client(int fd, const std::string &msg)
 		_path = "index.html";
 	else
 		_path = "../error_pages/404.html";
+
+
+	std::cout << "First Line\n{" << std::endl;
+	std::cout << RED << "method = " << _method << std::endl;
+	std::cout << "path = " << _path << std::endl;
+	std::cout << "protocol = " << _protocol << RESET << std::endl;
+	std::cout << "}" << std::endl;
+	std::cout << std::endl;
+
+	std::cout << "Header\n{" << std::endl;
+	for (auto head = _header.begin(); head != _header.end(); ++head)
+		std::cout << RED << head->first << " " << head->second << RESET << std::endl;
+	std::cout << "}" << std::endl;
+	std::cout << std::endl;
+
+	std::cout << "Body\n{" << std::endl;
+	std::cout << RED << _body << RESET << std::endl;
+	std::cout << "}" << std::endl;
 }
 
 // <HTTP-METHODE> <PFAD> <PROTOKOLL>

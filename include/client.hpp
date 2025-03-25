@@ -14,6 +14,7 @@ class Client
 {
 	private:
 		int									_fd;
+		std::string							_statusCode;
 		std::string							_method;
 		std::string							_path;
 		std::string							_protocol;
