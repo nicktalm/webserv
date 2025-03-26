@@ -1,8 +1,10 @@
 #pragma once
 
 #include <iostream>
-#include <map>
 #include <sstream>
+#include <vector>
+#include <map>
+#include <dirent.h>
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -23,5 +25,3 @@ class Client
 	public:
 		Client(int fd, const std::string &msg);
 };
-
-bool	checkPath(std::string path);

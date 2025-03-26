@@ -21,3 +21,14 @@ std::vector<Server>	utils::parsing(int argc, char **argv)
 		servers.emplace_back(config);
 	return (servers);
 }
+
+std::string	utils::readFile(std::string input)
+{
+	std::ifstream		file(input);
+	std::stringstream	buffer;
+
+	if (!file)
+		throw std::runtime_error("open failed");
+	buffer << file.rdbuf();
+	return (buffer.str());
+}

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/25 15:40:47 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/26 09:49:01 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,15 +56,11 @@ void	Server::run(void)
 {
 	int eventCount = poll(_clientsFd.data(), _clientsFd.size(), 0);
 	if (eventCount < 0)
-		std::cout << RED << "Poll failed" << RESET << std::endl;
+		throw std::runtime_error("Poll failed");
 	else if (eventCount > 0)
 	{
 		for (size_t it = 0; it < _clientsFd.size();)
 		{
-			if (_clientsFd[it].revents & POLLIN) //data ready to read
-				this->request(_clientsFd[it].fd);
-			else if (_clientsFd[it].revents & POLLOUT) //data ready to write
-				this->response(_clientsFd[it].fd);
 			if (_clientsFd[it].revents & POLLHUP) //client disconnected or hung up
 			{
 				std::cout << RED << "Client disconnected or hung up" << RESET << std::endl;
@@ -72,8 +68,11 @@ void	Server::run(void)
 				_clientsFd.erase(_clientsFd.begin() + it);
 				continue;
 			}
-			else
-				++it;
+			else if (_clientsFd[it].revents & POLLIN) //data ready to read
+				this->request(_clientsFd[it].fd);
+			else if (_clientsFd[it].revents & POLLOUT) //data ready to write
+				this->response(_clientsFd[it].fd);
+			++it;
 		}
 	}
 }
@@ -86,10 +85,8 @@ void Server::request(int fd)
 	{
 		socklen_t len = sizeof(_addr);
 		int clientFd = accept(_socketFd, (struct sockaddr *)&_addr, &len);
-		if (clientFd <= 0)
-		{
+		if (clientFd < 0)
 			perror("Client accept failed");
-		}
 		else
 		{
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
@@ -101,63 +98,21 @@ void Server::request(int fd)
 	else //existing client trys to connect
 	{
 		int bytesRead = recv(fd, tmp, sizeof(tmp), 0);
-		if (!bytesRead)
-			std::cout << "nothing to read" << std::endl;
-		else if (bytesRead < 0)
-			perror("recv");
+		if (bytesRead <= 0)
+			std::cerr << RED << "recv failed or client closed" << RESET << std::endl;
 		else
 		{
 			_clientsMsg[fd].append(tmp, bytesRead);
 			if (bytesRead < 1024)
 			{
-				_clientsInfo.emplace_back(Client(fd, _clientsMsg[fd]));
+				_clientsInfo.emplace_back(fd, _clientsMsg[fd]);
 				_clientsMsg[fd].clear();
 			}
 		}
 	}
 }
 
-
 void	Server::response(int fd)
 {
-	std::cout << "response " << fd << std::endl;
-	std::string	html_page = readFile("index.html");
-
-	// std::string http_response =
-	// 	"HTTP/1.1 200 OK\r\n"
-	// 	"Content-Type: text/html\r\n"
-	// 	"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
-	// 	"Connection: close\r\n"
-	// 	"\r\n" +
-	// 	html_page;
-	// std::string http_response =
-	// 	"HTTP/1.1 200 OK\r\n"
-	// 	"Content-Type: text/html\r\n"
-	// 	"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
-	// 	"Connection: close\r\n"
-	// 	"\r\n" +
-	// 	html_page;
-
-	// int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
-	// if (bytesSend == 0)
-	// 	throw std::runtime_error("send is empty");
-	// else if (bytesSend < 0)
-	// 	throw std::runtime_error("send failed");
-
-	// int bytesSend = send(this->client, http_response.c_str(), http_response.length(), 0); //muessen poll dazu beutzen sonst grade 0
-	// if (bytesSend == 0)
-	// 	throw std::runtime_error("send is empty");
-	// else if (bytesSend < 0)
-	// 	throw std::runtime_error("send failed");
-}
-
-std::string	readFile(std::string input)
-{
-	std::ifstream		file(input);
-	std::stringstream	buffer;
-
-	if (!file)
-		throw std::runtime_error("open failed");
-	buffer << file.rdbuf();
-	return (buffer.str());
+	std::cout << "fd = " << fd << std::endl;
 }

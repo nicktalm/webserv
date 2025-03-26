@@ -54,16 +54,13 @@ class Server
 		Server(t_config config);
 		~Server(void);
 
-		int		get_socketfd(void) {return _socketFd;};
-		int		get_port(void) {return _config.port;};
-		void	request(int fd);
-		void	run(void);
-		void	response(int fd);
+		int			getSocketfd(void) {return _socketFd;};
+		int			getPort(void) {return _config.port;};
+		std::string	getRoot(void) {return (_config.root)};
+		void		request(int fd);
+		void		run(void);
+		void		response(int fd);
 };
-
-
-// reads file and return the input as an const std::string
-std::string	readFile(std::string input);
 
 // checks the config file and returns a vector of t_config
 bool		check_config(const std::string& config_path, std::vector<t_config>& files);
