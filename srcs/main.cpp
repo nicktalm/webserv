@@ -5,13 +5,14 @@ std::atomic<bool>	run = true;
 
 void	signalHandler(int signal)
 {
-	std::cout << YELLOW << "Interrupt signal " << signal << " received" << RESET << std::endl;
+	std::cout << YELLOW << "\rInterrupt signal " << signal << " received" << RESET << std::endl;
 	run = false;
 }
 
 int main(int argc, char **argv)
 {
 	signal(SIGINT, signalHandler); //ctrl-c
+	std::cout << RED << "here" << RESET << std::endl;
 	try
 	{
 		std::vector<Server>	servers;
