@@ -47,7 +47,7 @@ class Server
 	private:
 		std::vector<pollfd>			_clientsFd;
 		std::map<int, std::string>	_clientsMsg;
-		std::vector<Client>			_clientsInfo;
+		std::map<int, Client>		_clientsInfo;
 		const t_config				_config;
 		int							_socketFd;
 		struct addrinfo 			*_res;
@@ -62,7 +62,7 @@ class Server
 		std::string	getRoot(void) {return (_config.root);};
 		void		request(int fd);
 		void		run(void);
-		void		response(int fd);
+		void		response(const Client &client);
 };
 
 // checks the config file and returns a vector of t_config

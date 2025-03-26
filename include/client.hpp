@@ -15,7 +15,6 @@
 class Client
 {
 	private:
-		int									_fd;
 		std::string							_statusCode;
 		std::string							_method;
 		std::string							_path;
@@ -23,5 +22,10 @@ class Client
 		std::string							_body;
 		std::map<std::string, std::string>	_header;
 	public:
-		Client(int fd, const std::string &msg);
+		Client(void) {};
+		Client(const std::string &msg);
+		std::string getMethod(void) const {return _method;};
+		std::string getstatusCode(void) const {return _statusCode;};
+		// std::string getMethod(void) const {return _method;};
+		// std::string getMethod(void) const {return _method;};
 };

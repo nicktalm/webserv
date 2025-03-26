@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/26 13:20:07 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/26 17:45:33 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,10 @@ void	Server::run(void)
 			else if (_clientsFd[it].revents & POLLIN) //data ready to read
 				this->request(_clientsFd[it].fd);
 			else if (_clientsFd[it].revents & POLLOUT) //data ready to write
-				this->response(_clientsFd[it].fd);
+			{
+				int	tmpFd = _clientsFd[it].fd;
+				this->response(_clientsInfo[tmpFd]);
+			}
 			++it;
 		}
 	}
@@ -113,14 +116,25 @@ void Server::request(int fd)
 			_clientsMsg[fd].append(tmp, bytesRead);
 			if (bytesRead < 1024)
 			{
-				_clientsInfo.emplace_back(fd, _clientsMsg[fd]);
+				_clientsInfo.insert(std::pair<int, Client>(fd, Client(_clientsMsg[fd])));
 				_clientsMsg[fd].clear();
 			}
 		}
 	}
 }
 
-void	Server::response(int fd)
+void	Server::response(const Client &client)
 {
-	std::cout << "fd = " << fd << std::endl;
+	if(client.getstatusCode() != "200")
+		handleERROR(&client);
+	if(client.getMethod() == "GET")
+		handleGET(&client);
+	else if(client.getMethod() == "POST")
+		handlePOST(&client);
+	else if(client.getMethod() == "DELETE")
+		handleDELETE(&client);
+	else
+	{
+			
+	}
 }

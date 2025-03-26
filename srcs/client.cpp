@@ -6,20 +6,19 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/26 12:38:54 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/26 17:17:49 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/client.hpp"
 
-Client::Client(int fd, const std::string &msg)
+Client::Client(const std::string &msg)
 {
 	std::stringstream			parse(msg);
 	std::vector<std::string>	tmp((std::istream_iterator<std::string>(parse)), std::istream_iterator<std::string>());
 	std::string					line;
 	size_t						endOfLine;
 
-	_fd = fd;
 	_statusCode = "200";
 	if (tmp.size() >= 3)
 	{
@@ -52,7 +51,7 @@ Client::Client(int fd, const std::string &msg)
 	}
 	else
 		_statusCode = "400";
-	std::cout << "fd = " << _fd << std::endl;
+	// std::cout << "fd = " << _fd << std::endl;
 	std::cout << "statusCode = " << _statusCode << std::endl;
 	std::cout << "method = " << _method << std::endl;
 	std::cout << "path = " << _path << std::endl;
