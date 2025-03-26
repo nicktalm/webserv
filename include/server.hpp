@@ -13,6 +13,8 @@
 #include <vector>
 #include <cerrno>
 #include <map>
+#include <csignal>
+#include <netdb.h>
 
 #include "client.hpp"
 
@@ -49,6 +51,8 @@ class Server
 		std::vector<Client>			_clientsInfo;
 		const t_config				_config;
 		int							_socketFd;
+		struct addrinfo 			*_res;
+		struct addrinfo 			_hints;
 
 	public:
 		Server(t_config config);

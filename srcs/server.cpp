@@ -3,20 +3,34 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/25 15:36:34 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/26 12:25:43 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "../include/server.hpp"
+#include <netdb.h>
 
 Server::Server(t_config config) : _config(config)
 {
 	std::cout << GREEN << "Starting server on port " << config.port << RESET << std::endl;
+	
+	memset(&_hints, 0, sizeof _hints);
+	_hints.ai_family = AF_UNSPEC; // don't care IPv4 or IPv6
+	_hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+	_hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+	std::string port = std::to_string(config.port);
+	const char *c_port = port.c_str();
 
+	if (auto status = getaddrinfo(config.server_name.c_str(), c_port, &_hints, &_res) != 0)
+	{
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+		throw std::runtime_error("Addressinfo failed");
+	}
+	
 	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
 	if (_socketFd == -1)
 		throw std::runtime_error("socket failed");
@@ -31,9 +45,9 @@ Server::Server(t_config config) : _config(config)
 		throw std::runtime_error("setsockopt failed");
 	}
 	
-	_addr.sin_family = AF_INET;
-	_addr.sin_addr.s_addr = INADDR_ANY;
-	_addr.sin_port = htons(_config.port);
+	// _addr.sin_family = AF_INET;
+	// _addr.sin_addr.s_addr = INADDR_ANY;
+	// _addr.sin_port = htons(_config.port);
 
 	if (bind(_socketFd, (struct sockaddr *)&_addr, sizeof(_addr)) < 0)
 		throw std::runtime_error("bind failed");
@@ -50,6 +64,7 @@ Server::Server(t_config config) : _config(config)
 Server::~Server(void)
 {
 	close(_socketFd);
+	freeaddrinfo(_res);
 }
 
 void	Server::run(void)
