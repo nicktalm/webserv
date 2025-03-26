@@ -62,7 +62,7 @@ class Server
 		std::string	getRoot(void) {return (_config.root);};
 		void		request(int fd);
 		void		run(void);
-		void		response(const Client &client);
+		void		response(Client &client);
 };
 
 // checks the config file and returns a vector of t_config

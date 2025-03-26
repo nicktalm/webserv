@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/26 17:45:33 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/26 18:13:27 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ void Server::request(int fd)
 		{
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
 			fcntl(clientFd, F_SETFL, O_NONBLOCK);
-			_clientsFd.push_back({clientFd, POLLIN, 0});
+			_clientsFd.push_back({clientFd, POLLIN | POLLOUT | POLLHUP, 0});
 			_clientsMsg.insert(std::pair(clientFd, ""));
 		}
 	}
@@ -116,25 +116,36 @@ void Server::request(int fd)
 			_clientsMsg[fd].append(tmp, bytesRead);
 			if (bytesRead < 1024)
 			{
-				_clientsInfo.insert(std::pair<int, Client>(fd, Client(_clientsMsg[fd])));
+				_clientsInfo.insert(std::pair<int, Client>(fd, Client(fd, _clientsMsg[fd])));
 				_clientsMsg[fd].clear();
 			}
 		}
 	}
 }
 
-void	Server::response(const Client &client)
+void	handleERROR(Client &client);
+
+void	Server::response(Client &client)
 {
-	if(client.getstatusCode() != "200")
-		handleERROR(&client);
-	if(client.getMethod() == "GET")
-		handleGET(&client);
-	else if(client.getMethod() == "POST")
-		handlePOST(&client);
-	else if(client.getMethod() == "DELETE")
-		handleDELETE(&client);
-	else
-	{
+	if (client.getstatusCode() != "200")
+		handleERROR(client);
+	// if (client.getMethod() == "GET")
+	// 	handleGET(&client);
+	// else if(client.getMethod() == "POST")
+	// 	handlePOST(&client);
+	// else if(client.getMethod() == "DELETE")
+	// 	handleDELETE(&client);
+	// else
+	// {
 			
-	}
+	// }
+}
+
+void	handleERROR(Client &client)
+{
+	std::string	response;
+	
+	response = client.getProtocol() + " " + client.getstatusCode() + " " + "NOT FOUND";
+	send(client.getFd(), response.c_str(), )
+	std::cout << response << std::endl;
 }
