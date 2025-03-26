@@ -15,6 +15,7 @@
 #include <map>
 #include <csignal>
 #include <netdb.h>
+#include <ctime> 
 
 #include "client.hpp"
 
@@ -63,6 +64,7 @@ class Server
 		void		request(int fd);
 		void		run(void);
 		void		response(Client &client);
+		void 		handleGET(Client &client);
 };
 
 // checks the config file and returns a vector of t_config

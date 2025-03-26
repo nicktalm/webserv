@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: leo <leo@student.42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/26 18:13:27 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/26 20:35:35 by leo              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,8 +129,8 @@ void	Server::response(Client &client)
 {
 	if (client.getstatusCode() != "200")
 		handleERROR(client);
-	// if (client.getMethod() == "GET")
-	// 	handleGET(&client);
+	if (client.getMethod() == "GET")
+		handleGET(client);
 	// else if(client.getMethod() == "POST")
 	// 	handlePOST(&client);
 	// else if(client.getMethod() == "DELETE")
@@ -148,4 +148,31 @@ void	handleERROR(Client &client)
 	response = client.getProtocol() + " " + client.getstatusCode() + " " + "NOT FOUND";
 	send(client.getFd(), response.c_str(), )
 	std::cout << response << std::endl;
+}
+
+void	Server::handleGET(Client &client)
+{
+	std::string response;
+	time_t currentTime;
+	struct tm* ti;
+
+	time(&currentTime);
+	ti = localtime(&currentTime);
+	
+	//start line
+	response = client.getProtocol() + " " + client.getstatusCode() + "Ok\n"; //Ok only if status is 200
+
+	//Headers
+	response += "Server: " + this->_config.server_name + "\n";
+	response += "Date: " + std::string(asctime(ti));
+	response += "Content-Length: " + client.;
+	response += "Content-Type: " + this->_config.server_name;
+
+	//Body
+
+
+	//Empty line
+	response += "\n";
+
+	//Body
 }
