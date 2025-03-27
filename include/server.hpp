@@ -27,7 +27,10 @@ typedef struct s_location
 	bool autoindex = false;
 	std::string index = "";
 	std::string root = "";
-	std::multimap<std::string, std::string> error_page = {};
+	std::vector<std::string> methods;
+	std::string path = "";
+	long max_size_location = 0;
+	char max_size_unit = ' ';
 }	t_location;
 
 typedef struct s_config
@@ -36,6 +39,9 @@ typedef struct s_config
 	std::string server_name = "";
 	std::string index = "";
 	std::string root = "";
+	std::multimap<std::string, std::string> error_page = {};
+	long max_size_server = 0;
+	char max_size_unit_server = ' ';
 	std::vector<t_location> locations;
 }	t_config;
 
