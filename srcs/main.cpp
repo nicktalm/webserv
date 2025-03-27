@@ -12,7 +12,6 @@ void	signalHandler(int signal)
 int main(int argc, char **argv)
 {
 	signal(SIGINT, signalHandler); //ctrl-c
-	std::cout << RED << "here" << RESET << std::endl;
 	try
 	{
 		std::vector<Server>	servers;

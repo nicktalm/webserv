@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: leo <leo@student.42.fr>                    +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/26 20:35:35 by leo              ###   ########.fr       */
+/*   Updated: 2025/03/27 12:58:16 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,43 +14,39 @@
 
 Server::Server(t_config config) : _config(config)
 {
-	std::cout << GREEN << "Starting server on port " << config.port << RESET << std::endl;
-	
-	memset(&_hints, 0, sizeof _hints);
-	_hints.ai_family = AF_UNSPEC; // don't care IPv4 or IPv6
-	_hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
-	_hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-	std::string port = std::to_string(config.port);
-	const char *c_port = port.c_str();
+	addrinfo			hints;
+	std::stringstream	tmp;
+	int					yes = 1;
 
-	if (auto status = getaddrinfo(config.server_name.c_str(), c_port, &_hints, &_res) != 0)
+	std::cout << GREEN << "Starting server on port " << config.port << RESET << std::endl;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC; // don't care IPv4 or IPv6
+	hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+	hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+
+	tmp << config.port;
+	if (auto status = getaddrinfo(config.server_name.c_str(), tmp.str().c_str(), &hints, &_res) != 0)
 	{
-		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
-		throw std::runtime_error("Addressinfo failed");
+		std::stringstream	error;
+
+		error << "getaddrinfo error: " << gai_strerror(status);
+		throw std::runtime_error(error.str());
 	}
-	
+
 	_socketFd = socket(_res->ai_family, _res->ai_socktype, _res->ai_protocol);
 	if (_socketFd == -1)
 		throw std::runtime_error("socket failed");
-	
 	fcntl(_socketFd, F_SETFL, O_NONBLOCK);
-	std::cout << "client fd = " << _socketFd << std::endl;
-	//gut, weil wenn der server restartet kann er den port direkt nutzen, weil der Kernel sonst beim closen bissl braucht bis man wieder dazu binden kann
-	int yes = 1;
+
 	if (setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
-	{
-		perror("setsockopt");
 		throw std::runtime_error("setsockopt failed");
-	}
 
 	if (bind(_socketFd, _res->ai_addr, _res->ai_addrlen) < 0)
 		throw std::runtime_error("bind failed");
 
 	if (listen(_socketFd, 10) < 0)
-	{
-		perror("");
 		throw std::runtime_error("listen failed");
-	}
 
 	_clientsFd.push_back({_socketFd, POLLIN, 0});
 }
@@ -102,8 +98,8 @@ void Server::request(int fd)
 		{
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
 			fcntl(clientFd, F_SETFL, O_NONBLOCK);
-			_clientsFd.push_back({clientFd, POLLIN | POLLOUT | POLLHUP, 0});
-			_clientsMsg.insert(std::pair(clientFd, ""));
+			_clientsFd.push_back({clientFd, POLLIN, 0});
+			_clientsInfo.insert(std::pair<int, Client>(clientFd, Client()));
 		}
 	}
 	else //existing client trys to connect
@@ -113,11 +109,11 @@ void Server::request(int fd)
 			std::cerr << RED << "recv failed or client closed" << RESET << std::endl;
 		else
 		{
-			_clientsMsg[fd].append(tmp, bytesRead);
+			_clientsInfo[fd].appendMsg(tmp, bytesRead);
 			if (bytesRead < 1024)
 			{
-				_clientsInfo.insert(std::pair<int, Client>(fd, Client(fd, _clientsMsg[fd])));
-				_clientsMsg[fd].clear();
+				_clientsInfo[fd].parseRequest(fd);
+				_clientsInfo[fd].clearMsg();
 			}
 		}
 	}
@@ -127,8 +123,8 @@ void	handleERROR(Client &client);
 
 void	Server::response(Client &client)
 {
-	if (client.getstatusCode() != "200")
-		handleERROR(client);
+	// if (client.getstatusCode() != "200")
+	// 	handleERROR(client);
 	if (client.getMethod() == "GET")
 		handleGET(client);
 	// else if(client.getMethod() == "POST")
@@ -141,14 +137,14 @@ void	Server::response(Client &client)
 	// }
 }
 
-void	handleERROR(Client &client)
-{
-	std::string	response;
+// void	handleERROR(Client &client)
+// {
+// 	std::string	response;
 	
-	response = client.getProtocol() + " " + client.getstatusCode() + " " + "NOT FOUND";
-	send(client.getFd(), response.c_str(), )
-	std::cout << response << std::endl;
-}
+// 	response = client.getProtocol() + " " + client.getstatusCode() + " " + "NOT FOUND";
+// 	send(client.getFd(), response.c_str(), )
+// 	std::cout << response << std::endl;
+// }
 
 void	Server::handleGET(Client &client)
 {
@@ -165,7 +161,7 @@ void	Server::handleGET(Client &client)
 	//Headers
 	response += "Server: " + this->_config.server_name + "\n";
 	response += "Date: " + std::string(asctime(ti));
-	response += "Content-Length: " + client.;
+	// response += "Content-Length: " + client.;
 	response += "Content-Type: " + this->_config.server_name;
 
 	//Body

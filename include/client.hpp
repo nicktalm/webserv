@@ -16,6 +16,7 @@ class Client
 {
 	private:
 		int									_fd;
+		std::string							_clientsMsg;
 		std::string							_statusCode;
 		std::string							_method;
 		std::string							_path;
@@ -23,10 +24,13 @@ class Client
 		std::string							_body;
 		std::map<std::string, std::string>	_header;
 	public:
-		Client(void) {};
-		Client(int fd, const std::string &msg);
-		std::string getMethod(void) const {return _method;};
-		std::string getstatusCode(void) {return _statusCode;};
-		std::string getProtocol(void) const {return _protocol;};
-		std::string getFd(void) const {return _fd;};
+		Client(void);
+		void		appendMsg(char *msg, size_t size);
+		void		parseRequest(int fd);
+		void		clearMsg(void);
+
+		std::string	getMethod(void) const {return _method;};
+		std::string	getstatusCode(void) {return _statusCode;};
+		std::string	getProtocol(void) const {return _protocol;};
+		int			getFd(void) const {return _fd;};
 };

@@ -47,12 +47,10 @@ class Server
 {
 	private:
 		std::vector<pollfd>			_clientsFd;
-		std::map<int, std::string>	_clientsMsg;
 		std::map<int, Client>		_clientsInfo;
 		const t_config				_config;
 		int							_socketFd;
 		struct addrinfo 			*_res;
-		struct addrinfo 			_hints;
 
 	public:
 		Server(t_config config);

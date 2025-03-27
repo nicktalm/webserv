@@ -6,15 +6,31 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/26 18:11:40 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/27 12:46:33 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/client.hpp"
 
-Client::Client(int fd, const std::string &msg)
+Client::Client(void)
 {
-	std::stringstream			parse(msg);
+	_fd = 0;
+	_clientsMsg = "";
+	_statusCode = "";
+	_method = "";
+	_path = "";
+	_protocol = "";
+	_body = "";
+}
+
+void	Client::appendMsg(char *msg, size_t size)
+{
+	_clientsMsg.append(msg, size);
+}
+
+void	Client::parseRequest(int fd)
+{
+	std::stringstream			parse(_clientsMsg);
 	std::vector<std::string>	tmp((std::istream_iterator<std::string>(parse)), std::istream_iterator<std::string>());
 	std::string					line;
 	size_t						endOfLine;
@@ -52,14 +68,9 @@ Client::Client(int fd, const std::string &msg)
 	}
 	else
 		_statusCode = "400";
-	// std::cout << "fd = " << _fd << std::endl;
-	std::cout << "statusCode = " << _statusCode << std::endl;
-	std::cout << "method = " << _method << std::endl;
-	std::cout << "path = " << _path << std::endl;
-	std::cout << "protocol = " << _protocol << std::endl;
-	for (auto head = _header.begin(); head != _header.end(); ++head)
-	{
-		std::cout << head->first << " " << head->second << std::endl;
-	}
-	std::cout << "body = " << _body << std::endl;
+}
+
+void	Client::clearMsg(void)
+{
+	_clientsMsg.clear();
 }
