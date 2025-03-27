@@ -18,6 +18,7 @@
 #include <ctime> 
 
 #include "client.hpp"
+#include "utils.hpp"
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -42,6 +43,17 @@ typedef struct s_config
 	std::vector<t_location> locations;
 }	t_config;
 
+typedef struct s_response
+{
+	std::string	start_line = "";
+	std::string	date = "";
+	std::string	content_type = "";
+	std::string	content_length = "";
+	std::string empty_line = "\r\n";
+	std::string	body = "";
+	std::string server_name = "";
+}	t_response;
+
 
 class Server
 {
@@ -58,13 +70,15 @@ class Server
 		Server(t_config config);
 		~Server(void);
 
-		int			getSocketfd(void) {return _socketFd;};
-		int			getPort(void) {return _config.port;};
-		std::string	getRoot(void) {return (_config.root);};
-		void		request(int fd);
-		void		run(void);
-		void		response(Client &client);
-		void 		handleGET(Client &client);
+		int				getSocketfd(void) {return _socketFd;};
+		int				getPort(void) {return _config.port;};
+		std::string		getRoot(void) {return (_config.root);};
+		void			request(int fd);
+		void			run(void);
+		void			response(Client &client);
+		void			handleRecvError(int bytesRead, int fd);
+		std::string 	handleGET(Client &client);
+		std::string		handleERROR(Client &client);
 };
 
 // checks the config file and returns a vector of t_config

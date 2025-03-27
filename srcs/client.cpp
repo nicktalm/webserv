@@ -3,17 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/26 18:11:40 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/27 16:54:46 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/client.hpp"
 
-Client::Client(int fd, const std::string &msg)
+Client::Client(int fd, const std::string &msg) : _responseBuffer(""), _bytesSent(0)
 {
+	std::cout << "Client constuctor called" << std::endl;
 	std::stringstream			parse(msg);
 	std::vector<std::string>	tmp((std::istream_iterator<std::string>(parse)), std::istream_iterator<std::string>());
 	std::string					line;
