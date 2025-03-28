@@ -6,6 +6,7 @@
 #include <map>
 #include <dirent.h>
 #include <string>
+#include <unistd.h>
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -28,6 +29,7 @@ class Client
 		ssize_t								_bytesSent;
 	public:
 		Client(void);
+		~Client(void);
 		void		appendMsg(char *msg, size_t size);
 		void		parseRequest(int fd);
 		void		clearMsg(void);
@@ -36,7 +38,7 @@ class Client
 		std::string	getMsg(void) {return (_clientsMsg);};
 		std::string	getstatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
-		std::string	getFd(void) const {return std::to_string(_fd);};
+		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		&getBytesSent(void) { return _bytesSent;};

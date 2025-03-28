@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/28 10:30:53 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/28 14:12:30 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,6 @@ Server::~Server(void)
 
 void	Server::run(void)
 {
-	// if (!_run)
-	// 	return ;
 	int eventCount = poll(_clientsFd.data(), _clientsFd.size(), 0);
 	if (eventCount < 0)
 		throw std::runtime_error("Poll failed");
@@ -76,41 +74,41 @@ void	Server::run(void)
 				continue;
 			}
 			else if (_clientsFd[it].revents & POLLIN) //data ready to read
-				this->request(_clientsFd[it]);
+				this->request(_clientsFd.begin() + it);
 			else if (_clientsFd[it].revents & POLLOUT) //data ready to write
 			{
 				int	tmpFd = _clientsFd[it].fd;
-				this->response(_clientsInfo[tmpFd]);
+				this->response(_clientsInfo[tmpFd], _clientsFd.begin() + it);
 			}
 			++it;
 		}
 	}
 }
 
-void	Server::handleRecvError(int bytesRead, int fd)
+void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 {
 	if (bytesRead == 0)
 		std::cout << RED << "Client disconnected" << RESET << std::endl;
 	else
-		std::cout << RED << "Recv failed" << RESET << std::endl;
-	close(fd);
-	_clientsInfo.erase(fd);
-	// _clientsMsg.erase(fd);
-	for (size_t i = 0; i < _clientsFd.size(); i++)
 	{
-		if (_clientsFd[i].fd == fd)
+		std::cout << RED << "Recv failed" << RESET << std::endl;
+		_clientsInfo.erase(find->fd);
+		for (auto it = _clientsFd.begin(); it != _clientsFd.end(); ++it)
 		{
-			_clientsFd.erase(_clientsFd.begin() + i);
-			break;
+			if (it->fd == find->fd)
+			{
+				_clientsFd.erase(it);
+				break ;
+			}
 		}
 	}
 }
 
-void Server::request(pollfd &clientFd)
+void Server::request(std::vector<pollfd>::iterator pollClient)
 {
 	char		tmp[1024];
 
-	if (clientFd.fd == _socketFd) //new client trys to connect
+	if (pollClient->fd == _socketFd) //new client trys to connect
 	{
 		int clientFd = accept(_socketFd, _res->ai_addr, &_res->ai_addrlen);
 		if (clientFd < 0)
@@ -120,28 +118,28 @@ void Server::request(pollfd &clientFd)
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
 			fcntl(clientFd, F_SETFL, O_NONBLOCK);
 			_clientsFd.push_back({clientFd, POLLIN, 0});
-			_clientsInfo.insert(std::pair<int, Client>(clientFd, Client()));
+			_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
 		}
 	}
 	else //existing client trys to connect
 	{
-		int bytesRead = recv(clientFd.fd, tmp, sizeof(tmp), 0);
-		if (bytesRead < 0 || (bytesRead == 0 && _clientsInfo[clientFd.fd].getMsg().empty()))
-			handleRecvError(bytesRead, clientFd.fd);
+		int bytesRead = recv(pollClient->fd, tmp, sizeof(tmp), 0);
+		if (bytesRead < 0 || (bytesRead == 0 && _clientsInfo[pollClient->fd].getMsg().empty()))
+			IO_Error(bytesRead, pollClient);
 		else
 		{
-			_clientsInfo[clientFd.fd].appendMsg(tmp, bytesRead);
+			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
 			if (bytesRead < 1024)
 			{
-				_clientsInfo[clientFd.fd].parseRequest(clientFd.fd);
-				_clientsInfo[clientFd.fd].clearMsg();
-				clientFd.events = POLLOUT;
+				_clientsInfo[pollClient->fd].parseRequest(pollClient->fd);
+				_clientsInfo[pollClient->fd].clearMsg();
+				pollClient->events = POLLOUT;
 			}
 		}
 	}
 }
 
-void	Server::response(Client &client)
+void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
 	std::cout << BLUE << "Response" << RESET << std::endl;
 	if (client.getResponseBuffer().empty())
@@ -165,30 +163,23 @@ void	Server::response(Client &client)
 	// std::cout << "TEST" << std::endl;
 
 	std::string response = client.getResponseBuffer();
-    size_t bytesSent = client.getBytesSent();
-    ssize_t remaining = response.size() - bytesSent;
+	size_t bytesSent = client.getBytesSent();
+	ssize_t remaining = response.size() - bytesSent;
 
-    // Send as much as possible
-    ssize_t sent = send(std::stoi(client.getFd()), response.c_str() + bytesSent, remaining, 0);
-    if (sent <= 0)
-    {
-        std::cout << RED << "send failed" << RESET << std::endl;
-        close(std::stoi(client.getFd()));
-        return;
-    }
-    bytesSent += sent;
-    // nachdem alles gesendet wurde, client aud POLLIN einstellen
-    if (bytesSent >= response.size())
-    {
-        for (size_t i = 0; i < _clientsFd.size(); ++i)
-        {
-            if (_clientsFd[i].fd == std::stoi(client.getFd()))
-            {
-                _clientsFd[i].events = POLLIN;
-                break;
-            }
-        }
-        client.getResponseBuffer().clear(); // Clear buffer fuer naechstes mal
+	// Send as much as possible
+	ssize_t sent = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
+	if (sent <= 0)
+	{
+		std::cout << RED << "send failed" << RESET << std::endl;
+		close(client.getFd());
+		return;
+	}
+	bytesSent += sent;
+	// nachdem alles gesendet wurde, client aud POLLIN einstellen
+	if (bytesSent >= response.size())
+	{
+		pollClient->events = POLLIN;
+		client.getResponseBuffer().clear(); // Clear buffer fuer naechstes mal
     }
 }
 

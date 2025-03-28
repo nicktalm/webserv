@@ -1,5 +1,7 @@
 #include "../include/server.hpp"
 
+std::atomic<bool>	test = true;
+
 void	signalHandler(int signal)
 {
 	std::cout << YELLOW << "\rInterrupt signal " << signal << " received" << RESET << std::endl;

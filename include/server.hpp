@@ -21,7 +21,7 @@
 #include "client.hpp"
 #include "utils.hpp"
 
-bool	test = true;
+extern std::atomic<bool>	test;
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -75,10 +75,10 @@ class Server
 		int				getSocketfd(void) {return _socketFd;};
 		int				getPort(void) {return _config.port;};
 		std::string		getRoot(void) {return (_config.root);};
-		void			request(pollfd &clientFd);
+		void			request(std::vector<pollfd>::iterator clientFd);
 		void			run(void);
-		void			response(Client &client);
-		void			handleRecvError(int bytesRead, int fd);
+		void			response(Client &client, std::vector<pollfd>::iterator pollClient);
+		void			IO_Error(int bytesRead, std::vector<pollfd>::iterator find);
 		std::string 	handleGET(Client &client);
 		std::string		handleERROR(Client &client);
 };

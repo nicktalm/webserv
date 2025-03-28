@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/28 09:37:15 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/28 14:13:29 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,12 @@ Client::Client(void)
 	_body = "";
 	_responseBuffer = "";
 	_bytesSent = 0;
+}
+
+Client::~Client(void)
+{
+	std::cout << "here" << std::endl;
+	close(_fd);
 }
 
 void	Client::appendMsg(char *msg, size_t size)
