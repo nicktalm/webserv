@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/03/27 16:15:19 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/03/28 12:47:20 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,21 +129,53 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 				{
 					std::string value;
 					iss >> value;
-					if (!value.empty())
+				
+					if (value.empty())
+						throw std::runtime_error("Error: client_max_body_size is missing a value");
+				
+					char unit = value.back();
+					std::string number_part = value;
+				
+					// Prüfen, ob die letzte Stelle eine Einheit ist
+					if (unit == 'K' || unit == 'M' || unit == 'G')
 					{
-						long zwischenwert = std::stoi(value.substr(0, value.size() - 1));
-						current_location.max_size_unit = value.back();
-						std::cout << YELLOW << "Max size unit: " << current_location.max_size_unit << RESET << std::endl;
-						std::cout << YELLOW << "Zwischenwert: " << zwischenwert << RESET << std::endl;
-						if (current_location.max_size_unit == 'K')
-							current_location.max_size_location = zwischenwert * 1024;
-						else if (current_location.max_size_unit == 'M')
-							current_location.max_size_location = zwischenwert * 1024 * 1024;
-						else if (current_location.max_size_unit == 'G')
-							current_location.max_size_location = zwischenwert * 1024 * 1024 * 1024;
+						number_part = value.substr(0, value.size() - 1);
 					}
+					else
+					{
+						unit = 'B'; // Standardmäßig in Bytes speichern
+					}
+				
+					if (number_part.empty() || !std::isdigit(number_part[0]))
+						throw std::runtime_error("Error: No valid numeric value provided for client_max_body_size");
+				
+					long zwischenwert;
+					try
+					{
+						zwischenwert = std::stoi(number_part);
+					}
+					catch (const std::exception &e)
+					{
+						throw std::runtime_error("Error: Invalid numeric value for client_max_body_size");
+					}
+				
+					current_location.max_size_unit = unit;
+					std::cout << YELLOW << "Max size unit: " << current_location.max_size_unit << RESET << std::endl;
+					std::cout << YELLOW << "Zwischenwert: " << zwischenwert << RESET << std::endl;
+				
+					if (unit == 'K')
+						current_location.max_size_location = zwischenwert * 1024;
+					else if (unit == 'M')
+						current_location.max_size_location = zwischenwert * 1024 * 1024;
+					else if (unit == 'G')
+						current_location.max_size_location = zwischenwert * 1024 * 1024 * 1024;
+					else // Falls keine Einheit vorhanden war → Bytes
+						current_location.max_size_location = zwischenwert;
+				
 					std::cout << YELLOW << "WERT: " << current_location.max_size_location << RESET << std::endl;
 				}
+				
+
 			}
 			else
 			{
@@ -172,19 +204,49 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 				{
 					std::string value;
 					iss >> value;
-					if (!value.empty())
+				
+					if (value.empty())
+						throw std::runtime_error("Error: client_max_body_size is missing a value");
+				
+					char unit_2 = value.back();
+					std::string number_part_2 = value;
+				
+					// Prüfen, ob die letzte Stelle eine Einheit ist
+					if (unit_2 == 'K' || unit_2 == 'M' || unit_2 == 'G')
 					{
-						long zwischenwert2 = std::stoi(value.substr(0, value.size() - 1));
-						current_config.max_size_unit_server = value.back();
-						std::cout << YELLOW << "Max size unit: " << current_config.max_size_unit_server << RESET << std::endl;
-						std::cout << YELLOW << "Zwischenwert2: " << zwischenwert2 << RESET << std::endl;
-						if (current_config.max_size_unit_server == 'K')
-							current_config.max_size_server = zwischenwert2 * 1024;
-						else if (current_config.max_size_unit_server == 'M')
-							current_config.max_size_server = zwischenwert2 * 1024 * 1024;
-						else if (current_config.max_size_unit_server == 'G')
-							current_config.max_size_server = zwischenwert2 * 1024 * 1024 * 1024;
+						number_part_2 = value.substr(0, value.size() - 1);
 					}
+					else
+					{
+						unit_2 = 'B'; // Standardmäßig in Bytes speichern
+					}
+				
+					if (number_part_2.empty() || !std::isdigit(number_part_2[0]))
+						throw std::runtime_error("Error: No valid numeric value provided for client_max_body_size");
+				
+					long zwischenwert;
+					try
+					{
+						zwischenwert = std::stoi(number_part_2);
+					}
+					catch (const std::exception &e)
+					{
+						throw std::runtime_error("Error: Invalid numeric value for client_max_body_size");
+					}
+				
+					current_config.max_size_unit_server = unit_2;
+					std::cout << YELLOW << "Max size unit_2: " << current_config.max_size_unit_server << RESET << std::endl;
+					std::cout << YELLOW << "Zwischenwert: " << zwischenwert << RESET << std::endl;
+				
+					if (unit_2 == 'K')
+						current_config.max_size_server = zwischenwert * 1024;
+					else if (unit_2 == 'M')
+						current_config.max_size_server = zwischenwert * 1024 * 1024;
+					else if (unit_2 == 'G')
+						current_config.max_size_server = zwischenwert * 1024 * 1024 * 1024;
+					else // Falls keine Einheit vorhanden war → Bytes
+						current_config.max_size_server = zwischenwert;
+				
 					std::cout << YELLOW << "WERT: " << current_config.max_size_server << RESET << std::endl;
 				}
 			}
