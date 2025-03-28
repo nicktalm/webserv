@@ -1,12 +1,9 @@
 #include "../include/server.hpp"
-#include "../include/utils.hpp"
-
-std::atomic<bool>	run = true;
 
 void	signalHandler(int signal)
 {
 	std::cout << YELLOW << "\rInterrupt signal " << signal << " received" << RESET << std::endl;
-	run = false;
+	test = false;
 }
 
 int main(int argc, char **argv)
@@ -17,7 +14,7 @@ int main(int argc, char **argv)
 		std::vector<Server>	servers;
 
 		servers = utils::parsing(argc, argv);
-		while(run)
+		while(test)
 		{
 			for (auto it = servers.begin(); it != servers.end(); ++it)
 			{

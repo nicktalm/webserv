@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <dirent.h>
+#include <string>
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -23,14 +24,20 @@ class Client
 		std::string							_protocol;
 		std::string							_body;
 		std::map<std::string, std::string>	_header;
+		std::string							_responseBuffer;
+		ssize_t								_bytesSent;
 	public:
 		Client(void);
 		void		appendMsg(char *msg, size_t size);
 		void		parseRequest(int fd);
 		void		clearMsg(void);
 
-		std::string	getMethod(void) const {return _method;};
+		std::string	getMethod(void) const {return (_method);};
+		std::string	getMsg(void) {return (_clientsMsg);};
 		std::string	getstatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
-		int			getFd(void) const {return _fd;};
+		std::string	getFd(void) const {return std::to_string(_fd);};
+		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
+		std::string	getResponseBuffer(void) {return _responseBuffer;};
+		ssize_t		&getBytesSent(void) { return _bytesSent;};
 };

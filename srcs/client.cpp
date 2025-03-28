@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/27 12:46:33 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/28 09:37:15 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ Client::Client(void)
 	_path = "";
 	_protocol = "";
 	_body = "";
+	_responseBuffer = "";
+	_bytesSent = 0;
 }
 
 void	Client::appendMsg(char *msg, size_t size)
