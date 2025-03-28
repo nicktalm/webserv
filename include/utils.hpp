@@ -12,4 +12,5 @@ namespace utils
 
 	// reads file and return the input as an std::string
 	std::string	readFile(std::string input);
+	std::string getDate(void);
 }

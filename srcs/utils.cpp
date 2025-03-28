@@ -28,7 +28,19 @@ std::string	utils::readFile(std::string input)
 	std::stringstream	buffer;
 
 	if (!file)
-		throw std::runtime_error("open failed");
+		return("");
 	buffer << file.rdbuf();
 	return (buffer.str());
+}
+
+std::string utils::getDate(void)
+{
+	time_t currentTime;
+	struct tm* ti;
+
+	time(&currentTime);
+	ti = localtime(&currentTime);
+	char timeBuffer[100];
+    strftime(timeBuffer, sizeof(timeBuffer), "%a, %d %b %Y %H:%M:%S GMT", ti);
+	return (std::string(timeBuffer) + "\r\n");
 }

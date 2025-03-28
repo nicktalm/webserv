@@ -20,11 +20,13 @@
 
 #include "client.hpp"
 #include "utils.hpp"
+#include "response.hpp"
 
-extern std::atomic<bool>	test;
+extern std::atomic<bool>	runner;
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
+#define PURPLE  "\033[35m"
 #define BLUE    "\033[34m"
 #define YELLOW  "\033[33m"
 #define RESET   "\033[0m"
@@ -81,6 +83,7 @@ class Server
 		void			IO_Error(int bytesRead, std::vector<pollfd>::iterator find);
 		std::string 	handleGET(Client &client);
 		std::string		handleERROR(Client &client);
+		std::string 	create_response(t_response response);
 };
 
 // checks the config file and returns a vector of t_config

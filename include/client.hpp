@@ -38,6 +38,7 @@ class Client
 		std::string	getMsg(void) {return (_clientsMsg);};
 		std::string	getstatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
+		std::string	getPath(void) const {return _path;};
 		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	getResponseBuffer(void) {return _responseBuffer;};

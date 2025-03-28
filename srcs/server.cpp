@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/28 14:12:30 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/28 18:19:26 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ Server::~Server(void)
 void	Server::run(void)
 {
 	int eventCount = poll(_clientsFd.data(), _clientsFd.size(), 0);
-	if (eventCount < 0)
+	if (eventCount < 0 && runner)
 		throw std::runtime_error("Poll failed");
 	else if (eventCount > 0)
 	{
@@ -118,7 +118,12 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
 			fcntl(clientFd, F_SETFL, O_NONBLOCK);
 			_clientsFd.push_back({clientFd, POLLIN, 0});
-			_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
+			if (_clientsInfo.find(clientFd) == _clientsInfo.end()) //nur an die map adden, wenn es den client noch nicht gibt, sonst kreaiert emplace ein temp client object und called direkt destructor
+				_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
+			else
+			{
+				std::cout << YELLOW << "Client already exists" << RESET << std::endl;
+			}
 		}
 	}
 	else //existing client trys to connect
@@ -196,45 +201,46 @@ std::string	Server::handleERROR(Client &client)
 	return ("Error muss gemacht werder wallah billah habibi");
 }
 
+std::string Server::create_response(t_response response)
+{
+	std::string finished;
+
+	finished =
+	response.start_line +
+	response.server_name +
+	response.date +
+	response.content_length +
+	response.content_type +
+	response.empty_line +
+	response.body;
+	
+	return (finished);
+}
+
 std::string	Server::handleGET(Client &client)
 {
-	(void)client;
-	std::string	html_page = utils::readFile("http/index.html");
-	std::string http_response =
-		"HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/html\r\n"
-		"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
-		"Connection: close\r\n"
-		"\r\n" +
-		html_page;
-
-	return (http_response);
-	// std::cout << "Starting GET creation" << std::endl;
-	// t_response response;
-	// time_t currentTime;
-	// struct tm* ti;
-
-	// time(&currentTime);
-	// ti = localtime(&currentTime);
+	std::cout << PURPLE << "GetRequest" << RESET << std::endl;
+	Response responseInstance;
+	t_response response;
+	//check path - content_type(mimetype) - startline
 	
-	// //start line
-	// response.start_line = client.getProtocol() + " " + client.getstatusCode() + "Ok\r\n"; //Ok only if status is 200
+	response.body = utils::readFile(client.getPath()) + "\r\n"; //TODO: need to check path
+	response.server_name = this->_config.server_name + "\r\n";
+	response.date = utils::getDate() + "\r\n";
+	response.content_length = std::to_string(response.body.size()) + "\r\n";
+	response.content_type = responseInstance.getContentType() + "\r\n"; //TODO: needs to be done
+	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n"; //TODO: needs more check & change status_code dynamic depending if something failes
 
-	// //Headers
-	// response.server_name = "Server: " + this->_config.server_name + "\r\n";
-	// response.date = "Date: " + std::string(asctime(ti));
-	
-	// client.
-	// utils::readFile(std::string input)
-	
-	// response.content_length = "Content-Length: " + ;
-	// response.content_type = "Content-Type: " + ;
+	std::string finished_response = Server::create_response(response);
+	// std::string	html_page = utils::readFile("http/index.html");
+	// std::string finished_response =
+	// 	"HTTP/1.1 200 OK\r\n"
+	// 	"Date: " + std::string(timeBuffer) + "\r\n"
+	// 	"Content-Type: text/html\r\n"
+	// 	"Content-Length: " + std::to_string(html_page.size()) + "\r\n"
+	// 	"Connection: close\r\n"
+	// 	"\r\n" +
+	// 	html_page;
 
-	// //Body
-
-
-	// //Empty line
-	// response += "\r\n";
-
-	//Body
+	return (finished_response);
 }
