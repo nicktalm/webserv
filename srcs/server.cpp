@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/28 18:19:26 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/03/31 13:34:26 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,9 +121,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			if (_clientsInfo.find(clientFd) == _clientsInfo.end()) //nur an die map adden, wenn es den client noch nicht gibt, sonst kreaiert emplace ein temp client object und called direkt destructor
 				_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
 			else
-			{
 				std::cout << YELLOW << "Client already exists" << RESET << std::endl;
-			}
 		}
 	}
 	else //existing client trys to connect
@@ -152,7 +150,7 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 		std::string response;
 		if (client.getstatusCode() != "200")
 			response = handleERROR(client);
-		if (client.getMethod() == "GET")
+		else if (client.getMethod() == "GET")
 			response = handleGET(client);
 		// else if(client.getMethod() == "POST")
 		// 	response = handlePOST(&client);
@@ -190,15 +188,23 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 
 std::string	Server::handleERROR(Client &client)
 {
-	(void)client;
-	// std::cout << "Starting ERROR creation" << std::endl;
-	// exit(1);
-	// std::string	response;
+	Response	repo;
+	t_response	response;
+	std::string	errorMsg;
+	std::string	path;
+	size_t		end;
+
+	errorMsg = repo.getErrorMsg(client.getstatusCode());
+	end = errorMsg.find(':');
+	path = errorMsg.substr(end + 2);
+	response.body = utils::readFile(path) + "\r\n";
+	response.start_line = "HTTP/1.1 " + client.getstatusCode() + " " + errorMsg.substr(0, end) + "\r\n";
+	response.server_name = "Servername: " + this->_config.server_name + "\r\n";
+	response.date = "Date: " + utils::getDate();
+	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size()) + "\r\n";
+	response.content_type = "Content-Type: " + repo.getContentType(path) + "\r\n";
 	
-	// response = client.getProtocol() + " " + client.getstatusCode() + " " + "NOT FOUND";
-	// send(client.getFd(), response.c_str(), )
-	// std::cout << response << std::endl;
-	return ("Error muss gemacht werder wallah billah habibi");
+	return (Server::create_response(response));
 }
 
 std::string Server::create_response(t_response response)
@@ -228,7 +234,7 @@ std::string	Server::handleGET(Client &client)
 	response.server_name = this->_config.server_name + "\r\n";
 	response.date = utils::getDate() + "\r\n";
 	response.content_length = std::to_string(response.body.size()) + "\r\n";
-	response.content_type = responseInstance.getContentType() + "\r\n"; //TODO: needs to be done
+	response.content_type = responseInstance.getContentType(client.getPath()) + "\r\n"; //TODO: needs to be done
 	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n"; //TODO: needs more check & change status_code dynamic depending if something failes
 
 	std::string finished_response = Server::create_response(response);

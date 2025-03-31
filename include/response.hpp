@@ -9,7 +9,7 @@ class Response
 {
 	public:
 	//GET request
-		std::string	getContentType();
+		std::string	getContentType(std::string file);
 		std::string	getStartLine(std::string protocol, std::string status_code);
 		std::string getErrorMsg(std::string error);
 
