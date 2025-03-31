@@ -3,13 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/28 14:58:16 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/03/31 15:38:25 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <dirent.h>
+#include <unistd.h>
+#include <sstream>
+#include <iostream>
 #include "../include/client.hpp"
 
 Client::Client(void)
@@ -80,4 +84,24 @@ void	Client::parseRequest(int fd)
 void	Client::clearMsg(void)
 {
 	_clientsMsg.clear();
+}
+
+std::string	Client::getPath(const t_config &config)
+{
+	(void)config;
+	if (!_path.empty())
+	{
+		DIR				*dir;
+		struct dirent	*openDir;
+
+		dir = opendir(_path.c_str());
+		if (!dir)
+			_statusCode = "404";
+		while ((openDir = readdir(dir)) != nullptr)
+		{
+			std::cout << "name = " << openDir->d_name << std::endl;
+			return (_path);
+		}
+	}
+	return (nullptr);
 }

@@ -1,12 +1,9 @@
 #pragma once
 
-#include <iostream>
-#include <sstream>
 #include <vector>
 #include <map>
-#include <dirent.h>
 #include <string>
-#include <unistd.h>
+#include "config.hpp"
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -38,7 +35,7 @@ class Client
 		std::string	getMsg(void) {return (_clientsMsg);};
 		std::string	getstatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
-		std::string	getPath(void) const {return _path;};
+		std::string	getPath(const t_config &config);
 		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	getResponseBuffer(void) {return _responseBuffer;};

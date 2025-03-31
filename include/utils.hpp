@@ -1,9 +1,9 @@
 #pragma once
 
-#include <iostream>
+#include <string>
 #include <vector>
-
-class Server;
+#include <map>
+#include "server.hpp"
 
 namespace utils
 {
@@ -12,5 +12,13 @@ namespace utils
 
 	// reads file and return the input as an std::string
 	std::string	readFile(std::string input);
-	std::string getDate(void);
+
+	// returns the current date
+	std::string	getDate(void);
+
+	// parsing the MIME file
+	void	parseMIME(void);
+
+	// maps all the MIME Types
+	extern std::map<std::string, std::string>	MIMETypes;
 }

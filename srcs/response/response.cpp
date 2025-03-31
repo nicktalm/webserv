@@ -1,4 +1,5 @@
 #include "../../include/response.hpp"
+#include "../../include/utils.hpp"
 
 std::string Response::getErrorMsg(std::string error)
 {
@@ -9,17 +10,18 @@ std::string Response::getErrorMsg(std::string error)
 		{"301", "Moved Permanently"},
 		{"302", "Found"},
 		{"304", "Not Modified"},
-		{"400", "Bad Request"},
+		{"400", "Bad Request: error_pages/400.html"},
 		{"401", "Unauthorized"},
-		{"403", "Forbidden"},
-		{"404", "Not Found"},
-		{"405", "Method Not Allowed"},
+		{"403", "Forbidden: error_pages/403.html"},
+		{"404", "Not Found: error_pages/404.html"},
+		{"405", "Method Not Allowed: error_pages/405.html"},
 		{"408", "Request Timeout"},
 		{"500", "Internal Server Error"},
 		{"501", "Not Implemented"},
 		{"502", "Bad Gateway"},
 		{"503", "Service Unavailable"},
-		{"504", "Gateway Timeout"}
+		{"504", "Gateway Timeout"},
+		{"505", "HTTP Version Not Supported: error_pages/505.html"}
 	};
 	
 	auto it = errorMessages.find(error);
@@ -35,7 +37,18 @@ std::string Response::getStartLine(std::string protocol, std::string status_code
 	return (start_line);
 }
 
-std::string Response::getContentType()
+std::string Response::getContentType(std::string file)
 {
-	return ("needs to be created (type)");
+	std::string	extention, ret;
+	size_t	end;
+
+	end = file.find('.');
+	if (end != std::string::npos)
+	{
+		extention = file.substr(end);
+		auto it = utils::MIMETypes.find(extention);
+		if (it != utils::MIMETypes.end())
+			return (utils::MIMETypes[extention]);
+	}
+	return (nullptr);
 }
