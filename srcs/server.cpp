@@ -6,10 +6,17 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 13:34:26 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/31 15:24:02 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
+#include <netdb.h>
+#include <sstream>
+#include <fcntl.h>
+#include <unistd.h>
+#include "../include/response.hpp"
+#include "../include/utils.hpp"
 #include "../include/server.hpp"
 
 Server::Server(t_config config) : _config(config)
@@ -207,7 +214,7 @@ std::string	Server::handleERROR(Client &client)
 	return (Server::create_response(response));
 }
 
-std::string Server::create_response(t_response response)
+std::string Server::create_response(const t_response &response)
 {
 	std::string finished;
 
@@ -230,11 +237,11 @@ std::string	Server::handleGET(Client &client)
 	t_response response;
 	//check path - content_type(mimetype) - startline
 	
-	response.body = utils::readFile(client.getPath()) + "\r\n"; //TODO: need to check path
+	response.body = utils::readFile(client.getPath(this->_config)) + "\r\n"; //TODO: need to check path
 	response.server_name = this->_config.server_name + "\r\n";
 	response.date = utils::getDate() + "\r\n";
 	response.content_length = std::to_string(response.body.size()) + "\r\n";
-	response.content_type = responseInstance.getContentType(client.getPath()) + "\r\n"; //TODO: needs to be done
+	response.content_type = responseInstance.getContentType(client.getPath(this->_config)) + "\r\n"; //TODO: needs to be done
 	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n"; //TODO: needs more check & change status_code dynamic depending if something failes
 
 	std::string finished_response = Server::create_response(response);

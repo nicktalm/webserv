@@ -6,11 +6,14 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:48 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 12:08:01 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/31 15:09:17 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
+#include <csignal>
 #include "../include/server.hpp"
+#include "../include/utils.hpp"
 
 std::atomic<bool>	runner = true;
 

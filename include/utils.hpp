@@ -1,11 +1,9 @@
 #pragma once
 
-#include <iostream>
+#include <string>
 #include <vector>
 #include <map>
-#include <sstream>
-
-class Server;
+#include "server.hpp"
 
 namespace utils
 {

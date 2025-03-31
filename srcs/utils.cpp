@@ -6,11 +6,14 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:23 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 13:09:04 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/31 15:37:11 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/server.hpp"
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include "../include/utils.hpp"
 
 std::map<std::string, std::string> utils::MIMETypes = {{"", ""}};
 
