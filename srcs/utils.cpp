@@ -41,6 +41,6 @@ std::string utils::getDate(void)
 	time(&currentTime);
 	ti = localtime(&currentTime);
 	char timeBuffer[100];
-    strftime(timeBuffer, sizeof(timeBuffer), "%a, %d %b %Y %H:%M:%S GMT", ti);
+	strftime(timeBuffer, sizeof(timeBuffer), "%a, %d %b %Y %H:%M:%S GMT", ti);
 	return (std::string(timeBuffer) + "\r\n");
 }
