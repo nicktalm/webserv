@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 15:42:42 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/31 16:48:32 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,9 +75,17 @@ void	Server::run(void)
 		{
 			if (_clientsFd[it].revents & POLLHUP) //client disconnected or hung up
 			{
-				std::cout << YELLOW << "Client disconnected" << RESET << std::endl;
+				std::cout << YELLOW << "Client disconnected: " << _clientsFd[it].fd << RESET << std::endl;
 				close(_clientsFd[it].fd);
 				_clientsFd.erase(_clientsFd.begin() + it);
+				for (auto iter = _clientsInfo.begin(); iter != _clientsInfo.end(); ++iter)
+				{
+					if (_clientsFd[it].fd == iter->first)
+					{
+						_clientsInfo.erase(it);
+						break ;
+					}
+				}
 				continue;
 			}
 			else if (_clientsFd[it].revents & POLLIN) //data ready to read
@@ -100,14 +108,6 @@ void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 	{
 		std::cout << RED << "Recv failed" << RESET << std::endl;
 		_clientsInfo.erase(find->fd);
-		for (auto it = _clientsFd.begin(); it != _clientsFd.end(); ++it)
-		{
-			if (it->fd == find->fd)
-			{
-				_clientsFd.erase(it);
-				break ;
-			}
-		}
 	}
 }
 
@@ -235,16 +235,18 @@ std::string	Server::handleGET(Client &client)
 	std::cout << PURPLE << "GetRequest" << RESET << std::endl;
 	Response responseInstance;
 	t_response response;
+	std::string	path;
 	//check path - content_type(mimetype) - startline
 	
-	response.body = utils::readFile(client.getPath(this->_config)) + "\r\n"; //TODO: need to check path
-	response.server_name = this->_config.server_name + "\r\n";
-	response.date = utils::getDate() + "\r\n";
-	response.content_length = std::to_string(response.body.size()) + "\r\n";
-	response.content_type = responseInstance.getContentType(client.getPath(this->_config)) + "\r\n"; //TODO: needs to be done
+	path = client.getPath(this->_config);
+	if (path.empty())
+		return (handleERROR(client));
+	response.body = utils::readFile(path) + "\r\n";
+	response.server_name = "Servername: " + this->_config.server_name + "\r\n";
+	response.date = "Date: " + utils::getDate();
+	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size()) + "\r\n";
+	response.content_type = "Content-Type: " + responseInstance.getContentType(path) + "\r\n"; //TODO: needs to be done
 	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n"; //TODO: needs more check & change status_code dynamic depending if something failes
-
-	std::string finished_response = Server::create_response(response);
 	// std::string	html_page = utils::readFile("http/index.html");
 	// std::string finished_response =
 	// 	"HTTP/1.1 200 OK\r\n"
@@ -254,6 +256,5 @@ std::string	Server::handleGET(Client &client)
 	// 	"Connection: close\r\n"
 	// 	"\r\n" +
 	// 	html_page;
-
-	return (finished_response);
+	return (Server::create_response(response));
 }

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 15:38:25 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/03/31 16:57:11 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,20 +88,43 @@ void	Client::clearMsg(void)
 
 std::string	Client::getPath(const t_config &config)
 {
-	(void)config;
 	if (!_path.empty())
 	{
 		DIR				*dir;
 		struct dirent	*openDir;
+		std::string	directory, file;
 
-		dir = opendir(_path.c_str());
+		std::cout << "config = " << config.root << std::endl;
+		std::cout << "_path = " << _path << std::endl;
+		if (_path == "/")
+		{
+			directory = "http/";
+			file = "index.html";
+		}
+		else
+		{
+			size_t	end = _path.rfind('/');
+			if (end == std::string::npos)
+				return ("");
+			directory = _path.substr(0, end);
+			file = _path.substr(end + 1);
+		}
+		dir = opendir(directory.c_str());
 		if (!dir)
+		{
 			_statusCode = "404";
+			return ("");
+		}
 		while ((openDir = readdir(dir)) != nullptr)
 		{
-			std::cout << "name = " << openDir->d_name << std::endl;
-			return (_path);
+			if (openDir->d_name == file)
+			{
+				closedir(dir);
+				return (directory + file);
+			}
 		}
+		closedir(dir);
 	}
-	return (nullptr);
+	_statusCode = "404";
+	return ("");
 }
