@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 11:57:19 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/01 16:14:30 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,28 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 	}
 }
 
+std::string Server::handlePOST(Client &client)
+{
+	std::cout << PURPLE << "PostRequest" << RESET << std::endl;
+
+	std::cout << "Received Body: " << client.getBody() << std::endl;
+
+	// Beispiel: Speichere den Body in einer Datei
+	std::ofstream outFile("uploaded_data.txt");
+	if (!outFile)
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+
+	outFile << client.getBody(); // Schreibe den Body in die Datei
+	outFile.close();
+
+	// Generiere eine Antwort
+	std::string response = "HTTP/1.1 201 Created\r\n";
+	response += "Content-Length: 0\r\n";
+	response += "Connection: close\r\n\r\n";
+
+	return response;
+}
+
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
 	std::cout << BLUE << "Response" << RESET << std::endl;
@@ -154,8 +176,8 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 			response = handleERROR(client);
 		if (client.getMethod() == "GET")
 			response = handleGET(client);
-		// else if(client.getMethod() == "POST")
-		// 	response = handlePOST(&client);
+		else if(client.getMethod() == "POST")
+			response = handlePOST(client);
 		// else if(client.getMethod() == "DELETE")
 		// 	response = handleDELETE(&client);
 		// else
@@ -185,7 +207,7 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	{
 		pollClient->events = POLLIN;
 		client.getResponseBuffer().clear(); // Clear buffer fuer naechstes mal
-    }
+	}
 }
 
 std::string	Server::handleERROR(Client &client)
