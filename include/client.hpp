@@ -39,5 +39,5 @@ class Client
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		&getBytesSent(void) { return _bytesSent;};
-		bool		checkDir(const t_config config, std::string &dir);
+		bool		checkPath(const t_config config, std::string &dir, std::string &file);
 };

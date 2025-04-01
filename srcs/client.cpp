@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/01 17:42:31 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/01 19:16:38 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,9 +95,7 @@ std::string	Client::getPath(const t_config &config)
 			return (_statusCode = "404", "");
 		directory = _path.substr(0, end + 1);
 		file = _path.substr(end + 1);
-		std::cout << "dir = " << directory << std::endl;
-		std::cout << "file = " << file << std::endl;
-		if (!this->checkDir(config, directory))
+		if (!this->checkPath(config, directory, file))
 			return (_statusCode = "404", "");
 		dir = opendir(directory.c_str());
 		if (!dir)
@@ -115,17 +113,28 @@ std::string	Client::getPath(const t_config &config)
 	return (_statusCode = "404", "");
 }
 
-bool	Client::checkDir(const t_config config, std::string &dir)
+bool	Client::checkPath(const t_config config, std::string &dir, std::string &file)
 {
-	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
+	if (dir == "/")
 	{
-		if (dir == loc->path)
+		if (file.empty())
+			file = config.index;
+		return (dir.insert(0, config.root), true);
+	}
+	else
+	{
+		for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
 		{
-			if (!loc->root.empty())
-				dir.insert(0, loc->root);
-			else
-				dir.insert(0, config.root);
-			return (true);
+			if (dir == loc->path)
+			{
+				if (!loc->root.empty())
+					dir.insert(0, loc->root);
+				else
+					dir.insert(0, config.root);
+				if (file.empty())
+					file = loc->index;
+				return (true);
+			}
 		}
 	}
 	return (false);
