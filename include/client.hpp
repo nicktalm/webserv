@@ -29,7 +29,6 @@ class Client
 		~Client(void);
 		void		appendMsg(char *msg, size_t size);
 		void		parseRequest(int fd);
-		void		clearMsg(void);
 
 		std::string	getMethod(void) const {return (_method);};
 		std::string	getMsg(void) {return (_clientsMsg);};
@@ -40,4 +39,5 @@ class Client
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		&getBytesSent(void) { return _bytesSent;};
+		bool		checkDir(const t_config config, std::string &dir);
 };

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 16:48:32 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/01 15:55:17 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,17 +75,7 @@ void	Server::run(void)
 		{
 			if (_clientsFd[it].revents & POLLHUP) //client disconnected or hung up
 			{
-				std::cout << YELLOW << "Client disconnected: " << _clientsFd[it].fd << RESET << std::endl;
-				close(_clientsFd[it].fd);
-				_clientsFd.erase(_clientsFd.begin() + it);
-				for (auto iter = _clientsInfo.begin(); iter != _clientsInfo.end(); ++iter)
-				{
-					if (_clientsFd[it].fd == iter->first)
-					{
-						_clientsInfo.erase(it);
-						break ;
-					}
-				}
+				this->disconnect(_clientsFd.begin() + it);
 				continue;
 			}
 			else if (_clientsFd[it].revents & POLLIN) //data ready to read
@@ -102,13 +92,9 @@ void	Server::run(void)
 
 void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 {
-	if (bytesRead == 0)
-		std::cout << RED << "Client disconnected" << RESET << std::endl;
-	else
-	{
-		std::cout << RED << "Recv failed" << RESET << std::endl;
-		_clientsInfo.erase(find->fd);
-	}
+	if (bytesRead < 0)
+		std::cerr << RED << "Recv failed" << RESET << std::endl;
+	this->disconnect(find);
 }
 
 void Server::request(std::vector<pollfd>::iterator pollClient)
@@ -125,10 +111,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
 			fcntl(clientFd, F_SETFL, O_NONBLOCK);
 			_clientsFd.push_back({clientFd, POLLIN, 0});
-			if (_clientsInfo.find(clientFd) == _clientsInfo.end()) //nur an die map adden, wenn es den client noch nicht gibt, sonst kreaiert emplace ein temp client object und called direkt destructor
-				_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
-			else
-				std::cout << YELLOW << "Client already exists" << RESET << std::endl;
+			_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
 		}
 	}
 	else //existing client trys to connect
@@ -142,7 +125,6 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			if (bytesRead < 1024)
 			{
 				_clientsInfo[pollClient->fd].parseRequest(pollClient->fd);
-				_clientsInfo[pollClient->fd].clearMsg();
 				pollClient->events = POLLOUT;
 			}
 		}
@@ -190,7 +172,7 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	{
 		pollClient->events = POLLIN;
 		client.getResponseBuffer().clear(); // Clear buffer fuer naechstes mal
-    }
+	}
 }
 
 std::string	Server::handleERROR(Client &client)
@@ -257,4 +239,13 @@ std::string	Server::handleGET(Client &client)
 	// 	"\r\n" +
 	// 	html_page;
 	return (Server::create_response(response));
+}
+
+void	Server::disconnect(std::vector<pollfd>::iterator find)
+{
+	std::cout << YELLOW << "Client disconnected: " << find->fd << RESET << std::endl;
+	auto del = _clientsInfo.find(find->fd);
+	_clientsInfo.erase(del);
+	close(find->fd);
+	_clientsFd.erase(find);
 }

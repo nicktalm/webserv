@@ -50,5 +50,5 @@ std::string Response::getContentType(std::string file)
 		if (it != utils::MIMETypes.end())
 			return (utils::MIMETypes[extention]);
 	}
-	return (nullptr);
+	return ("");
 }

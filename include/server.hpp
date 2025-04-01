@@ -40,6 +40,7 @@ class Server
 		std::string 	handleGET(Client &client);
 		std::string		handleERROR(Client &client);
 		std::string 	create_response(const t_response &response);
+		void			disconnect(std::vector<pollfd>::iterator find);
 };
 
 // checks the config file and returns a vector of t_config

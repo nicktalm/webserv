@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 16:57:11 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/01 17:42:31 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,10 +79,6 @@ void	Client::parseRequest(int fd)
 	}
 	else
 		_statusCode = "400";
-}
-
-void	Client::clearMsg(void)
-{
 	_clientsMsg.clear();
 }
 
@@ -94,27 +90,18 @@ std::string	Client::getPath(const t_config &config)
 		struct dirent	*openDir;
 		std::string	directory, file;
 
-		std::cout << "config = " << config.root << std::endl;
-		std::cout << "_path = " << _path << std::endl;
-		if (_path == "/")
-		{
-			directory = "http/";
-			file = "index.html";
-		}
-		else
-		{
-			size_t	end = _path.rfind('/');
-			if (end == std::string::npos)
-				return ("");
-			directory = _path.substr(0, end);
-			file = _path.substr(end + 1);
-		}
+		size_t	end = _path.rfind('/');
+		if (end == std::string::npos)
+			return (_statusCode = "404", "");
+		directory = _path.substr(0, end + 1);
+		file = _path.substr(end + 1);
+		std::cout << "dir = " << directory << std::endl;
+		std::cout << "file = " << file << std::endl;
+		if (!this->checkDir(config, directory))
+			return (_statusCode = "404", "");
 		dir = opendir(directory.c_str());
 		if (!dir)
-		{
-			_statusCode = "404";
-			return ("");
-		}
+			return (_statusCode = "404", "");
 		while ((openDir = readdir(dir)) != nullptr)
 		{
 			if (openDir->d_name == file)
@@ -125,6 +112,21 @@ std::string	Client::getPath(const t_config &config)
 		}
 		closedir(dir);
 	}
-	_statusCode = "404";
-	return ("");
+	return (_statusCode = "404", "");
+}
+
+bool	Client::checkDir(const t_config config, std::string &dir)
+{
+	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
+	{
+		if (dir == loc->path)
+		{
+			if (!loc->root.empty())
+				dir.insert(0, loc->root);
+			else
+				dir.insert(0, config.root);
+			return (true);
+		}
+	}
+	return (false);
 }
