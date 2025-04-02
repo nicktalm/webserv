@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/01 15:55:17 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/02 11:04:37 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,12 +186,16 @@ std::string	Server::handleERROR(Client &client)
 	errorMsg = repo.getErrorMsg(client.getstatusCode());
 	end = errorMsg.find(':');
 	path = errorMsg.substr(end + 2);
-	response.body = utils::readFile(path) + "\r\n";
-	response.start_line = "HTTP/1.1 " + client.getstatusCode() + " " + errorMsg.substr(0, end) + "\r\n";
-	response.server_name = "Servername: " + this->_config.server_name + "\r\n";
+	if (utils::readFile(path, response.body) == false)
+	{
+		client.setStatusCode(404);
+		return (handleERROR(client));
+	};
+	response.start_line = "HTTP/1.1 " + client.getstatusCode() + " " + errorMsg.substr(0, end);
+	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
-	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size()) + "\r\n";
-	response.content_type = "Content-Type: " + repo.getContentType(path) + "\r\n";
+	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size());
+	response.content_type = "Content-Type: " + repo.getContentType(path);
 	
 	return (Server::create_response(response));
 }
@@ -201,13 +205,13 @@ std::string Server::create_response(const t_response &response)
 	std::string finished;
 
 	finished =
-	response.start_line +
-	response.server_name +
-	response.date +
-	response.content_length +
-	response.content_type +
+	response.start_line + "\r\n" +
+	response.server_name + "\r\n" +
+	response.date + "\r\n" +
+	response.content_length + "\r\n" +
+	response.content_type + "\r\n" +
 	response.empty_line +
-	response.body;
+	response.body  + "\r\n";
 	
 	return (finished);
 }
@@ -223,12 +227,16 @@ std::string	Server::handleGET(Client &client)
 	path = client.getPath(this->_config);
 	if (path.empty())
 		return (handleERROR(client));
-	response.body = utils::readFile(path) + "\r\n";
-	response.server_name = "Servername: " + this->_config.server_name + "\r\n";
+	if (utils::readFile(path, response.body) == false)
+	{
+		client.setStatusCode(404);
+		return (handleERROR(client));
+	};
+	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
-	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size()) + "\r\n";
-	response.content_type = "Content-Type: " + responseInstance.getContentType(path) + "\r\n"; //TODO: needs to be done
-	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n"; //TODO: needs more check & change status_code dynamic depending if something failes
+	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size());
+	response.content_type = "Content-Type: " + responseInstance.getContentType(path); //TODO: needs to be done
+	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()); //TODO: needs more check & change status_code dynamic depending if something failes
 	// std::string	html_page = utils::readFile("http/index.html");
 	// std::string finished_response =
 	// 	"HTTP/1.1 200 OK\r\n"

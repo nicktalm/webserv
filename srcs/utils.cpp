@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:23 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 15:37:11 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/02 11:03:01 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,15 +40,16 @@ std::vector<Server>	utils::parsing(int argc, char **argv)
 	return (servers);
 }
 
-std::string	utils::readFile(std::string input)
+bool	utils::readFile(std::string input, std::string &body)
 {
 	std::ifstream		file(input);
 	std::stringstream	buffer;
-
+	
 	if (!file)
-		return("");
+		return(false);
 	buffer << file.rdbuf();
-	return (buffer.str());
+	body = buffer.str();
+	return (true);
 }
 
 std::string utils::getDate(void)
@@ -60,7 +61,7 @@ std::string utils::getDate(void)
 	ti = localtime(&currentTime);
 	char timeBuffer[100];
 	strftime(timeBuffer, sizeof(timeBuffer), "%a, %d %b %Y %H:%M:%S GMT", ti);
-	return (std::string(timeBuffer) + "\r\n");
+	return (std::string(timeBuffer));
 }
 
 void	utils::parseMIME(void)

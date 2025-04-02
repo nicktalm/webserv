@@ -11,7 +11,7 @@ namespace utils
 	std::vector<Server>	parsing(int argc, char **argv);
 
 	// reads file and return the input as an std::string
-	std::string	readFile(std::string input);
+	bool			readFile(std::string input, std::string &body);
 
 	// returns the current date
 	std::string	getDate(void);
