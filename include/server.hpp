@@ -38,6 +38,7 @@ class Server
 		void			response(Client &client, std::vector<pollfd>::iterator pollClient);
 		void			IO_Error(int bytesRead, std::vector<pollfd>::iterator find);
 		std::string 	handleGET(Client &client);
+		std::string 	handlePOST(Client &client);
 		std::string		handleERROR(Client &client);
 		std::string 	create_response(const t_response &response);
 		void			disconnect(std::vector<pollfd>::iterator find);
