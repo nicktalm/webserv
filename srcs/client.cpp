@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 15:19:38 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/02 18:09:22 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,6 @@ void	Client::parseRequest(int fd)
 				_header.insert(std::pair<std::string, std::string>(line.substr(0, endOfLine), line.substr(endOfLine + 1)));
 			}
 			parse >> _body;
-			std::cout << "Body: " << _body << std::endl;
 		}
 	}
 	else
@@ -103,7 +102,7 @@ std::string	Client::getPath(const t_config &config)
 			return (_statusCode = "404", "");
 		while ((openDir = readdir(dir)) != nullptr)
 		{
-			if (openDir->d_name == file)
+			if (openDir->d_type == DT_REG && openDir->d_name == file)
 			{
 				closedir(dir);
 				return (directory + file);
