@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 18:09:50 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/02 19:21:13 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,8 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 	}
 }
 
+// TODO chunk request muss man schauen ob das schon funktioniert
+
 std::string Server::handlePOST(Client &client)
 {
 	std::cout << PURPLE << "PostRequest" << RESET << std::endl;
@@ -220,6 +222,8 @@ std::string	Server::handleERROR(Client &client)
 	return (Server::create_response(response));
 }
 
+// TODO man muss noch check ob die error page vorhanden ist in der config file
+
 std::string Server::create_response(const t_response &response)
 {
 	std::string finished;
@@ -250,8 +254,8 @@ std::string	Server::handleGET(Client &client)
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
 	response.content_length = "Content-Length: " + std::to_string(response.body.size());
-	response.content_type = "Content-Type: " + responseInstance.getContentType(path); //TODO: needs to be done
-	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()); //TODO: needs more check & change status_code dynamic depending if something failes
+	response.content_type = "Content-Type: " + responseInstance.getContentType(path);
+	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode());
 	return (Server::create_response(response));
 }
 

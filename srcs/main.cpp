@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:48 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 15:09:17 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/02 23:16:19 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,5 +47,6 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
-//TODO: implement signal handler that puts run bool to false
-//TODO: implement better structure for the run function
+// TODO signal handler muss alle Clients schliessen
+// TODO multiple cgi einbauen
+// TODO cookies

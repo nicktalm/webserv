@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 18:09:22 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/02 23:15:21 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,8 @@ std::string	Client::getPath(const t_config &config)
 	}
 	return (_statusCode = "404", "");
 }
+
+// TODO muss noch gecheckt werden ob man die methode auf die location angewenden werden darf
 
 bool	Client::checkPath(const t_config config, std::string &dir, std::string &file)
 {
