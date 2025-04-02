@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 11:04:37 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/02 15:29:44 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,7 +194,7 @@ std::string	Server::handleERROR(Client &client)
 	response.start_line = "HTTP/1.1 " + client.getstatusCode() + " " + errorMsg.substr(0, end);
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
-	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size());
+	response.content_length = "Content-Length: " + std::to_string(response.body.size());
 	response.content_type = "Content-Type: " + repo.getContentType(path);
 	
 	return (Server::create_response(response));
@@ -234,7 +234,7 @@ std::string	Server::handleGET(Client &client)
 	};
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
-	response.content_length = "Conent-Lenght: " + std::to_string(response.body.size());
+	response.content_length = "Content-Length: " + std::to_string(response.body.size());
 	response.content_type = "Content-Type: " + responseInstance.getContentType(path); //TODO: needs to be done
 	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()); //TODO: needs more check & change status_code dynamic depending if something failes
 	// std::string	html_page = utils::readFile("http/index.html");
