@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:48 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 23:16:19 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/03 16:46:34 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,14 +28,14 @@ int main(int argc, char **argv)
 	signal(SIGINT, signalHandler); //ctrl-c
 	try
 	{
-		std::vector<Server>	servers;
+		std::vector<std::unique_ptr<Server>>	servers;
 
 		servers = utils::parsing(argc, argv);
 		while(runner)
 		{
 			for (auto it = servers.begin(); it != servers.end(); ++it)
 			{
-				it->run();
+				(*it)->run();
 			}
 		}
 	}

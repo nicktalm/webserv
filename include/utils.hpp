@@ -8,7 +8,7 @@
 namespace utils
 {
 	// parsing returns the servers created by the config file
-	std::vector<Server>	parsing(int argc, char **argv);
+	std::vector<std::unique_ptr<Server>>	parsing(int argc, char **argv);
 
 	// reads file and return the input as an std::string
 	bool			readFile(std::string input, std::string &body);
