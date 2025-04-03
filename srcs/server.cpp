@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/03 18:30:18 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/03 21:44:36 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,14 +126,11 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			if (bytesRead < 1024)
 			{
 				_clientsInfo[pollClient->fd].parseRequest(pollClient->fd);
-				// if (_clientsInfo[pollClient->fd].transferEncoding())
 				pollClient->events = POLLOUT;
 			}
 		}
 	}
 }
-
-// TODO chunk request muss man schauen ob das schon funktioniert
 
 std::string Server::handlePOST(Client &client)
 {
