@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:23 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/03 16:45:21 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/03 16:52:40 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ std::map<std::string, std::string> utils::MIMETypes = {{"", ""}};
 
 std::vector<std::unique_ptr<Server>>	utils::parsing(int argc, char **argv)
 {
-	std::vector<t_config>	files;
+	std::vector<t_config>						files;
 	std::vector<std::unique_ptr<Server>>		servers;
 
 	if (argc > 2)

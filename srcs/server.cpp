@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 19:21:13 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/03 18:30:18 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,6 +126,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			if (bytesRead < 1024)
 			{
 				_clientsInfo[pollClient->fd].parseRequest(pollClient->fd);
+				// if (_clientsInfo[pollClient->fd].transferEncoding())
 				pollClient->events = POLLOUT;
 			}
 		}

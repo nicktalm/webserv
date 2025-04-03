@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 23:15:21 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/03 18:40:07 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ std::string	Client::getPath(const t_config &config)
 		directory = _path.substr(0, end + 1);
 		file = _path.substr(end + 1);
 		if (!this->checkPath(config, directory, file))
-			return (_statusCode = "404", "");
+			return ("");
 		dir = opendir(directory.c_str());
 		if (!dir)
 			return (_statusCode = "404", "");
@@ -113,8 +113,6 @@ std::string	Client::getPath(const t_config &config)
 	return (_statusCode = "404", "");
 }
 
-// TODO muss noch gecheckt werden ob man die methode auf die location angewenden werden darf
-
 bool	Client::checkPath(const t_config config, std::string &dir, std::string &file)
 {
 	if (dir == "/")
@@ -129,6 +127,8 @@ bool	Client::checkPath(const t_config config, std::string &dir, std::string &fil
 		{
 			if (dir == loc->path)
 			{
+				if (std::find(loc->methods.begin(), loc->methods.end(), _method) == loc->methods.end())
+					return (_statusCode = "405", false);
 				if (!loc->root.empty())
 					dir.insert(0, loc->root);
 				else
@@ -139,5 +139,7 @@ bool	Client::checkPath(const t_config config, std::string &dir, std::string &fil
 			}
 		}
 	}
-	return (false);
+	return (_statusCode = "404", false);
 }
+
+// TODO nick muss fuer "/" eine location erstllen fuer default
