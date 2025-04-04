@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/03 18:40:07 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/04 17:05:37 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,29 +86,45 @@ std::string	Client::getPath(const t_config &config)
 {
 	if (!_path.empty())
 	{
-		DIR				*dir;
-		struct dirent	*openDir;
-		std::string	directory, file;
-
-		size_t	end = _path.rfind('/');
-		if (end == std::string::npos)
-			return (_statusCode = "404", "");
-		directory = _path.substr(0, end + 1);
-		file = _path.substr(end + 1);
-		if (!this->checkPath(config, directory, file))
-			return ("");
-		dir = opendir(directory.c_str());
-		if (!dir)
-			return (_statusCode = "404", "");
-		while ((openDir = readdir(dir)) != nullptr)
+		//parsing for delete method
+		if (this->getMethod() == "DELETE")
 		{
-			if (openDir->d_type == DT_REG && openDir->d_name == file)
+			std::string delete_path = config.root + "/upload";
+			size_t	end = _path.rfind('/');
+			while (_path[end])
 			{
-				closedir(dir);
-				return (directory + file);
+				delete_path += _path[end];
+				end++;
 			}
+			return (delete_path);
 		}
-		closedir(dir);
+		else
+		{
+			DIR				*dir;
+			struct dirent	*openDir;
+			std::string	directory, file;
+			
+			size_t	end = _path.rfind('/');
+			if (end == std::string::npos)
+				return (_statusCode = "404", "");
+			directory = _path.substr(0, end + 1);
+			file = _path.substr(end + 1);
+			if (!this->checkPath(config, directory, file))
+				return ("");
+			dir = opendir(directory.c_str());
+			if (!dir)
+				return (_statusCode = "404", "");
+			while ((openDir = readdir(dir)) != nullptr)
+			{
+				std::cout << openDir->d_type << std::endl;
+				if (openDir->d_type == DT_REG && openDir->d_name == file)
+				{
+					closedir(dir);
+					return (directory + file);
+				}
+			}
+			closedir(dir);
+		}
 	}
 	return (_statusCode = "404", "");
 }
