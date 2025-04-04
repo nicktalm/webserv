@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/04 11:31:03 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/04 11:42:57 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,8 +131,6 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 		}
 	}
 }
-
-// TODO chunk request muss man schauen ob das schon funktioniert
 
 std::string Server::handlePOST(Client &client)
 {
