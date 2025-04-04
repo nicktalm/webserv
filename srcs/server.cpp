@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 19:21:13 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/04 11:31:03 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,8 +168,8 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 			response = handleGET(client);
 		else if(client.getMethod() == "POST")
 			response = handlePOST(client);
-		// else if(client.getMethod() == "DELETE")
-		// 	response = handleDELETE(&client);
+		else if(client.getMethod() == "DELETE")
+			response = handleDELETE(&client);
 		// else
 		// {
 			// response = "";
@@ -220,6 +220,11 @@ std::string	Server::handleERROR(Client &client)
 	response.content_type = "Content-Type: " + repo.getContentType(path);
 	
 	return (Server::create_response(response));
+}
+
+std::string Server::handleDELETE(Client &client)
+{
+	std::string path = client.getPath(_config);
 }
 
 // TODO man muss noch check ob die error page vorhanden ist in der config file
