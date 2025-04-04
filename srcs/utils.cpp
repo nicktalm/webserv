@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:23 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/02 11:03:01 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/03 16:52:40 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,10 @@
 
 std::map<std::string, std::string> utils::MIMETypes = {{"", ""}};
 
-std::vector<Server>	utils::parsing(int argc, char **argv)
+std::vector<std::unique_ptr<Server>>	utils::parsing(int argc, char **argv)
 {
-	std::vector<t_config>	files;
-	std::vector<Server>		servers;
+	std::vector<t_config>						files;
+	std::vector<std::unique_ptr<Server>>		servers;
 
 	if (argc > 2)
 		throw std::runtime_error("Wrong number of arguments, try [./webserv configuration_file]");
@@ -34,8 +34,8 @@ std::vector<Server>	utils::parsing(int argc, char **argv)
 		if (!check_config(config_file, files))
 			throw std::runtime_error("Error in config file");
 	}
-	for (auto config : files)
-		servers.emplace_back(config);
+	for (auto &config : files)
+		servers.emplace_back(std::make_unique<Server>(config));
 	parseMIME();
 	return (servers);
 }

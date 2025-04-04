@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 15:27:29 by lbohm             #+#    #+#             */
-/*   Updated: 2025/03/31 15:44:14 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/04 11:35:52 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,22 +18,24 @@
 typedef struct s_location
 {
 	bool autoindex = false;
+	char max_size_unit = ' ';
+	long max_size_location = 0;
 	std::string index = "";
 	std::string root = "";
-	std::vector<std::string> methods;
 	std::string path = "";
-	long max_size_location = 0;
-	char max_size_unit = ' ';
+	std::vector<std::string> methods;
+	std::multimap<std::string, std::string> error_page = {};
+	std::pair<std::string, std::string>	redir = {};
 }	t_location;
 
 typedef struct s_config
 {
+	char max_size_unit_server = ' ';
 	int port = 0;
+	long max_size_server = 0;
 	std::string server_name = "";
 	std::string index = "";
 	std::string root = "";
-	std::multimap<std::string, std::string> error_page = {};
-	long max_size_server = 0;
-	char max_size_unit_server = ' ';
 	std::vector<t_location> locations;
+	std::multimap<std::string, std::string> error_page = {};
 }	t_config;
