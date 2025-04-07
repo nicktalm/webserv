@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/04/07 16:15:15 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/07 16:36:22 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,6 @@ void add_default_location(std::__1::vector<t_config> & files)
 			defaultLocation.index = server.index; // Übernehme den Index des Serverblocks
 			defaultLocation.root = server.root;  // Übernehme den Root des Serverblocks
 			server.locations.push_back(defaultLocation);
-			std::cout << "Default location with path '/' added to server: " << server.server_name << std::endl;
 		}
 	}
 }
@@ -130,7 +129,6 @@ bool process_server_block(const std::string& line, t_config& current_config, boo
 	{
 		in_server_block = true;
 		current_config = t_config(); // Start a new server block
-		std::cout << "Entering server block" << std::endl;
 		expect_server_brace = false;
 		return true;
 	}
@@ -152,7 +150,6 @@ bool process_location_block(const std::string& line, t_location& current_locatio
 	if (expect_location_brace && line == "{")
 	{
 		in_location_block = true;
-		std::cout << "Entering location block" << std::endl;
 		expect_location_brace = false;
 		return true;
 	}
@@ -167,13 +164,11 @@ bool process_closing_brace(const std::string& line, t_config& current_config, t_
 		{
 			current_config.locations.push_back(current_location);
 			in_location_block = false;
-			std::cout << "Exiting location block" << std::endl;
 		}
 		else if (in_server_block)
 		{
 			files.push_back(current_config);
 			in_server_block = false;
-			std::cout << "Exiting server block" << std::endl;
 		}
 		return true;
 	}
@@ -216,6 +211,10 @@ void process_location_directives(const std::string& line, t_location& current_lo
 		while (iss >> error_code >> error_path)
 			current_location.error_page.emplace(error_code, error_path);
 	}
+	else
+	{
+		throw std::runtime_error("Unknown directive in location block");
+	}
 }
 
 void process_server_directives(const std::string& line, t_config& current_config)
@@ -247,6 +246,10 @@ void process_server_directives(const std::string& line, t_config& current_config
 	}
 	else if (key == "client_max_body_size")
 		process_client_max_body_size(iss, current_config.max_size_server, current_config.max_size_unit_server);
+	else
+	{
+		throw std::runtime_error("Unknown directive in server block");
+	}
 }
 
 void process_client_max_body_size(std::istringstream& iss, long& max_size, char& unit)
@@ -322,5 +325,3 @@ void debug_parsed_configurations(const std::vector<t_config>& files)
 	}
 	std::cout << "----------------------------------------\n";
 }
-
-//TODO default location
