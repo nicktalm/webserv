@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/07 17:29:48 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/07 18:05:07 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,6 @@ void	Client::parseRequest(int fd, const t_config config)
 
 	_fd = fd;
 	_statusCode = "200";
-	std::cout << "msg" << std::endl;
-	std::cout << _clientsMsg << std::endl;
 	if (tmp.size() >= 3)
 	{
 		if (tmp[0] != "GET" && tmp[0] != "POST" && tmp[0] != "DELETE")
@@ -138,7 +136,6 @@ void	Client::checkPath(const t_config config)
 	else
 		this->checkFile(lastDir, file);
 	this->_path = lastDir + file;
-	std::cout << "path = " << _path << std::endl;
 }
 
 void	Client::checkFile(const std::string &lastDir, const std::string &file)
@@ -179,26 +176,23 @@ void	Client::createAutoIndex(const std::string &lastDir)
 	}
 	while ((openDir = readdir(dir)) != nullptr)
 	{
+		struct stat info;
 		std::string name = openDir->d_name;
 
 		if (name == ".")
 			continue;
-		std::string fullPath = lastDir + "/" + name;
-		struct stat info;
+		std::string fullPath = lastDir + name;
 		if (stat(fullPath.c_str(), &info) != 0)
 			continue;
 		bool isDir = S_ISDIR(info.st_mode);
 		std::string href = name + (isDir ? "/" : "");
 		std::string displayName = isDir ? "<td class=\"directory\">" : "<td>";
-		// std::string sizeStr = isDir ? "-" : formatSize(info.st_size);
-		// std::string modTimeStr = formatTime(info.st_mtime);
-		entries << "<tr>"
-		<< "<a href=\"" << href << "\">" << href << "</a></td>"
-		// << "<td>" << sizeStr << "</td>"
-		// << "<td>" << modTimeStr << "</td>"
+		entries << "<tr>\n"
+		<< "  " << displayName
+		<< "<a href=\"" << href << "\">" << href << "</a></td>\n"
 		<< "</tr>\n";
 	}
-
+	closedir(dir);
 	size_t pos;
 
 	while ((pos = this->_autoIndexBody.find("{{path}}")) != std::string::npos)

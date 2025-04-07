@@ -34,6 +34,7 @@ class Client
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 
+		std::string	getAutoIndex(void) const {return (_autoIndexBody);};
 		std::string	getMethod(void) const {return (_method);};
 		std::string	getMsg(void) {return (_clientsMsg);};
 		std::string	getstatusCode(void) {return _statusCode;};

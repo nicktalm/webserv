@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/07 16:55:17 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/07 17:40:09 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,8 +256,13 @@ std::string	Server::handleGET(Client &client)
 		return (handleERROR(client));
 	else
 	{
-		if (!utils::readFile(path, response.body))
-			return (client.setStatusCode("404"), handleERROR(client));
+		if (!client.getAutoIndex().empty())
+			response.body = client.getAutoIndex();
+		else
+		{
+			if (!utils::readFile(path, response.body))
+				return (client.setStatusCode("404"), handleERROR(client));
+		}
 	}
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
