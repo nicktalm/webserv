@@ -43,6 +43,8 @@ std::string Response::getContentType(std::string file)
 	std::string	extention, ret;
 	size_t	end;
 
+	if (file == "autoindex")
+		return (utils::MIMETypes[".html"]);
 	end = file.find('.');
 	if (end != std::string::npos)
 	{

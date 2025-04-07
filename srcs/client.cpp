@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/03 18:40:07 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/07 14:51:10 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,16 +88,29 @@ std::string	Client::getPath(const t_config &config)
 	{
 		DIR				*dir;
 		struct dirent	*openDir;
-		std::string	directory, file;
+		std::string		fulldir, file, fdir;
+		size_t			end;
+		bool			autoindex = false;
 
-		size_t	end = _path.rfind('/');
+		end = _path.rfind('/');
 		if (end == std::string::npos)
 			return (_statusCode = "404", "");
-		directory = _path.substr(0, end + 1);
+		fulldir = _path.substr(0, end + 1);
 		file = _path.substr(end + 1);
-		if (!this->checkPath(config, directory, file))
+		if (end > 0)
+		{
+			end = _path.find('/', 1);
+			if (end == std::string::npos)
+				fdir = fulldir;
+			fdir = _path.substr(0, end + 1);
+		}
+		else
+			fdir = fulldir;
+		if (!this->checkPath(config, fdir, fulldir, file, autoindex))
 			return ("");
-		dir = opendir(directory.c_str());
+		if (file.empty() && autoindex)
+			return (_path = fulldir, "autoindex");
+		dir = opendir(fulldir.c_str());
 		if (!dir)
 			return (_statusCode = "404", "");
 		while ((openDir = readdir(dir)) != nullptr)
@@ -105,7 +118,7 @@ std::string	Client::getPath(const t_config &config)
 			if (openDir->d_type == DT_REG && openDir->d_name == file)
 			{
 				closedir(dir);
-				return (directory + file);
+				return (fulldir + file);
 			}
 		}
 		closedir(dir);
@@ -113,33 +126,37 @@ std::string	Client::getPath(const t_config &config)
 	return (_statusCode = "404", "");
 }
 
-bool	Client::checkPath(const t_config config, std::string &dir, std::string &file)
+bool	Client::checkPath(const t_config config, const std::string &fdir, std::string &dir, std::string &file, bool &autoindex)
 {
-	if (dir == "/")
+	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
 	{
-		if (file.empty())
-			file = config.index;
-		return (dir.insert(0, config.root), true);
-	}
-	else
-	{
-		for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
+		if (fdir == loc->path)
 		{
-			if (dir == loc->path)
+			if (std::find(loc->methods.begin(), loc->methods.end(), _method) != loc->methods.end())
+				return (_statusCode = "405", false);
+			if (!loc->root.empty())
+				dir.insert(0, loc->root);
+			else
+				dir.insert(0, config.root);
+			if (file.empty())
 			{
-				if (std::find(loc->methods.begin(), loc->methods.end(), _method) == loc->methods.end())
-					return (_statusCode = "405", false);
-				if (!loc->root.empty())
-					dir.insert(0, loc->root);
-				else
-					dir.insert(0, config.root);
-				if (file.empty())
+				if (!loc->index.empty())
 					file = loc->index;
-				return (true);
+				else
+					autoindex = true;
 			}
+			return (true);
 		}
 	}
 	return (_statusCode = "404", false);
 }
 
-// TODO nick muss fuer "/" eine location erstllen fuer default
+std::string	Client::getPath(void)
+{
+	return (this->_path);
+}
+
+int	Client::checkPath(const t_config config)
+{
+	
+}

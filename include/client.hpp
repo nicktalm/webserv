@@ -40,6 +40,6 @@ class Client
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		&getBytesSent(void) { return _bytesSent;};
-		bool		checkPath(const t_config config, std::string &dir, std::string &file);
-		void		setStatusCode(int code) {_statusCode = std::to_string(code);};
+		bool		checkPath(const t_config config, const std::string &fdir, std::string &dir, std::string &file, bool &autoindex);
+		void		setStatusCode(std::string code) {_statusCode = code;};
 };

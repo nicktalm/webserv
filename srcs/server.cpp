@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/04 11:55:07 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/07 13:40:43 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include <fcntl.h>
 #include <fstream>
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "../include/response.hpp"
 #include "../include/utils.hpp"
 #include "../include/server.hpp"
@@ -253,8 +255,13 @@ std::string	Server::handleGET(Client &client)
 	path = client.getPath(this->_config);
 	if (path.empty())
 		return (handleERROR(client));
-	if (utils::readFile(path, response.body) == false)
-		return (client.setStatusCode(404), handleERROR(client));
+	else if (path == "autoindex")
+		handelAutoindex(client, response.body);
+	else
+	{
+		if (!utils::readFile(path, response.body))
+			return (client.setStatusCode(404), handleERROR(client));
+	}
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
 	response.content_length = "Content-Length: " + std::to_string(response.body.size());
@@ -271,3 +278,28 @@ void	Server::disconnect(std::vector<pollfd>::iterator find)
 	close(find->fd);
 	_clientsFd.erase(find);
 }
+
+std::string	Server::handelAutoindex(Client &client, std::string &body)
+{
+	std::stringstream	entries;
+	DIR					*dir;
+	struct dirent		*openDir;
+
+	body = utils::autoindexTemplate;
+	dir = openDir(client.getPath().c_str());
+	if (!dir)
+		return (client.setStatusCode(404), "");
+	while ((openDir = readdir(dir)) != nullptr)
+	{
+		if (openDir->d_name == ".")
+			continue ;
+		
+		entries << "<tr>"
+		<<  << "<a href=\"" << href << "\">" << href << "</a></td>"
+		<< "<td>" << sizeStr << "</td>"
+		<< "<td>" << modTimeStr << "</td>"
+		<< "</tr>\n";
+	}
+}
+
+// TODO getPath() umschreiben und checkPath() extra schreiben

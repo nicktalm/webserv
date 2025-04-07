@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/03/31 15:45:54 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/07 12:22:13 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,6 +256,15 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 		}
 	}
 
+	t_location	tmp;
+
+	tmp.index = "index.html";
+	tmp.path = "/";
+	tmp.root = "http";
+	for (auto file = files.begin(); file != files.end(); ++file)
+	{
+		file->locations.push_back(tmp);
+	}
 	// Debug-Ausgabe nach dem Parsen
 	std::cout << "Parsed Configurations:\n";
 	for (size_t i = 0; i < files.size(); ++i)
