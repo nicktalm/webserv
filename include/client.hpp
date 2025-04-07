@@ -22,24 +22,29 @@ class Client
 		std::string							_protocol;
 		std::string							_body;
 		std::map<std::string, std::string>	_header;
+		std::string							_autoIndexBody;
 		std::string							_responseBuffer;
 		ssize_t								_bytesSent;
 	public:
 		Client(void);
 		~Client(void);
 		void		appendMsg(char *msg, size_t size);
-		void		parseRequest(int fd);
+		void		parseRequest(int fd, const t_config config);
+		void		createAutoIndex(const std::string &lastDir);
+		void		checkFile(const std::string &lastDir, const std::string &file);
+		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 
 		std::string	getMethod(void) const {return (_method);};
 		std::string	getMsg(void) {return (_clientsMsg);};
 		std::string	getstatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
-		std::string	getPath(const t_config &config);
+		std::string	getPath(void);
 		std::string	getBody(void) const {return _body;};
 		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		&getBytesSent(void) { return _bytesSent;};
-		bool		checkPath(const t_config config, const std::string &fdir, std::string &dir, std::string &file, bool &autoindex);
+		void		checkPath(const t_config config);
+		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex);
 		void		setStatusCode(std::string code) {_statusCode = code;};
 };

@@ -22,6 +22,7 @@ namespace utils
 	// maps all the MIME Types
 	extern std::map<std::string, std::string>	MIMETypes;
 
+	// Template for autoindex
 	const std::string autoindexTemplate = R"(
 		<!DOCTYPE html>
 		<html lang="de">

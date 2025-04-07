@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/07 13:40:43 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/07 16:55:17 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@
 #include <fstream>
 #include <unistd.h>
 #include <dirent.h>
-#include <sys/stat.h>
 #include "../include/response.hpp"
 #include "../include/utils.hpp"
 #include "../include/server.hpp"
@@ -127,7 +126,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
 			if (bytesRead < 1024)
 			{
-				_clientsInfo[pollClient->fd].parseRequest(pollClient->fd);
+				_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
 				pollClient->events = POLLOUT;
 			}
 		}
@@ -212,7 +211,7 @@ std::string	Server::handleERROR(Client &client)
 	end = errorMsg.find(':');
 	path = errorMsg.substr(end + 2);
 	if (utils::readFile(path, response.body) == false)
-		return (client.setStatusCode(404), handleERROR(client));
+		return (client.setStatusCode("404"), handleERROR(client));
 	response.start_line = "HTTP/1.1 " + client.getstatusCode() + " " + errorMsg.substr(0, end);
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
@@ -224,7 +223,7 @@ std::string	Server::handleERROR(Client &client)
 
 std::string Server::handleDELETE(Client &client)
 {
-	std::string path = client.getPath(_config);
+	std::string path = client.getPath();
 	return "useless";
 }
 
@@ -252,15 +251,13 @@ std::string	Server::handleGET(Client &client)
 	t_response response;
 	std::string	path;
 	
-	path = client.getPath(this->_config);
+	path = client.getPath();
 	if (path.empty())
 		return (handleERROR(client));
-	else if (path == "autoindex")
-		handelAutoindex(client, response.body);
 	else
 	{
 		if (!utils::readFile(path, response.body))
-			return (client.setStatusCode(404), handleERROR(client));
+			return (client.setStatusCode("404"), handleERROR(client));
 	}
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
@@ -279,27 +276,27 @@ void	Server::disconnect(std::vector<pollfd>::iterator find)
 	_clientsFd.erase(find);
 }
 
-std::string	Server::handelAutoindex(Client &client, std::string &body)
-{
-	std::stringstream	entries;
-	DIR					*dir;
-	struct dirent		*openDir;
+// std::string	Server::handelAutoindex(Client &client, std::string &body)
+// {
+// 	std::stringstream	entries;
+// 	DIR					*dir;
+// 	struct dirent		*openDir;
 
-	body = utils::autoindexTemplate;
-	dir = openDir(client.getPath().c_str());
-	if (!dir)
-		return (client.setStatusCode(404), "");
-	while ((openDir = readdir(dir)) != nullptr)
-	{
-		if (openDir->d_name == ".")
-			continue ;
+// 	body = utils::autoindexTemplate;
+// 	dir = openDir(client.getPath().c_str());
+// 	if (!dir)
+// 		return (client.setStatusCode(404), "");
+// 	while ((openDir = readdir(dir)) != nullptr)
+// 	{
+// 		if (openDir->d_name == ".")
+// 			continue ;
 		
-		entries << "<tr>"
-		<<  << "<a href=\"" << href << "\">" << href << "</a></td>"
-		<< "<td>" << sizeStr << "</td>"
-		<< "<td>" << modTimeStr << "</td>"
-		<< "</tr>\n";
-	}
-}
+// 		entries << "<tr>"
+// 		<<  << "<a href=\"" << href << "\">" << href << "</a></td>"
+// 		<< "<td>" << sizeStr << "</td>"
+// 		<< "<td>" << modTimeStr << "</td>"
+// 		<< "</tr>\n";
+// 	}
+// }
 
 // TODO getPath() umschreiben und checkPath() extra schreiben
