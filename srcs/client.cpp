@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/07 18:05:07 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/08 00:28:12 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 #include <sys/stat.h>
 #include "../include/client.hpp"
 #include "../include/utils.hpp"
@@ -28,6 +29,7 @@ Client::Client(void)
 	_protocol = "";
 	_body = "";
 	_autoIndexBody = "";
+	_reDirHeader = "";
 	_responseBuffer = "";
 	_bytesSent = 0;
 }
@@ -86,7 +88,34 @@ void	Client::parseRequest(int fd, const t_config config)
 	_clientsMsg.clear();
 }
 
-bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex)
+std::string	Client::getPath(void)
+{
+	return (this->_path);
+}
+
+void	Client::checkPath(const t_config config)
+{
+	std::string	lastDir = "", firstDir = "", file = "";
+	bool		autoIndex = false, reDir = false;
+
+	if (!this->splitPath(lastDir, firstDir, file))
+	{
+		this->_statusCode = "404";
+		return ;
+	}
+	if (!this->checkLocation(config, firstDir, lastDir, file, autoIndex, reDir))
+		return ;
+	if (!reDir)
+	{
+		if (autoIndex)
+			this->createAutoIndex(lastDir);
+		else
+			this->checkFile(lastDir, file);
+	}
+	this->_path = lastDir + file;
+}
+
+bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir)
 {
 	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
 	{
@@ -108,34 +137,19 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 						autoindex = true;
 				}
 			}
+			if (!loc->redir.first.empty() && !loc->redir.second.empty())
+			{
+				if (loc->redir.first[0] == '3')
+				{
+					_statusCode = loc->redir.first;
+					_reDirHeader = "Location: " + loc->redir.second;
+				}
+				reDir = true;
+			}
 			return (true);
 		}
 	}
 	return (_statusCode = "404", false);
-}
-
-std::string	Client::getPath(void)
-{
-	return (this->_path);
-}
-
-void	Client::checkPath(const t_config config)
-{
-	std::string	lastDir = "", firstDir = "", file = "";
-	bool		autoIndex = false;
-
-	if (!this->splitPath(lastDir, firstDir, file))
-	{
-		this->_statusCode = "404";
-		return ;
-	}
-	if (!this->checkLocation(config, firstDir, lastDir, file, autoIndex))
-		return ;
-	if (autoIndex)
-		this->createAutoIndex(lastDir);
-	else
-		this->checkFile(lastDir, file);
-	this->_path = lastDir + file;
 }
 
 void	Client::checkFile(const std::string &lastDir, const std::string &file)
@@ -176,20 +190,27 @@ void	Client::createAutoIndex(const std::string &lastDir)
 	}
 	while ((openDir = readdir(dir)) != nullptr)
 	{
-		struct stat info;
-		std::string name = openDir->d_name;
+		bool		isDir;
+		struct stat	info;
+		std::string	name = openDir->d_name;
+		std::string	href;
+		std::string	displayName;
+		std::string	fileSize;
+		std::string	dateChanged;
 
 		if (name == ".")
 			continue;
 		std::string fullPath = lastDir + name;
 		if (stat(fullPath.c_str(), &info) != 0)
 			continue;
-		bool isDir = S_ISDIR(info.st_mode);
-		std::string href = name + (isDir ? "/" : "");
-		std::string displayName = isDir ? "<td class=\"directory\">" : "<td>";
+		isDir = S_ISDIR(info.st_mode);
+		href = name + (isDir ? "/" : "");
+		displayName = isDir ? "<td class=\"directory\">" : "<td>";
+		fileSize = isDir ? "<td>-</td>" : getSize(info.st_size);
 		entries << "<tr>\n"
 		<< "  " << displayName
-		<< "<a href=\"" << href << "\">" << href << "</a></td>\n"
+		<< "<a href=\"" << href << "\">" << href << "</a></td>"
+		<< fileSize << getTime(info.st_mtime) << "\n"
 		<< "</tr>\n";
 	}
 	closedir(dir);
@@ -199,6 +220,36 @@ void	Client::createAutoIndex(const std::string &lastDir)
 		this->_autoIndexBody.replace(pos, 8, lastDir);
 	while ((pos = this->_autoIndexBody.find("{{entries}}")) != std::string::npos)
 		this->_autoIndexBody.replace(pos, 11, entries.str());
+}
+
+std::string	getTime(std::time_t time)
+{
+	std::tm				*tmp;
+	std::stringstream	ret;
+
+	tmp = std::localtime(&time);
+	ret << "<td>" << std::put_time(tmp, "%Y-%m-%d %H:%M:%S") << "</td>";
+	return (ret.str());
+}
+
+std::string	getSize(off_t &bytes)
+{
+	std::stringstream	ret;
+	double				size = bytes;
+	std::string			value = " B";
+
+	if (bytes > 1024)
+	{
+		size = static_cast<double>(bytes) / 1024.0;
+		value = " KB";
+	}
+	else if (bytes > (1024 * 1024))
+	{
+		size = static_cast<double>(bytes) / (1024.0 * 1024.0);
+		value = " MB";
+	}
+	ret << "<td>" << std::fixed << std::setprecision(1) << size << value << "</td>";
+	return (ret.str());
 }
 
 bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string &file)
@@ -218,6 +269,6 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 		firstDir = this->_path.substr(0, end + 1);
 	}
 	else
-	firstDir = fullPath;
+		firstDir = fullPath;
 	return (true);
 }

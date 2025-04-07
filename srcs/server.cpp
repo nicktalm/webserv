@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/07 17:40:09 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/08 00:35:12 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,7 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	if (client.getResponseBuffer().empty())
 	{
 		std::string response;
-		if (client.getstatusCode() != "200")
+		if (client.getstatusCode()[0] != '2' && client.getstatusCode()[0] != '3')
 			response = handleERROR(client);
 		else if (client.getMethod() == "GET")
 			response = handleGET(client);
@@ -256,7 +256,18 @@ std::string	Server::handleGET(Client &client)
 		return (handleERROR(client));
 	else
 	{
-		if (!client.getAutoIndex().empty())
+		if (!client.getReDir().empty())
+		{
+			std::stringstream	tmp;
+			response.server_name = "Servername: " + this->_config.server_name + "\r\n";
+			response.date = "Date: " + utils::getDate() + "\r\n";
+			response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n";
+			response.content_type = client.getReDir() + "\r\n";
+
+			tmp << response.start_line << response.server_name << response.date << response.content_type << response.empty_line;
+			return (tmp.str());
+		}
+		else if (!client.getAutoIndex().empty())
 			response.body = client.getAutoIndex();
 		else
 		{
