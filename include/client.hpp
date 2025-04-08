@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <ctime>
 #include "config.hpp"
 
 #define RED     "\033[31m"
