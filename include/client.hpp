@@ -57,3 +57,4 @@ class Client
 
 std::string	getSize(off_t &bytes);
 std::string	getTime(std::time_t time);
+long long	convertIntoBytes(long size, char unit);

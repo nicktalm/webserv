@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 17:18:45 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/08 18:02:34 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ void	Client::parseRequest(int fd, const t_config config)
 	size_t						endOfLine;
 
 
-	// std::cout << "Parsing request: " << _clientsMsg << std::endl;
+	std::cout << "Parsing request: " << _clientsMsg << std::endl;
 	_fd = fd;
 	_statusCode = "200";
 	if (tmp.size() >= 3)
@@ -172,10 +172,37 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 				}
 				reDir = true;
 			}
+			bool	tmp = loc->max_size_location;
+			bool	tmp2 = config.max_size_server;
+			if (tmp || tmp2)
+			{
+				long sizeRequst = 0;
+				auto size = _header.find("Content-Length");
+				if (size != _header.end())
+					sizeRequst = std::stol(size->second);
+				if (tmp)
+				{
+					if (convertIntoBytes(loc->max_size_location, loc->max_size_unit) < sizeRequst)
+						_statusCode = "413";
+				}
+				else if ()
+			}
 			return (true);
 		}
 	}
 	return (_statusCode = "404", false);
+}
+
+long long	convertIntoBytes(long size, char unit)
+{
+	long long	ret;
+	if (unit == 'K')
+		ret = size * 1024;
+	else if (unit == 'M')
+		ret = size * (1024 * 1024);
+	else
+		ret = size * (1024 * 1024 * 1024);
+	return (ret);
 }
 
 void	Client::checkFile(const std::string &lastDir, const std::string &file)
@@ -265,7 +292,7 @@ std::string	getSize(off_t &bytes)
 	double				size = bytes;
 	std::string			value = " B";
 
-	if (bytes > 1024)
+	if (bytes > 1024 && bytes < (1024 * 1024))
 	{
 		size = static_cast<double>(bytes) / 1024.0;
 		value = " KB";
