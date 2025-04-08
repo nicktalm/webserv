@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 17:16:28 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/08 17:18:45 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ void	Client::parseRequest(int fd, const t_config config)
 	size_t						endOfLine;
 
 
-	std::cout << "Parsing request: " << _clientsMsg << std::endl;
+	// std::cout << "Parsing request: " << _clientsMsg << std::endl;
 	_fd = fd;
 	_statusCode = "200";
 	if (tmp.size() >= 3)
@@ -285,7 +285,6 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 
 	if (this->getMethod() == "DELETE")
 	{
-		std::cout << "TEST" << std::endl;
 		end = _path.rfind('/');
 		fullPath = "/upload/";
 		firstDir = "/upload/";
