@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 16:26:48 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/08 19:17:59 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,6 +249,7 @@ std::string	Server::handleERROR(Client &client)
 	std::string	path;
 	size_t		end;
 
+	std::cout << "status code = " << client.getstatusCode() << std::endl;
 	errorMsg = repo.getErrorMsg(client.getstatusCode());
 	end = errorMsg.find(':');
 	path = errorMsg.substr(end + 2);

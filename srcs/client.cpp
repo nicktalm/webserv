@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 18:02:34 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/08 23:21:55 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,9 +86,10 @@ void	Client::parseRequest(int fd, const t_config config)
 			}
 			_body = parse.str().substr(parse.tellg());
 			this->checkBodySize();
-			if (!utils::listen)
-				this->checkPath(config);
-			else
+			this->checkPath(config);
+			if (_statusCode[0] != '2' && _statusCode[0] != '3')
+				utils::listen = false;
+			if (utils::listen)
 				return ;
 		}
 	}
@@ -126,6 +127,7 @@ void	Client::checkPath(const t_config config)
 
 	if (!this->splitPath(lastDir, firstDir, file))
 	{
+		std::cout << "here" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}
@@ -174,6 +176,8 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 			}
 			bool	tmp = loc->max_size_location;
 			bool	tmp2 = config.max_size_server;
+			std::cout << "tmp = " << tmp << std::endl;
+			std::cout << "tmp2 = " << tmp2 << std::endl;
 			if (tmp || tmp2)
 			{
 				long sizeRequst = 0;
@@ -182,27 +186,19 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 					sizeRequst = std::stol(size->second);
 				if (tmp)
 				{
-					if (convertIntoBytes(loc->max_size_location, loc->max_size_unit) < sizeRequst)
-						_statusCode = "413";
+					if (loc->max_size_location < sizeRequst)
+						return (_statusCode = "413", false);
 				}
-				else if ()
+				else
+				{
+					if (config.max_size_server < sizeRequst)
+						return (_statusCode = "413", false);
+				}
 			}
 			return (true);
 		}
 	}
 	return (_statusCode = "404", false);
-}
-
-long long	convertIntoBytes(long size, char unit)
-{
-	long long	ret;
-	if (unit == 'K')
-		ret = size * 1024;
-	else if (unit == 'M')
-		ret = size * (1024 * 1024);
-	else
-		ret = size * (1024 * 1024 * 1024);
-	return (ret);
 }
 
 void	Client::checkFile(const std::string &lastDir, const std::string &file)
@@ -251,6 +247,7 @@ void	Client::createAutoIndex(const std::string &lastDir)
 		std::string	displayName;
 		std::string	fileSize;
 		std::string	dateChanged;
+		std::string	button;
 
 		if (name == ".")
 			continue;
@@ -261,10 +258,12 @@ void	Client::createAutoIndex(const std::string &lastDir)
 		href = name + (isDir ? "/" : "");
 		displayName = isDir ? "<td class=\"directory\">" : "<td>";
 		fileSize = isDir ? "<td>-</td>" : getSize(info.st_size);
+		button = isDir ? "<td></td>" : "<td><button onclick=\"deleteFile('" + name + "', this)\">Delete</button></td>";
 		entries << "<tr>\n"
 		<< "  " << displayName
 		<< "<a href=\"" << href << "\">" << href << "</a></td>"
-		<< fileSize << getTime(info.st_mtime) << "\n"
+		<< fileSize << getTime(info.st_mtime)
+		<< button << "\n"
 		<< "</tr>\n";
 	}
 	closedir(dir);
@@ -274,6 +273,8 @@ void	Client::createAutoIndex(const std::string &lastDir)
 		this->_autoIndexBody.replace(pos, 8, lastDir);
 	while ((pos = this->_autoIndexBody.find("{{entries}}")) != std::string::npos)
 		this->_autoIndexBody.replace(pos, 11, entries.str());
+	// while ((pos = this->_autoIndexBody.find("{{delete}}")) != std::string::npos)
+	// 	this->_autoIndexBody.replace(pos, 10, lastDir);
 }
 
 std::string	getTime(std::time_t time)
@@ -310,29 +311,29 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 {
 	size_t	end;
 
-	if (this->getMethod() == "DELETE")
+	// if (this->getMethod() == "DELETE")
+	// {
+	// 	end = _path.rfind('/');
+	// 	fullPath = "/upload/";
+	// 	firstDir = "/upload/";
+	// 	file = _path.substr(end + 1);
+	// }
+	// else
+	// {
+	end = this->_path.rfind('/');
+	if (end == std::string::npos)
+		return (false);
+	fullPath = this->_path.substr(0, end + 1);
+	file = this->_path.substr(end + 1);
+	if (end > 0)
 	{
-		end = _path.rfind('/');
-		fullPath = "/upload/";
-		firstDir = "/upload/";
-		file = _path.substr(end + 1);
+		end = this->_path.find('/', 1);
+		if (end == std::string::npos)
+			firstDir = fullPath;
+		firstDir = this->_path.substr(0, end + 1);
 	}
 	else
-	{
-		end = this->_path.rfind('/');
-		if (end == std::string::npos)
-			return (false);
-		fullPath = this->_path.substr(0, end + 1);
-		file = this->_path.substr(end + 1);
-		if (end > 0)
-		{
-			end = this->_path.find('/', 1);
-			if (end == std::string::npos)
-				firstDir = fullPath;
-			firstDir = this->_path.substr(0, end + 1);
-		}
-		else
-			firstDir = fullPath;
-	}
+		firstDir = fullPath;
+	// }
 	return (true);
 }

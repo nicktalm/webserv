@@ -68,14 +68,36 @@ namespace utils
 		  <h1>Index of {{path}}</h1>
 		  <table>
 			<tr>
-			  <th>Name</th>
-			  <th>Größe</th>
-			  <th>Zuletzt geändert</th>
+			  <th>name</th>
+			  <th>size</th>
+			  <th>last change</th>
+			  <th>delete</th>
 			</tr>
 			{{entries}}
 		  </table>
 		
 		</body>
+		<script>
+			function deleteFile(filename, button) {
+				fetch(`${filename}`, {
+				method: 'DELETE'
+				})
+				.then(response => {
+				if (response.ok) {
+					// Entfernt die Zeile aus der Tabelle
+					const row = button.closest("tr");
+					row.remove();
+					alert(`Deleted: ${filename}`);
+				} else {
+					alert(`Failed to delete ${filename}`);
+				}
+				})
+				.catch(error => {
+				console.error("Error:", error);
+				alert("Something went wrong.");
+				});
+			}
+		</script>
 		</html>
 		)";
 }
