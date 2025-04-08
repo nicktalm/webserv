@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 15:46:20 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/08 16:26:48 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,15 +136,8 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 
 std::string Server::handlePOST(Client &client)
 {
-	
-	client.setBody("------WebKitFormBoundarytcq1BPKiqWfAfGRD\r\n"
-				   "Content-Disposition: form-data; name=\"files[]\"; filename=\"NICK.txt\"\r\n"
-				   "Content-Type: text/plain\r\n"
-				   "\r\n"
-				   "Hallo mein Name ist Nick\n"
-				   "------WebKitFormBoundarytcq1BPKiqWfAfGRD--");
 	std::cout << GREEN << "POST request" << RESET << std::endl;
-	std::cout << "Body: " << client.getBody() << std::endl;
+	// std::cout << "Body: " << client.getBody() << std::endl;
 	std::string uploadDir = "./http/upload/";
 	std::string body = client.getBody();
 
@@ -226,7 +219,6 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 		client.setResponseBuffer(response);
 		client.getBytesSent() = 0;
 	}
-	// std::cout << "TEST" << std::endl;
 
 	std::string response = client.getResponseBuffer();
 	size_t bytesSent = client.getBytesSent();

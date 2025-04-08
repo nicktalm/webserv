@@ -48,7 +48,7 @@ class Client
 		std::string setBody(const std::string &body) {_body = body; return _body;};
 		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
-		std::string	getResponseBuffer(void) {return _responseBuffer;};
+		std::string	&getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		&getBytesSent(void) { return _bytesSent;};
 		void		checkPath(const t_config config);
 		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 15:46:06 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/08 16:09:31 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -201,6 +201,7 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 		}
 	}
 	std::cout << "Testcheckfile2" << std::endl;
+	std::cout << RED << "File doesn't exist" << RESET << std::endl;
 	this->_statusCode = "404";
 	closedir(dir);
 }
