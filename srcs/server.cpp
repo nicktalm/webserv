@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/04 11:55:07 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/08 15:18:29 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,23 +134,72 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 
 std::string Server::handlePOST(Client &client)
 {
-	std::cout << PURPLE << "PostRequest" << RESET << std::endl;
+	
+	client.setBody("------WebKitFormBoundarytcq1BPKiqWfAfGRD\r\n"
+				   "Content-Disposition: form-data; name=\"files[]\"; filename=\"NICK.txt\"\r\n"
+				   "Content-Type: text/plain\r\n"
+				   "\r\n"
+				   "Hallo mein Name ist Nick\n"
+				   "------WebKitFormBoundarytcq1BPKiqWfAfGRD--");
+	std::cout << GREEN << "POST request" << RESET << std::endl;
+	std::cout << "Body: " << client.getBody() << std::endl;
+	std::string uploadDir = "./http/upload/";
+	std::string body = client.getBody();
 
-	std::cout << "Received Body: " << client.getBody() << std::endl;
+	// Extract filename from the body
+	size_t filenamePos = body.find("filename=\"");
+	if (filenamePos == std::string::npos)
+	{
+		std::cerr << RED << "Filename not found in request body" << RESET << std::endl;
+		return "HTTP/1.1 400 Bad Request\r\n\r\n";
+	}
+	filenamePos += 10; // Move past 'filename="'
+	size_t filenameEnd = body.find("\"", filenamePos);
+	if (filenameEnd == std::string::npos)
+	{
+		std::cerr << RED << "Invalid filename format" << RESET << std::endl;
+		return "HTTP/1.1 400 Bad Request\r\n\r\n";
+	}
+	std::string filename = body.substr(filenamePos, filenameEnd - filenamePos);
 
-	// Beispiel: Speichere den Body in einer Datei
-	std::ofstream outFile("uploaded_data.txt");
-	if (!outFile)
+	// Extract file content from the body
+	size_t contentStart = body.find("\r\n\r\n", filenameEnd);
+	if (contentStart == std::string::npos)
+	{
+		std::cerr << RED << "File content not found in request body" << RESET << std::endl;
+		return "HTTP/1.1 400 Bad Request\r\n\r\n";
+	}
+	contentStart += 4; // Move past the "\r\n\r\n"
+	size_t contentEnd = body.find("------WebKitFormBoundary", contentStart);
+	if (contentEnd == std::string::npos)
+	{
+		std::cerr << RED << "Invalid file content format" << RESET << std::endl;
+		return "HTTP/1.1 400 Bad Request\r\n\r\n";
+	}
+	std::string fileContent = body.substr(contentStart, contentEnd - contentStart);
+
+	// Write content to the file
+	std::string filePath = uploadDir + filename;
+	std::ofstream outFile(filePath);
+	if (outFile.is_open())
+	{
+		outFile << fileContent;
+		outFile.close();
+		std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
+	}
+	else
+	{
+		std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+	}
 
-	outFile << client.getBody(); // Schreibe den Body in die Datei
-	outFile.close();
-
-	// Generiere eine Antwort
-	std::string response = "HTTP/1.1 201 Created\r\n";
+	std::string response = "HTTP/1.1 200 OK\r\n";
+	response += "Content-Type: text/plain\r\n";
 	response += "Content-Length: 0\r\n";
-	response += "Connection: close\r\n\r\n";
-
+	response += "Connection: close\r\n";
+	response += "\r\n";
+	response += "File uploaded successfully\r\n";
+	
 	return response;
 }
 

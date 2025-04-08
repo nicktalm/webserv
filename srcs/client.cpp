@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/03 18:40:07 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/07 16:59:14 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,8 @@ void	Client::parseRequest(int fd)
 	std::string					line;
 	size_t						endOfLine;
 
+
+	std::cout << "Parsing request: " << _clientsMsg << std::endl;
 	_fd = fd;
 	_statusCode = "200";
 	if (tmp.size() >= 3)
