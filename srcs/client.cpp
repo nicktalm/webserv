@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2025/04/08 12:59:36 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/08 15:21:58 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,17 +92,6 @@ void	Client::parseRequest(int fd, const t_config config)
 
 std::string	Client::getPath(void)
 {
-	// if (this->getMethod() == "DELETE")
-	// 	{
-	// 		std::string delete_path = "/http/upload";
-	// 		size_t	end = _path.rfind('/');
-	// 		while (_path[end])
-	// 		{
-	// 			delete_path += _path[end];
-	// 			end++;
-	// 		}
-	// 		return (delete_path);
-	// 	}
 	return (this->_path);
 }
 
@@ -113,7 +102,6 @@ void	Client::checkPath(const t_config config)
 
 	if (!this->splitPath(lastDir, firstDir, file))
 	{
-		std::cout << "Testsplit" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}
@@ -164,7 +152,6 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 			return (true);
 		}
 	}
-	std::cout << "Test1" << std::endl;
 	return (_statusCode = "404", false);
 }
 
@@ -176,7 +163,6 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 	dir = opendir(lastDir.c_str());
 	if (!dir)
 	{
-		std::cout << "Testcheckfile" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}
@@ -188,7 +174,6 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 			return ;
 		}
 	}
-	std::cout << "Testcheckfile2" << std::endl;
 	this->_statusCode = "404";
 	closedir(dir);
 }
@@ -203,7 +188,6 @@ void	Client::createAutoIndex(const std::string &lastDir)
 	dir = opendir(lastDir.c_str());
 	if (!dir)
 	{
-		std::cout << "Testautoindex" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}

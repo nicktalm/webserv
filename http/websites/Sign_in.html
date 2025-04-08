@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dateien hochladen</title>
+    <title>Sign-in</title>
     <script>
-        function sendDelete(){
-            file = document.getElementById('input1').value;
-            const url = `${window.location.href}/${encodeURIComponent(file)}`;
-            fetch(url, {method: 'DELETE'})
-            alert(url);
-            return url;
-        }
+        function createSession(){
+			let username = document.getElementById('username').value;
+			let password = document.getElementById('password').value;
+			alert(username)
+			alert(password)
+		}
     </script>
     <style>
         body {
@@ -23,6 +22,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            background: linear-gradient(135deg, #fdea40, #ff6347);
         }
         .container {
             background: #fff;
@@ -32,6 +32,8 @@
             text-align: center;
             width: 100%;
             max-width: 400px;
+            background: linear-gradient(135deg, #ff6347, #fdea40);
+            border: 2px solid black;
         }
         h1 {
             margin-bottom: 20px;
@@ -41,7 +43,7 @@
             margin: 10px 0;
         }
         button {
-            background-color: #007BFF;
+            background-color: #000000;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -64,22 +66,30 @@
         input:hover {
             background-color: hsl(0, 0%, 82%);
         }
-        #input1{
-            margin: 10px;
+        input{
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dateien hochladen</h1>
-        <form action="http://localhost:8080/test1/upload_success.html" method="POST" enctype="multipart/form-data">
-            <input type="file" name="files[]" multiple required>
-            <br><br>
-            <button type="submit">Hochladen</button>
-        </form>
-        <h1>Delete uploaded data</h1>
-        <input id='input1' placeholder="Please enter content to delete">
-        <button onclick=sendDelete()>Choose data to delete</button>
+		<form action="/cgi-bin/signup.py" method="POST">
+			<h1>Register/Sign-in</h1>
+			<br></br>
+			<label for="username">Username: </label>
+			<input type="text" id="username" name="username" required placeholder="Enter username">
+			<br></br>
+			<label for="password">Password: </label>
+			<input type="password" id="password" name="password" required placeholder="Enter password">
+			<br></br>
+			<button type="submit">Sign Up</button>
+		</form>
+		<!-- <h4>Username</h4>
+        <input id='username' placeholder="Please enter username">
+		<h4>Password</h4>
+        <input id='password' placeholder="Please enter password">
+		<br></br>
+        <button id='sign-in-btn' onclick=createSession()>Sign in</button> -->
     </div>
 </body>
 </html>
