@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2025/04/08 11:28:10 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/08 12:59:36 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,18 +92,17 @@ void	Client::parseRequest(int fd, const t_config config)
 
 std::string	Client::getPath(void)
 {
-	if (this->getMethod() == "DELETE")
-		{
-			std::cout << "TEST" << std::endl;
-			std::string delete_path = "/http/upload";
-			size_t	end = _path.rfind('/');
-			while (_path[end])
-			{
-				delete_path += _path[end];
-				end++;
-			}
-			return (delete_path);
-		}
+	// if (this->getMethod() == "DELETE")
+	// 	{
+	// 		std::string delete_path = "/http/upload";
+	// 		size_t	end = _path.rfind('/');
+	// 		while (_path[end])
+	// 		{
+	// 			delete_path += _path[end];
+	// 			end++;
+	// 		}
+	// 		return (delete_path);
+	// 	}
 	return (this->_path);
 }
 
@@ -114,6 +113,7 @@ void	Client::checkPath(const t_config config)
 
 	if (!this->splitPath(lastDir, firstDir, file))
 	{
+		std::cout << "Testsplit" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}
@@ -127,6 +127,7 @@ void	Client::checkPath(const t_config config)
 			this->checkFile(lastDir, file);
 	}
 	this->_path = lastDir + file;
+	std::cout << _path << std::endl;
 }
 
 bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir)
@@ -163,6 +164,7 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 			return (true);
 		}
 	}
+	std::cout << "Test1" << std::endl;
 	return (_statusCode = "404", false);
 }
 
@@ -174,6 +176,7 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 	dir = opendir(lastDir.c_str());
 	if (!dir)
 	{
+		std::cout << "Testcheckfile" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}
@@ -185,6 +188,7 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 			return ;
 		}
 	}
+	std::cout << "Testcheckfile2" << std::endl;
 	this->_statusCode = "404";
 	closedir(dir);
 }
@@ -199,6 +203,7 @@ void	Client::createAutoIndex(const std::string &lastDir)
 	dir = opendir(lastDir.c_str());
 	if (!dir)
 	{
+		std::cout << "Testautoindex" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}
@@ -270,19 +275,30 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 {
 	size_t	end;
 
-	end = this->_path.rfind('/');
-	if (end == std::string::npos)
-		return (false);
-	fullPath = this->_path.substr(0, end + 1);
-	file = this->_path.substr(end + 1);
-	if (end > 0)
+	if (this->getMethod() == "DELETE")
 	{
-		end = this->_path.find('/', 1);
-		if (end == std::string::npos)
-			firstDir = fullPath;
-		firstDir = this->_path.substr(0, end + 1);
+		std::cout << "TEST" << std::endl;
+		end = _path.rfind('/');
+		fullPath = "/upload/";
+		firstDir = "/upload/";
+		file = _path.substr(end + 1);
 	}
 	else
-		firstDir = fullPath;
+	{
+		end = this->_path.rfind('/');
+		if (end == std::string::npos)
+			return (false);
+		fullPath = this->_path.substr(0, end + 1);
+		file = this->_path.substr(end + 1);
+		if (end > 0)
+		{
+			end = this->_path.find('/', 1);
+			if (end == std::string::npos)
+				firstDir = fullPath;
+			firstDir = this->_path.substr(0, end + 1);
+		}
+		else
+			firstDir = fullPath;
+	}
 	return (true);
 }
