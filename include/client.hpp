@@ -35,6 +35,7 @@ class Client
 		void		createAutoIndex(const std::string &lastDir);
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
+		void		checkBodySize(void);
 
 		std::string	getAutoIndex(void) const {return (_autoIndexBody);};
 		std::string	getReDir(void) const {return (_reDirHeader);};
@@ -44,9 +45,10 @@ class Client
 		std::string	getProtocol(void) const {return _protocol;};
 		std::string	getPath(void);
 		std::string	getBody(void) const {return _body;};
+		std::string setBody(const std::string &body) {_body = body; return _body;};
 		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
-		std::string	getResponseBuffer(void) {return _responseBuffer;};
+		std::string	&getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		&getBytesSent(void) { return _bytesSent;};
 		void		checkPath(const t_config config);
 		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir);

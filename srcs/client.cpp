@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2025/04/08 15:21:58 by lglauch          ###   ########.fr       */
+/*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
+/*   Updated: 2025/04/08 17:16:28 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #include <sys/stat.h>
 #include "../include/client.hpp"
 #include "../include/utils.hpp"
+
+bool	utils::listen = false;
 
 Client::Client(void)
 {
@@ -52,9 +54,10 @@ void	Client::parseRequest(int fd, const t_config config)
 	std::string					line;
 	size_t						endOfLine;
 
+
+	std::cout << "Parsing request: " << _clientsMsg << std::endl;
 	_fd = fd;
 	_statusCode = "200";
-	std::cout << _clientsMsg << std::endl;
 	if (tmp.size() >= 3)
 	{
 		if (tmp[0] != "GET" && tmp[0] != "POST" && tmp[0] != "DELETE")
@@ -81,13 +84,34 @@ void	Client::parseRequest(int fd, const t_config config)
 				}
 				_header.insert(std::pair<std::string, std::string>(line.substr(0, endOfLine), line.substr(endOfLine + 1)));
 			}
-			parse >> _body;
-			this->checkPath(config);
+			_body = parse.str().substr(parse.tellg());
+			this->checkBodySize();
+			if (!utils::listen)
+				this->checkPath(config);
+			else
+				return ;
 		}
 	}
 	else
 		_statusCode = "400";
 	_clientsMsg.clear();
+}
+
+void	Client::checkBodySize(void)
+{
+	std::map<std::string, std::string>::iterator	tmp;
+	size_t											size;
+
+	tmp = _header.find("Content-Length");
+	if (tmp != _header.end())
+	{
+		size = std::stoll(tmp->second);
+		std::cout << "size = " << size << "body size" << _body.size() << std::endl;
+		if (_body.size() == size)
+			utils::listen = false;
+		else
+			utils::listen = true;
+	}
 }
 
 std::string	Client::getPath(void)
@@ -115,7 +139,6 @@ void	Client::checkPath(const t_config config)
 			this->checkFile(lastDir, file);
 	}
 	this->_path = lastDir + file;
-	std::cout << _path << std::endl;
 }
 
 bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir)
@@ -174,6 +197,7 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 			return ;
 		}
 	}
+	std::cout << RED << "File doesn't exist" << RESET << std::endl;
 	this->_statusCode = "404";
 	closedir(dir);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/04/07 17:34:44 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/08 15:46:14 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,6 +203,10 @@ void process_location_directives(const std::string& line, t_location& current_lo
 	{
 		std::string status_code, redirect_url;
 		iss >> status_code >> redirect_url;
+		if (status_code.length() != 3 || status_code[0] != '3' || !std::isdigit(status_code[1]) || !std::isdigit(status_code[2]))
+		{
+			throw std::runtime_error("Error: Invalid status code in return directive. Must be a 3xx code.");
+		}
 		current_location.redir = std::make_pair(status_code, redirect_url);
 	}
 	else if (key == "error_page")

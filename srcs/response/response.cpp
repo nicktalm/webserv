@@ -1,5 +1,6 @@
 #include "../../include/response.hpp"
 #include "../../include/utils.hpp"
+#include <iostream>
 
 std::string Response::getErrorMsg(std::string error)
 {
