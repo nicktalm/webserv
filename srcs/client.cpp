@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 00:28:12 by lucabohn         ###   ########.fr       */
+/*   Created: Invalid date        by                   #+#    #+#             */
+/*   Updated: 2025/04/08 11:28:10 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include <dirent.h>
 #include <unistd.h>
@@ -53,6 +54,7 @@ void	Client::parseRequest(int fd, const t_config config)
 
 	_fd = fd;
 	_statusCode = "200";
+	std::cout << _clientsMsg << std::endl;
 	if (tmp.size() >= 3)
 	{
 		if (tmp[0] != "GET" && tmp[0] != "POST" && tmp[0] != "DELETE")
@@ -90,6 +92,18 @@ void	Client::parseRequest(int fd, const t_config config)
 
 std::string	Client::getPath(void)
 {
+	if (this->getMethod() == "DELETE")
+		{
+			std::cout << "TEST" << std::endl;
+			std::string delete_path = "/http/upload";
+			size_t	end = _path.rfind('/');
+			while (_path[end])
+			{
+				delete_path += _path[end];
+				end++;
+			}
+			return (delete_path);
+		}
 	return (this->_path);
 }
 
@@ -121,7 +135,7 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 	{
 		if (firstDir == loc->path)
 		{
-			if (std::find(loc->methods.begin(), loc->methods.end(), _method) != loc->methods.end())
+			if (loc->methods.size() > 0 && std::find(loc->methods.begin(), loc->methods.end(), _method) != loc->methods.end())
 				return (_statusCode = "405", false);
 			if (!loc->root.empty())
 				lastDir.insert(0, loc->root);

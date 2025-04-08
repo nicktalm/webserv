@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 15:27:29 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/04 12:33:39 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/08 11:23:35 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ typedef struct s_location
 	std::string index = "";
 	std::string root = "";
 	std::string path = "";
-	std::vector<std::string> methods;
+	std::vector<std::string> methods = std::vector<std::string>();
 	std::multimap<std::string, std::string> error_page = {};
 	std::pair<std::string, std::string>	redir = {};
 }	t_location;

@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dateien hochladen</title>
+    <script>
+        function sendDelete(){
+            file = document.getElementById('input1').value;
+            const url = `${window.location.href}/${encodeURIComponent(file)}`;
+            fetch(url, {method: 'DELETE'})
+            alert(url);
+            return url;
+        }
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,6 +52,21 @@
         button:hover {
             background-color: #0056b3;
         }
+        input{
+            background-color: hsl(0, 0%, 62%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input:hover {
+            background-color: hsl(0, 0%, 82%);
+        }
+        #input1{
+            margin: 10px;
+        }
     </style>
 </head>
 <body>
@@ -53,6 +77,9 @@
             <br><br>
             <button type="submit">Hochladen</button>
         </form>
+        <h1>Delete uploaded data</h1>
+        <input id='input1' placeholder="Please enter content to delete">
+        <button onclick=sendDelete()>Choose data to delete</button>
     </div>
 </body>
 </html>

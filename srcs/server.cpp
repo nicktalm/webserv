@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 00:35:12 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/08 11:13:23 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,8 +167,8 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 			response = handleGET(client);
 		else if(client.getMethod() == "POST")
 			response = handlePOST(client);
-		// else if(client.getMethod() == "DELETE")
-		// 	response = handleDELETE(client);
+		else if(client.getMethod() == "DELETE")
+			response = handleDELETE(client);
 		// else
 		// {
 			// response = "";
@@ -223,8 +223,16 @@ std::string	Server::handleERROR(Client &client)
 
 std::string Server::handleDELETE(Client &client)
 {
+	std::cout << PURPLE << "DELETE method" << RESET << std::endl;
 	std::string path = client.getPath();
-	return "useless";
+	if (std::remove(path.c_str()) != 0)
+	{
+		std::cout << RED << "File doesn't exist" << RESET << std::endl;
+		return (handleERROR(client));
+	}
+	else
+		std::cout << GREEN << "DELETE successful" << RESET << std::endl;
+	return "HTTP/1.1 204 No Content\r\n\r\n";
 }
 
 // TODO man muss noch check ob die error page vorhanden ist in der config file
