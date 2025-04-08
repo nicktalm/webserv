@@ -35,6 +35,7 @@ class Client
 		void		createAutoIndex(const std::string &lastDir);
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
+		void		checkBodySize(void);
 
 		std::string	getAutoIndex(void) const {return (_autoIndexBody);};
 		std::string	getReDir(void) const {return (_reDirHeader);};

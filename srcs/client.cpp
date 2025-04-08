@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2025/04/08 12:59:36 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/08 15:40:28 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #include <sys/stat.h>
 #include "../include/client.hpp"
 #include "../include/utils.hpp"
+
+bool	utils::listen = false;
 
 Client::Client(void)
 {
@@ -54,7 +56,6 @@ void	Client::parseRequest(int fd, const t_config config)
 
 	_fd = fd;
 	_statusCode = "200";
-	std::cout << _clientsMsg << std::endl;
 	if (tmp.size() >= 3)
 	{
 		if (tmp[0] != "GET" && tmp[0] != "POST" && tmp[0] != "DELETE")
@@ -81,8 +82,12 @@ void	Client::parseRequest(int fd, const t_config config)
 				}
 				_header.insert(std::pair<std::string, std::string>(line.substr(0, endOfLine), line.substr(endOfLine + 1)));
 			}
-			parse >> _body;
-			this->checkPath(config);
+			_body = parse.str().substr(parse.tellg());
+			this->checkBodySize();
+			if (!utils::listen)
+				this->checkPath(config);
+			else
+				return ;
 		}
 	}
 	else
@@ -90,19 +95,25 @@ void	Client::parseRequest(int fd, const t_config config)
 	_clientsMsg.clear();
 }
 
+void	Client::checkBodySize(void)
+{
+	std::map<std::string, std::string>::iterator	tmp;
+	size_t											size;
+
+	tmp = _header.find("Content-Length");
+	if (tmp != _header.end())
+	{
+		size = std::stoll(tmp->second);
+		std::cout << "size = " << size << "body size" << _body.size() << std::endl;
+		if (_body.size() == size)
+			utils::listen = false;
+		else
+			utils::listen = true;
+	}
+}
+
 std::string	Client::getPath(void)
 {
-	// if (this->getMethod() == "DELETE")
-	// 	{
-	// 		std::string delete_path = "/http/upload";
-	// 		size_t	end = _path.rfind('/');
-	// 		while (_path[end])
-	// 		{
-	// 			delete_path += _path[end];
-	// 			end++;
-	// 		}
-	// 		return (delete_path);
-	// 	}
 	return (this->_path);
 }
 
@@ -127,7 +138,6 @@ void	Client::checkPath(const t_config config)
 			this->checkFile(lastDir, file);
 	}
 	this->_path = lastDir + file;
-	std::cout << _path << std::endl;
 }
 
 bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir)
