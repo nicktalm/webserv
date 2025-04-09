@@ -15,6 +15,8 @@
 class Client
 {
 	private:
+		bool								_listen;
+		bool								_headerReady;
 		int									_fd;
 		std::string							_clientsMsg;
 		std::string							_statusCode;
@@ -36,11 +38,13 @@ class Client
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 		void		checkBodySize(void);
+		void		headerParsing(int fd, const t_config config, std::stringstream &parse);
 
 		std::string	getAutoIndex(void) const {return (_autoIndexBody);};
+		bool		getListen(void) const {return (_listen);};
 		std::string	getReDir(void) const {return (_reDirHeader);};
 		std::string	getMethod(void) const {return (_method);};
-		std::string	getMsg(void) {return (_clientsMsg);};
+		std::string	&getMsg(void) {return (_clientsMsg);};
 		std::string	getstatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
 		std::string	getPath(void);
@@ -57,4 +61,3 @@ class Client
 
 std::string	getSize(off_t &bytes);
 std::string	getTime(std::time_t time);
-long long	convertIntoBytes(long size, char unit);

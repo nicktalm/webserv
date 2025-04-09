@@ -7,7 +7,7 @@
     <script>
         function sendDelete(){
             file = document.getElementById('input1').value;
-            const url = `${window.location.href}/${encodeURIComponent(file)}`;
+            const url = `/upload/${encodeURIComponent(file)}`;
             fetch(url, {method: 'DELETE'})
             // alert(url);
             return url;

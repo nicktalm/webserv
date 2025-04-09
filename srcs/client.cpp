@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 23:21:55 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/09 16:35:56 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,10 @@
 #include "../include/client.hpp"
 #include "../include/utils.hpp"
 
-bool	utils::listen = false;
-
 Client::Client(void)
 {
+	_listen = false;
+	_headerReady = false;
 	_fd = 0;
 	_clientsMsg = "";
 	_statusCode = "";
@@ -35,6 +35,7 @@ Client::Client(void)
 	_reDirHeader = "";
 	_responseBuffer = "";
 	_bytesSent = 0;
+	_header = {};
 }
 
 Client::~Client(void)
@@ -49,13 +50,27 @@ void	Client::appendMsg(char *msg, size_t size)
 
 void	Client::parseRequest(int fd, const t_config config)
 {
-	std::stringstream			parse(_clientsMsg);
+	std::stringstream	parse(_clientsMsg);
+
+	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
+		this->headerParsing(fd, config, parse);
+	if (_headerReady)
+		_body.append(parse.str().substr(parse.tellg()));
+	this->checkBodySize();
+	if (_statusCode[0] != '2' && _statusCode[0] != '3')
+		this->_listen = false;
+	if (_headerReady)
+		_clientsMsg.clear();
+}
+
+void	Client::headerParsing(int fd, const t_config config, std::stringstream &parse)
+{
 	std::vector<std::string>	tmp((std::istream_iterator<std::string>(parse)), std::istream_iterator<std::string>());
 	std::string					line;
 	size_t						endOfLine;
 
-
-	std::cout << "Parsing request: " << _clientsMsg << std::endl;
+	if (!_method.empty())
+		return ;
 	_fd = fd;
 	_statusCode = "200";
 	if (tmp.size() >= 3)
@@ -84,18 +99,12 @@ void	Client::parseRequest(int fd, const t_config config)
 				}
 				_header.insert(std::pair<std::string, std::string>(line.substr(0, endOfLine), line.substr(endOfLine + 1)));
 			}
-			_body = parse.str().substr(parse.tellg());
-			this->checkBodySize();
-			this->checkPath(config);
-			if (_statusCode[0] != '2' && _statusCode[0] != '3')
-				utils::listen = false;
-			if (utils::listen)
-				return ;
 		}
+		this->checkPath(config);
 	}
 	else
-		_statusCode = "400";
-	_clientsMsg.clear();
+		_statusCode = "404";
+	_headerReady = true;
 }
 
 void	Client::checkBodySize(void)
@@ -107,11 +116,10 @@ void	Client::checkBodySize(void)
 	if (tmp != _header.end())
 	{
 		size = std::stoll(tmp->second);
-		std::cout << "size = " << size << "body size" << _body.size() << std::endl;
 		if (_body.size() == size)
-			utils::listen = false;
+			this->_listen = false;
 		else
-			utils::listen = true;
+			this->_listen = true;
 	}
 }
 
@@ -127,7 +135,6 @@ void	Client::checkPath(const t_config config)
 
 	if (!this->splitPath(lastDir, firstDir, file))
 	{
-		std::cout << "here" << std::endl;
 		this->_statusCode = "404";
 		return ;
 	}
@@ -176,8 +183,6 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 			}
 			bool	tmp = loc->max_size_location;
 			bool	tmp2 = config.max_size_server;
-			std::cout << "tmp = " << tmp << std::endl;
-			std::cout << "tmp2 = " << tmp2 << std::endl;
 			if (tmp || tmp2)
 			{
 				long sizeRequst = 0;
@@ -273,8 +278,6 @@ void	Client::createAutoIndex(const std::string &lastDir)
 		this->_autoIndexBody.replace(pos, 8, lastDir);
 	while ((pos = this->_autoIndexBody.find("{{entries}}")) != std::string::npos)
 		this->_autoIndexBody.replace(pos, 11, entries.str());
-	// while ((pos = this->_autoIndexBody.find("{{delete}}")) != std::string::npos)
-	// 	this->_autoIndexBody.replace(pos, 10, lastDir);
 }
 
 std::string	getTime(std::time_t time)
@@ -311,15 +314,6 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 {
 	size_t	end;
 
-	// if (this->getMethod() == "DELETE")
-	// {
-	// 	end = _path.rfind('/');
-	// 	fullPath = "/upload/";
-	// 	firstDir = "/upload/";
-	// 	file = _path.substr(end + 1);
-	// }
-	// else
-	// {
 	end = this->_path.rfind('/');
 	if (end == std::string::npos)
 		return (false);
@@ -334,6 +328,5 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 	}
 	else
 		firstDir = fullPath;
-	// }
 	return (true);
 }
