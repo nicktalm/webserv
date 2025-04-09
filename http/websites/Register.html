@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign-in</title>
+    <title>Registration</title>
+    <script>
+        function createSession(){
+			let username = document.getElementById('username').value;
+			let password = document.getElementById('password').value;
+			alert(username)
+			alert(password)
+		}
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -65,8 +73,8 @@
 </head>
 <body>
     <div class="container">
-		<form action="/cgi-bin/signup.py" method="POST">
-			<h1>Sign-in</h1>
+		<form action="/cgi-bin/register.py" method="POST">
+			<h1>Please Register</h1>
 			<br></br>
 			<label for="username">Username: </label>
 			<input type="text" id="username" name="username" required placeholder="Enter username">

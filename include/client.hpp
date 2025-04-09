@@ -44,7 +44,7 @@ class Client
 		std::string	getstatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
 		std::string	getPath(void);
-		std::string	getBody(void) const {return _body;};
+		std::string	&getBody(void) {return _body;};
 		std::string setBody(const std::string &body) {_body = body; return _body;};
 		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};

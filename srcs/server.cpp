@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 16:26:48 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/09 16:41:32 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <netdb.h>
 #include <sstream>
+#include <string>
 #include <fcntl.h>
 #include <fstream>
 #include <unistd.h>
@@ -134,9 +135,101 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 	}
 }
 
+std::map<std::string, std::string> parseBody(std::string &body)
+{
+	std::map<std::string, std::string> parsedBody;
+	std::istringstream stream(body);
+	std::string pair;
+
+	while (std::getline(stream, pair, '&'))
+	{
+		size_t pos = pair.find('=');
+		if (pos  != std::string::npos)
+		{
+			std::string key = pair.substr(0, pos);
+			std::string value = pair.substr(pos + 1);
+			parsedBody[key] = value;
+		}
+	}
+	return parsedBody;
+}
+
+std::string execute_cgi(Client &client, std::string path)
+{
+	int inputPipe[2], outputPipe[2];
+	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1)
+	{
+		std::cerr << RED << "Pipe creation failed" << RESET << std::endl;
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+	}
+
+	pid_t pid = fork();
+	if (pid == -1)
+	{
+		close(inputPipe[0]);
+		close(inputPipe[1]);
+		close(outputPipe[0]);
+		close(outputPipe[1]);
+		std::cerr << RED << "Fork failed" << RESET << std::endl;
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+	}
+	else if (pid == 0) // Child process
+	{
+		dup2(inputPipe[0], STDIN_FILENO);
+		close(inputPipe[0]);
+		close(inputPipe[1]);
+		close(outputPipe[0]);
+		dup2(outputPipe[1], STDOUT_FILENO);
+		close(outputPipe[1]);
+		std::map<std::string, std::string> params = parseBody(client.getBody());
+
+		char *const args[] = {
+			const_cast<char *>(path.c_str()),
+			const_cast<char *>(params["username"].c_str()), 
+			const_cast<char *>(params["password"].c_str()),
+			nullptr};
+		if (execve(path.c_str(), args, nullptr) == -1)
+		{
+			std::cerr << RED << "Execve failed" << RESET << std::endl;
+			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+		}
+	}
+	else // Parent process
+	{
+		close(inputPipe[0]);
+		write(inputPipe[1], client.getBody().c_str(), client.getBody().size());
+		close(inputPipe[1]);
+
+		close(outputPipe[1]);
+		char buffer[1024];
+		std::string cgiOutput;
+		ssize_t bytesRead;
+		while ((bytesRead = read(outputPipe[0], buffer, sizeof(buffer))) > 0)
+		{
+			cgiOutput.append(buffer, bytesRead);
+		}
+		close(outputPipe[0]);
+
+		int status;
+		waitpid(pid, &status, 0);
+
+		return cgiOutput;
+	}
+	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+}
+
 std::string Server::handlePOST(Client &client)
 {
 	std::cout << GREEN << "POST request" << RESET << std::endl;
+	std::cout << client.getPath() << std::endl;
+	if (client.getPath() == "http/cgi-bin/register.py")
+	{
+		return (execute_cgi(client, "./http/cgi-bin/register.py"));
+	}
+	if (client.getPath() == "http/cgi-bin/signup.py")
+	{
+		return (execute_cgi(client, "./http/cgi-bin/signup.py"));
+	}
 	// std::cout << "Body: " << client.getBody() << std::endl;
 	std::string uploadDir = "./http/upload/";
 	std::string body = client.getBody();
@@ -197,6 +290,7 @@ std::string Server::handlePOST(Client &client)
 	
 	return response;
 }
+
 
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
