@@ -46,6 +46,7 @@ class Client
 		std::string	getPath(void);
 		std::string	getBody(void) const {return _body;};
 		std::string setBody(const std::string &body) {_body = body; return _body;};
+		std::map<std::string, std::string>	getHeader(void) const {return _header;};
 		int			getFd(void) const {return _fd;};
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		std::string	&getResponseBuffer(void) {return _responseBuffer;};

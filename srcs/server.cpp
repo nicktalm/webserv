@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/08 16:26:48 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/09 17:55:04 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,54 +140,87 @@ std::string Server::handlePOST(Client &client)
 	// std::cout << "Body: " << client.getBody() << std::endl;
 	std::string uploadDir = "./http/upload/";
 	std::string body = client.getBody();
+	std::cout << BLUE << client.getHeader()["Content-Type"] << RESET << std::endl;
 
-	// Extract filename from the body
-	size_t filenamePos = body.find("filename=\"");
-	if (filenamePos == std::string::npos)
+	std::string content_type;
+	if (client.getHeader()["Content-Type"].find("multipart/form-data") != std::string::npos)
+		content_type = "multipart/form-data";
+	else if (client.getHeader()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
+		content_type = "application/x-www-form-urlencoded";
+	else if (client.getHeader()["Content-Type"].find("text/plain") != std::string::npos)
+		content_type = "text/plain";
+	else
 	{
-		std::cerr << RED << "Filename not found in request body" << RESET << std::endl;
-		return "HTTP/1.1 400 Bad Request\r\n\r\n";
+		std::cerr << RED << "Unsupported Content-Type" << RESET << std::endl;
+		return "HTTP/1.1 415 Unsupported Media Type\r\n\r\n";
 	}
-	filenamePos += 10; // Move past 'filename="'
-	size_t filenameEnd = body.find("\"", filenamePos);
-	if (filenameEnd == std::string::npos)
-	{
-		std::cerr << RED << "Invalid filename format" << RESET << std::endl;
-		return "HTTP/1.1 400 Bad Request\r\n\r\n";
-	}
-	std::string filename = body.substr(filenamePos, filenameEnd - filenamePos);
 
-	// Extract file content from the body
-	size_t contentStart = body.find("\r\n\r\n", filenameEnd);
-	if (contentStart == std::string::npos)
+	if (content_type == "multipart/form-data")
 	{
-		std::cerr << RED << "File content not found in request body" << RESET << std::endl;
-		return "HTTP/1.1 400 Bad Request\r\n\r\n";
-	}
-	contentStart += 4; // Move past the "\r\n\r\n"
-	size_t contentEnd = body.find("------WebKitFormBoundary", contentStart);
-	if (contentEnd == std::string::npos)
-	{
-		std::cerr << RED << "Invalid file content format" << RESET << std::endl;
-		return "HTTP/1.1 400 Bad Request\r\n\r\n";
-	}
-	std::string fileContent = body.substr(contentStart, contentEnd - contentStart);
+		std::string boundary = client.getHeader()["Content-Type"];
+		boundary = boundary.substr(boundary.find("boundary=") + 9);
+		std::cout << RED << "Boundary: " << boundary << RESET << std::endl;
+		// Extract filename from the body
+		size_t filenamePos = body.find("filename=\"");
+		if (filenamePos == std::string::npos)
+		{
+			std::cerr << RED << "Filename not found in request body" << RESET << std::endl;
+			return "HTTP/1.1 400 Bad Request\r\n\r\n";
+		}
+		filenamePos += 10; // Move past 'filename="'
+		size_t filenameEnd = body.find("\"", filenamePos);
+		if (filenameEnd == std::string::npos)
+		{
+			std::cerr << RED << "Invalid filename format" << RESET << std::endl;
+			return "HTTP/1.1 400 Bad Request\r\n\r\n";
+		}
+		std::string filename = body.substr(filenamePos, filenameEnd - filenamePos);
+			// Extract file content from the body
+		size_t contentStart = body.find("\r\n\r\n", filenameEnd);
+		if (contentStart == std::string::npos)
+		{
+			std::cerr << RED << "File content not found in request body" << RESET << std::endl;
+			return "HTTP/1.1 400 Bad Request\r\n\r\n";
+		}
+		contentStart += 4; // Move past the "\r\n\r\n"
+		size_t contentEnd = body.find("------WebKitFormBoundary", contentStart);
+		if (contentEnd == std::string::npos)
+		{
+			std::cerr << RED << "Invalid file content format" << RESET << std::endl;
+			return "HTTP/1.1 400 Bad Request\r\n\r\n";
+		}
+		std::string fileContent = body.substr(contentStart, contentEnd - contentStart);
+	
+		// Write content to the file
+		std::string filePath = uploadDir + filename;
+		std::cout << YELLOW << body << RESET << std::endl;
 
-	// Write content to the file
-	std::string filePath = uploadDir + filename;
-	std::ofstream outFile(filePath);
-	if (outFile.is_open())
+		std::ofstream outFile(filePath);
+		if (outFile.is_open())
+		{
+			outFile << fileContent;
+			outFile.close();
+			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
+		}
+		else
+		{
+			std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
+			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+		}
+	}
+	else if (content_type == "application/x-www-form-urlencoded")
 	{
-		outFile << fileContent;
-		outFile.close();
-		std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
+		std::cout << YELLOW << "TESTTESTTEST application/x-www-form-urlencoded" << RESET << std::endl;
+	}
+	else if (content_type == "text/plain")
+	{
+		std::cout << YELLOW << "TESTTESTTEST atext/plain" << RESET << std::endl;
 	}
 	else
 	{
-		std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
-		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+		std::cerr << RED << "Unsupported Content-Type" << RESET << std::endl;
+		return "HTTP/1.1 415 Unsupported Media Type\r\n\r\n";
 	}
-
 	std::string response = "HTTP/1.1 200 OK\r\n";
 	response += "Content-Type: text/plain\r\n";
 	response += "Content-Length: 0\r\n";
