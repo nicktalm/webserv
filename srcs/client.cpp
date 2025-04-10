@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/10 12:54:27 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/10 22:57:04 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,16 +53,19 @@ void	Client::parseRequest(int fd, const t_config config)
 	std::stringstream	parse(_clientsMsg);
 
 	std::cout << "msg" << std::endl;
-	std::cout << _clientsMsg << std::endl;
+	std::cout << parse.str().substr(parse.tellg()) << std::endl;
 	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
 		this->headerParsing(fd, config, parse);
-	this->checkBodySize(parse);
+	std::cout << "parse after" << std::endl;
+	std::cout << parse.str().substr(parse.tellg()) << std::endl;
 	if (_headerReady)
 		_body.append(parse.str().substr(parse.tellg()));
+	this->checkBodySize(parse);
 	if (_statusCode[0] != '2' && _statusCode[0] != '3')
 		this->_listen = false;
 	if (_headerReady)
 		_clientsMsg.clear();
+	std::cout << "listen = " << this->_listen << std::endl;
 }
 
 void	Client::headerParsing(int fd, const t_config config, std::stringstream &parse)
@@ -113,6 +116,7 @@ void	Client::checkBodySize(std::stringstream &parse)
 {
 	std::map<std::string, std::string>::iterator	tmp;
 	size_t											size = 0;
+	size_t											sizeBody = 0;
 
 	if ((tmp = _header.find("Transfer-Encoding")) != _header.end())
 	{
@@ -124,12 +128,17 @@ void	Client::checkBodySize(std::stringstream &parse)
 
 				std::getline(parse, line);
 				size = std::stoll(line);
+				sizeBody = parse.str().substr(parse.tellg()).size();
 			}
 		}
 	}
 	else if ((tmp = _header.find("Content-Length")) != _header.end())
+	{
 		size = std::stoll(tmp->second);
-	if (parse.str().size() == size)
+		sizeBody = _body.size();
+	}
+	std::cout << "sizeBody = " << sizeBody << " size = " << size << std::endl;
+	if (sizeBody == size)
 		this->_listen = false;
 	else
 		this->_listen = true;
