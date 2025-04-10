@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/09 16:41:32 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/10 10:26:47 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,12 +125,11 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 		else
 		{
 			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
-			if (bytesRead < 1024)
-			{
-				_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
-				if (!utils::listen)
-					pollClient->events = POLLOUT;
-			}
+			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
+			if (!_clientsInfo[pollClient->fd].getListen())
+				pollClient->events = POLLOUT;
+			if (_clientsInfo[pollClient->fd].getstatusCode()[0] != '2' && _clientsInfo[pollClient->fd].getstatusCode()[0] != '3')
+				this->response(_clientsInfo[pollClient->fd], pollClient);
 		}
 	}
 }
@@ -343,6 +342,7 @@ std::string	Server::handleERROR(Client &client)
 	std::string	path;
 	size_t		end;
 
+	std::cout << "status code = " << client.getstatusCode() << std::endl;
 	errorMsg = repo.getErrorMsg(client.getstatusCode());
 	end = errorMsg.find(':');
 	path = errorMsg.substr(end + 2);
@@ -435,28 +435,3 @@ void	Server::disconnect(std::vector<pollfd>::iterator find)
 	close(find->fd);
 	_clientsFd.erase(find);
 }
-
-// std::string	Server::handelAutoindex(Client &client, std::string &body)
-// {
-// 	std::stringstream	entries;
-// 	DIR					*dir;
-// 	struct dirent		*openDir;
-
-// 	body = utils::autoindexTemplate;
-// 	dir = openDir(client.getPath().c_str());
-// 	if (!dir)
-// 		return (client.setStatusCode(404), "");
-// 	while ((openDir = readdir(dir)) != nullptr)
-// 	{
-// 		if (openDir->d_name == ".")
-// 			continue ;
-		
-// 		entries << "<tr>"
-// 		<<  << "<a href=\"" << href << "\">" << href << "</a></td>"
-// 		<< "<td>" << sizeStr << "</td>"
-// 		<< "<td>" << modTimeStr << "</td>"
-// 		<< "</tr>\n";
-// 	}
-// }
-
-// TODO getPath() umschreiben und checkPath() extra schreiben
