@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/09 17:55:04 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/10 12:53:18 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 std::string Server::handlePOST(Client &client)
 {
 	std::cout << GREEN << "POST request" << RESET << std::endl;
-	// std::cout << "Body: " << client.getBody() << std::endl;
+	std::cout << "Body: " << client.getBody() << std::endl;
 	std::string uploadDir = "./http/upload/";
 	std::string body = client.getBody();
 	std::cout << BLUE << client.getHeader()["Content-Type"] << RESET << std::endl;
@@ -210,11 +210,43 @@ std::string Server::handlePOST(Client &client)
 	}
 	else if (content_type == "application/x-www-form-urlencoded")
 	{
-		std::cout << YELLOW << "TESTTESTTEST application/x-www-form-urlencoded" << RESET << std::endl;
+		static int counter = 1;
+		std::string filename = "test_x-www-form-urlencoded_" + std::to_string(counter) + ".txt";
+		counter++;
+		std::string filePath = uploadDir + filename;
+		std::ofstream outFile(filePath);
+		if (outFile.is_open())
+		{
+			outFile << "Content-Type: " << content_type << "\r\n";
+			outFile << body;
+			outFile.close();
+			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
+		}
+		else
+		{
+			std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
+			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+		}
 	}
 	else if (content_type == "text/plain")
 	{
-		std::cout << YELLOW << "TESTTESTTEST atext/plain" << RESET << std::endl;
+		static int counter = 1;
+		std::string filename = "test_text_plain_" + std::to_string(counter) + ".txt";
+		counter++;
+		std::string filePath = uploadDir + filename;
+		std::ofstream outFile(filePath);
+		if (outFile.is_open())
+		{
+			outFile << "Content-Type: " << content_type << "\r\n";
+			outFile << body;
+			outFile.close();
+			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
+		}
+		else
+		{
+			std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
+			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+		}
 	}
 	else
 	{
@@ -222,7 +254,7 @@ std::string Server::handlePOST(Client &client)
 		return "HTTP/1.1 415 Unsupported Media Type\r\n\r\n";
 	}
 	std::string response = "HTTP/1.1 200 OK\r\n";
-	response += "Content-Type: text/plain\r\n";
+	response += "Content-Type: text/plain\r\n"; //a ANPASSEN
 	response += "Content-Length: 0\r\n";
 	response += "Connection: close\r\n";
 	response += "\r\n";
