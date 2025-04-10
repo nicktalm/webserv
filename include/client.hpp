@@ -37,7 +37,7 @@ class Client
 		void		createAutoIndex(const std::string &lastDir);
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
-		void		checkBodySize(void);
+		void		checkBodySize(std::stringstream &parse);
 		void		headerParsing(int fd, const t_config config, std::stringstream &parse);
 
 		std::string	getAutoIndex(void) const {return (_autoIndexBody);};

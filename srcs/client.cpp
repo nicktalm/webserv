@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/09 16:35:56 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/10 12:54:27 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,11 +52,13 @@ void	Client::parseRequest(int fd, const t_config config)
 {
 	std::stringstream	parse(_clientsMsg);
 
+	std::cout << "msg" << std::endl;
+	std::cout << _clientsMsg << std::endl;
 	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
 		this->headerParsing(fd, config, parse);
+	this->checkBodySize(parse);
 	if (_headerReady)
 		_body.append(parse.str().substr(parse.tellg()));
-	this->checkBodySize();
 	if (_statusCode[0] != '2' && _statusCode[0] != '3')
 		this->_listen = false;
 	if (_headerReady)
@@ -107,20 +109,30 @@ void	Client::headerParsing(int fd, const t_config config, std::stringstream &par
 	_headerReady = true;
 }
 
-void	Client::checkBodySize(void)
+void	Client::checkBodySize(std::stringstream &parse)
 {
 	std::map<std::string, std::string>::iterator	tmp;
-	size_t											size;
+	size_t											size = 0;
 
-	tmp = _header.find("Content-Length");
-	if (tmp != _header.end())
+	if ((tmp = _header.find("Transfer-Encoding")) != _header.end())
 	{
-		size = std::stoll(tmp->second);
-		if (_body.size() == size)
-			this->_listen = false;
-		else
-			this->_listen = true;
+		if (tmp->second.find("chunked") != std::string::npos)
+		{
+			if (!parse.str().empty())
+			{
+				std::string			line;
+
+				std::getline(parse, line);
+				size = std::stoll(line);
+			}
+		}
 	}
+	else if ((tmp = _header.find("Content-Length")) != _header.end())
+		size = std::stoll(tmp->second);
+	if (parse.str().size() == size)
+		this->_listen = false;
+	else
+		this->_listen = true;
 }
 
 std::string	Client::getPath(void)
