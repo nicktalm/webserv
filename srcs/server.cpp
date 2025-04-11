@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/10 10:26:47 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/11 12:23:47 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 
 void Server::request(std::vector<pollfd>::iterator pollClient)
 {
-	char		tmp[1024];
+	char				tmp[1024];
 
 	if (pollClient->fd == _socketFd) //new client trys to connect
 	{
@@ -124,8 +124,11 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			IO_Error(bytesRead, pollClient);
 		else
 		{
-			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
-			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
+			std::cout << "bytesRead = " << bytesRead << std::endl;
+			tmp[bytesRead] = '\0';
+			_clientsInfo[pollClient->fd].getTestMsg() << tmp;
+			// _clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
+			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config, _clientsInfo[pollClient->fd].getTestMsg());
 			if (!_clientsInfo[pollClient->fd].getListen())
 				pollClient->events = POLLOUT;
 			if (_clientsInfo[pollClient->fd].getstatusCode()[0] != '2' && _clientsInfo[pollClient->fd].getstatusCode()[0] != '3')
