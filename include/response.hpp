@@ -16,7 +16,24 @@ typedef struct s_response
 
 class Response
 {
+	protected:
+		std::string	_responseBuffer;
+		ssize_t		_bytesSend;
+		bool		_responseReady;
 	public:
+		Response(void);
+		virtual ~Response(void);
+
+		// getter
+		std::string	getResponseBuffer(void) {return _responseBuffer;};
+		ssize_t		getBytesSend(void) { return _bytesSend;};
+		bool		getReady(void) {return (_responseReady);};
+
+		// setter
+
+		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
+		void		setBytesSend(const size_t bytes) {_bytesSend = bytes;};
+		void		setReady(const bool ready) {_responseReady = ready;};
 	//GET request
 		std::string	getContentType(std::string file);
 		std::string	getStartLine(std::string protocol, std::string status_code);

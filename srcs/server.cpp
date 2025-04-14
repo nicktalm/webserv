@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/14 14:54:26 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/14 17:29:50 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -356,24 +356,20 @@ std::string Server::handlePOST(Client &client)
 	return response;
 }
 
-#include <stdio.h>
-
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
 	std::cout << BLUE << "Response" << RESET << std::endl;
-	if (client.getResponseBuffer().empty())
+	if (client.getBytesSend() != client.getResponseBuffer().size())
 	{
-		std::string response;
-		if (client.getstatusCode()[0] == '4' || client.getstatusCode()[0] == '5')
-			response = handleERROR(client);
+		if (client.getStatusCode()[0] == '4' || client.getStatusCode()[0] == '5')
+			client.setResponseBuffer(handleERROR(client));
 		else if (client.getMethod() == "GET")
-			response = handleGET(client);
-		else if(client.getMethod() == "POST")
-			response = handlePOST(client);
-		else if(client.getMethod() == "DELETE")
-			response = handleDELETE(client);
-		client.setResponseBuffer(response);
-		client.getBytesSent() = 0;
+			client.setResponseBuffer(handleGET(client));
+		// else if(response.getMethod() == "POST")
+		// 	response = handlePOST(client);
+		// else if(response.getMethod() == "DELETE")
+		// 	response = handleDELETE(client);
+		client.setBytesSend(0);
 	}
 
 	std::string response = client.getResponseBuffer();

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <ctime>
 #include "config.hpp"
+#include "response.hpp"
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -13,7 +14,7 @@
 #define YELLOW  "\033[33m"
 #define RESET   "\033[0m"
 
-class Client
+class Client : public Response
 {
 	private:
 		bool								_listen;
@@ -28,8 +29,6 @@ class Client
 		std::map<std::string, std::string>	_header;
 		std::string							_autoIndexBody;
 		std::string							_reDirHeader;
-		std::string							_responseBuffer;
-		ssize_t								_bytesSent;
 	public:
 		Client(void);
 		~Client(void);
@@ -47,16 +46,13 @@ class Client
 		std::string	getReDir(void) const {return (_reDirHeader);};
 		std::string	getMethod(void) const {return (_method);};
 		std::string	&getMsg(void) {return (_clientsMsg);};
-		std::string	getstatusCode(void) {return _statusCode;};
+		std::string	getStatusCode(void) {return _statusCode;};
 		std::string	getProtocol(void) const {return _protocol;};
 		std::string	getPath(void);
 		std::string	&getBody(void) {return _body;};
 		std::string setBody(const std::string &body) {_body = body; return _body;};
 		std::map<std::string, std::string>	getHeader(void) const {return _header;};
 		int			getFd(void) const {return _fd;};
-		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
-		std::string	&getResponseBuffer(void) {return _responseBuffer;};
-		ssize_t		&getBytesSent(void) { return _bytesSent;};
 		void		checkPath(const t_config config);
 		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir);
 		void		setStatusCode(std::string code) {_statusCode = code;};

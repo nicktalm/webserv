@@ -2,6 +2,16 @@
 #include "../../include/utils.hpp"
 #include <iostream>
 
+Response::Response(void)
+{
+	_client = client;
+	_responseBuffer = "";
+	_responseReady = false;
+	_bytesSend = 0;
+}
+
+Response::~Response(void) {}
+
 std::string Response::getErrorMsg(std::string error)
 {
 	const std::map<std::string, std::string> errorMessages = {
