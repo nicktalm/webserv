@@ -20,7 +20,6 @@ class Client
 		bool								_headerReady;
 		int									_fd;
 		std::string							_clientsMsg;
-		std::stringstream					_testMsg;
 		std::string							_statusCode;
 		std::string							_method;
 		std::string							_path;
@@ -35,15 +34,13 @@ class Client
 		Client(void);
 		~Client(void);
 		void		appendMsg(char *msg, size_t size);
-		void		parseRequest(int fd, const t_config config, std::stringstream &msg);
+		void		parseRequest(int fd, const t_config config);
 		void		createAutoIndex(const std::string &lastDir);
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
-		void		checkBodySize(std::stringstream &parse);
-		void		headerParsing(int fd, const t_config config, std::stringstream &parse);
+		void		checkBodySize(void);
 
-		std::stringstream	&getTestMsg(void) {return (_testMsg);};
-		void				headerParsing(int fd, const t_config config);
+		void		headerParsing(int fd, const t_config config);
 
 		std::string	getAutoIndex(void) const {return (_autoIndexBody);};
 		bool		getListen(void) const {return (_listen);};
