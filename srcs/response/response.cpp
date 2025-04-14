@@ -18,6 +18,7 @@ std::string Response::getErrorMsg(std::string error)
 		{"405", "Method Not Allowed: error_pages/405.html"},
 		{"408", "Request Timeout"},
 		{"413", "Payload Too Large: error_pages/413.html"},
+		{"431", "Request Header Fields Too Large: error_pages/431.html"},
 		{"500", "Internal Server Error"},
 		{"501", "Not Implemented"},
 		{"502", "Bad Gateway"},

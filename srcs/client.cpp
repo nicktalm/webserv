@@ -6,14 +6,13 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/09 16:35:56 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/14 12:22:06 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include <dirent.h>
 #include <unistd.h>
-#include <sstream>
 #include <iostream>
 #include <iomanip>
 #include <sys/stat.h>
@@ -50,27 +49,29 @@ void	Client::appendMsg(char *msg, size_t size)
 
 void	Client::parseRequest(int fd, const t_config config)
 {
-	std::stringstream	parse(_clientsMsg);
-
 	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
-		this->headerParsing(fd, config, parse);
-	if (_headerReady)
-		_body.append(parse.str().substr(parse.tellg()));
+		this->headerParsing(fd, config);
+	else if (_headerReady)
+		_body.append(_clientsMsg);
+	else
+	{
+		_fd = fd;
+		_statusCode = "431";
+	}
 	this->checkBodySize();
-	if (_statusCode[0] != '2' && _statusCode[0] != '3')
-		this->_listen = false;
-	if (_headerReady)
+	if (_headerReady || _statusCode[0] == '4' || _statusCode[0] == '5')
 		_clientsMsg.clear();
+	if (_statusCode[0] == '4' || _statusCode[0] == '5')
+		this->_listen = false;
 }
 
-void	Client::headerParsing(int fd, const t_config config, std::stringstream &parse)
+void	Client::headerParsing(int fd, const t_config config)
 {
-	std::vector<std::string>	tmp((std::istream_iterator<std::string>(parse)), std::istream_iterator<std::string>());
+	std::stringstream			input(_clientsMsg);
+	std::vector<std::string>	tmp((std::istream_iterator<std::string>(input)), std::istream_iterator<std::string>());
 	std::string					line;
 	size_t						endOfLine;
 
-	if (!_method.empty())
-		return ;
 	_fd = fd;
 	_statusCode = "200";
 	if (tmp.size() >= 3)
@@ -84,10 +85,10 @@ void	Client::headerParsing(int fd, const t_config config, std::stringstream &par
 			_method = tmp[0];
 			_path = tmp[1];
 			_protocol = tmp[2];
-			parse.clear();
-			parse.seekg(0);
-			std::getline(parse, line);
-			while (std::getline(parse, line))
+			input.clear();
+			input.seekg(0);
+			std::getline(input, line);
+			while (std::getline(input, line))
 			{
 				if (line == "\r" || line.empty())
 					break ;
@@ -100,6 +101,7 @@ void	Client::headerParsing(int fd, const t_config config, std::stringstream &par
 				_header.insert(std::pair<std::string, std::string>(line.substr(0, endOfLine), line.substr(endOfLine + 1)));
 			}
 		}
+		_body.append(input.str().substr(input.tellg()));
 		this->checkPath(config);
 	}
 	else
@@ -110,17 +112,18 @@ void	Client::headerParsing(int fd, const t_config config, std::stringstream &par
 void	Client::checkBodySize(void)
 {
 	std::map<std::string, std::string>::iterator	tmp;
-	size_t											size;
+	size_t											size = 0;
+	size_t											sizeBody = 0;
 
-	tmp = _header.find("Content-Length");
-	if (tmp != _header.end())
+	if ((tmp = _header.find("Content-Length")) != _header.end())
 	{
 		size = std::stoll(tmp->second);
-		if (_body.size() == size)
-			this->_listen = false;
-		else
-			this->_listen = true;
+		sizeBody = _body.size();
 	}
+	if (sizeBody == size)
+		this->_listen = false;
+	else
+		this->_listen = true;
 }
 
 std::string	Client::getPath(void)

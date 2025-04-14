@@ -43,7 +43,6 @@ class Server
 		std::string 	handleDELETE(Client &client);
 		std::string 	create_response(const t_response &response);
 		void			disconnect(std::vector<pollfd>::iterator find);
-		std::string		handelAutoindex(Client &client);
 };
 
 // checks the config file and returns a vector of t_config

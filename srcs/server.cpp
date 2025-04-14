@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/10 12:57:43 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/14 14:54:26 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 
 void Server::request(std::vector<pollfd>::iterator pollClient)
 {
-	char		tmp[1024];
+	char				tmp[8192];
 
 	if (pollClient->fd == _socketFd) //new client trys to connect
 	{
@@ -124,12 +124,13 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			IO_Error(bytesRead, pollClient);
 		else
 		{
+			tmp[bytesRead] = '\0';
 			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
 			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
-			if (!_clientsInfo[pollClient->fd].getListen())
-				pollClient->events = POLLOUT;
-			if (_clientsInfo[pollClient->fd].getstatusCode()[0] != '2' && _clientsInfo[pollClient->fd].getstatusCode()[0] != '3')
+			if (_clientsInfo[pollClient->fd].getstatusCode()[0] == '4' || _clientsInfo[pollClient->fd].getstatusCode()[0] == '5')
 				this->response(_clientsInfo[pollClient->fd], pollClient);
+			else if (!_clientsInfo[pollClient->fd].getListen())
+				pollClient->events = POLLOUT;
 		}
 	}
 }
@@ -355,6 +356,7 @@ std::string Server::handlePOST(Client &client)
 	return response;
 }
 
+#include <stdio.h>
 
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
@@ -362,7 +364,7 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	if (client.getResponseBuffer().empty())
 	{
 		std::string response;
-		if (client.getstatusCode()[0] != '2' && client.getstatusCode()[0] != '3')
+		if (client.getstatusCode()[0] == '4' || client.getstatusCode()[0] == '5')
 			response = handleERROR(client);
 		else if (client.getMethod() == "GET")
 			response = handleGET(client);
@@ -370,10 +372,6 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 			response = handlePOST(client);
 		else if(client.getMethod() == "DELETE")
 			response = handleDELETE(client);
-		// else
-		// {
-			// response = "";
-		// }
 		client.setResponseBuffer(response);
 		client.getBytesSent() = 0;
 	}
@@ -407,7 +405,6 @@ std::string	Server::handleERROR(Client &client)
 	std::string	path;
 	size_t		end;
 
-	std::cout << "status code = " << client.getstatusCode() << std::endl;
 	errorMsg = repo.getErrorMsg(client.getstatusCode());
 	end = errorMsg.find(':');
 	path = errorMsg.substr(end + 2);

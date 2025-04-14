@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <sstream>
 #include <ctime>
 #include "config.hpp"
 
@@ -38,7 +39,8 @@ class Client
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 		void		checkBodySize(void);
-		void		headerParsing(int fd, const t_config config, std::stringstream &parse);
+
+		void		headerParsing(int fd, const t_config config);
 
 		std::string	getAutoIndex(void) const {return (_autoIndexBody);};
 		bool		getListen(void) const {return (_listen);};
