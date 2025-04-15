@@ -4,9 +4,9 @@
 
 Response::Response(void)
 {
-	_client = client;
 	_responseBuffer = "";
 	_responseReady = false;
+	_autoindex = false;
 	_bytesSend = 0;
 }
 

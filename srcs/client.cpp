@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/14 12:22:06 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/15 15:13:50 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,7 @@ Client::Client(void)
 	_path = "";
 	_protocol = "";
 	_body = "";
-	_autoIndexBody = "";
 	_reDirHeader = "";
-	_responseBuffer = "";
-	_bytesSent = 0;
 	_header = {};
 }
 
@@ -134,26 +131,21 @@ std::string	Client::getPath(void)
 void	Client::checkPath(const t_config config)
 {
 	std::string	lastDir = "", firstDir = "", file = "";
-	bool		autoIndex = false, reDir = false;
+	bool		reDir = false;
 
 	if (!this->splitPath(lastDir, firstDir, file))
 	{
 		this->_statusCode = "404";
 		return ;
 	}
-	if (!this->checkLocation(config, firstDir, lastDir, file, autoIndex, reDir))
+	if (!this->checkLocation(config, firstDir, lastDir, file, reDir))
 		return ;
-	if (!reDir)
-	{
-		if (autoIndex)
-			this->createAutoIndex(lastDir);
-		else
+	if (!reDir && !this->_autoindex)
 			this->checkFile(lastDir, file);
-	}
 	this->_path = lastDir + file;
 }
 
-bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir)
+bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &reDir)
 {
 	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
 	{
@@ -172,7 +164,7 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 				else
 				{
 					if (loc->autoindex)
-						autoindex = true;
+						this->_autoindex = true;
 				}
 			}
 			if (!loc->redir.first.empty() && !loc->redir.second.empty())

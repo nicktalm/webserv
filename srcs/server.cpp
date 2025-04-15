@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/14 17:29:50 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/15 15:11:59 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -359,7 +359,7 @@ std::string Server::handlePOST(Client &client)
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
 	std::cout << BLUE << "Response" << RESET << std::endl;
-	if (client.getBytesSend() != client.getResponseBuffer().size())
+	if (client.getBytesSend() == client.getResponseBuffer().size())
 	{
 		if (client.getStatusCode()[0] == '4' || client.getStatusCode()[0] == '5')
 			client.setResponseBuffer(handleERROR(client));
@@ -377,41 +377,39 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	ssize_t remaining = response.size() - bytesSent;
 
 	// Send as much as possible
-	ssize_t sent = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
-	if (sent <= 0)
+	ssize_t send = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
+	if (send <= 0)
 	{
 		std::cout << RED << "send failed" << RESET << std::endl;
-		close(client.getFd());
+		this->disconnect(pollClient);
 		return;
 	}
-	bytesSent += sent;
+	client.setBytesSend(bytesSent + send);
 	// nachdem alles gesendet wurde, client aud POLLIN einstellen
-	if (bytesSent >= response.size())
-	{
+	if (client.getBytesSent() == response.size())
+		client.setResponseBuffer(""); // Clear buffer fuer naechstes mal
+	if (client.getReady() && client.getBytesSent() == response.size())
 		pollClient->events = POLLIN;
-		client.getResponseBuffer().clear(); // Clear buffer fuer naechstes mal
-	}
 }
 
 std::string	Server::handleERROR(Client &client)
 {
-	Response	repo;
 	t_response	response;
 	std::string	errorMsg;
 	std::string	path;
 	size_t		end;
 
-	errorMsg = repo.getErrorMsg(client.getstatusCode());
+	errorMsg = client.getErrorMsg(client.getstatusCode());
 	end = errorMsg.find(':');
 	path = errorMsg.substr(end + 2);
-	if (utils::readFile(path, response.body) == false)
+	if (!utils::readFile(path, response.body))
 		return (client.setStatusCode("404"), handleERROR(client));
 	response.start_line = "HTTP/1.1 " + client.getstatusCode() + " " + errorMsg.substr(0, end);
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
 	response.content_length = "Content-Length: " + std::to_string(response.body.size());
-	response.content_type = "Content-Type: " + repo.getContentType(path);
-	
+	response.content_type = "Content-Type: " + client.getContentType(path);
+	client.setReady(true);
 	return (Server::create_response(response));
 }
 
@@ -449,39 +447,35 @@ std::string Server::create_response(const t_response &response)
 std::string	Server::handleGET(Client &client)
 {
 	std::cout << PURPLE << "GetRequest" << RESET << std::endl;
-	Response responseInstance;
 	t_response response;
 	std::string	path;
 	
 	path = client.getPath();
-	if (path.empty())
-		return (handleERROR(client));
+	if (!client.getReDir().empty())
+	{
+		std::stringstream	tmp;
+		response.server_name = "Servername: " + this->_config.server_name + "\r\n";
+		response.date = "Date: " + utils::getDate() + "\r\n";
+		response.start_line = client.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n";
+		response.content_type = client.getReDir() + "\r\n";
+
+		tmp << response.start_line << response.server_name << response.date << response.content_type << response.empty_line;
+		return (tmp.str());
+	}
+	else if (!client.getAutoIndex())
+	{
+		
+	}
 	else
 	{
-		if (!client.getReDir().empty())
-		{
-			std::stringstream	tmp;
-			response.server_name = "Servername: " + this->_config.server_name + "\r\n";
-			response.date = "Date: " + utils::getDate() + "\r\n";
-			response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n";
-			response.content_type = client.getReDir() + "\r\n";
-
-			tmp << response.start_line << response.server_name << response.date << response.content_type << response.empty_line;
-			return (tmp.str());
-		}
-		else if (!client.getAutoIndex().empty())
-			response.body = client.getAutoIndex();
-		else
-		{
-			if (!utils::readFile(path, response.body))
-				return (client.setStatusCode("404"), handleERROR(client));
-		}
+		if (!utils::readFile(path, response.body))
+			return (client.setStatusCode("404"), handleERROR(client));
 	}
 	response.server_name = "Servername: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
 	response.content_length = "Content-Length: " + std::to_string(response.body.size());
-	response.content_type = "Content-Type: " + responseInstance.getContentType(path);
-	response.start_line = responseInstance.getStartLine(client.getProtocol(), client.getstatusCode());
+	response.content_type = "Content-Type: " + client.getContentType(path);
+	response.start_line = client.getStartLine(client.getProtocol(), client.getstatusCode());
 	return (Server::create_response(response));
 }
 

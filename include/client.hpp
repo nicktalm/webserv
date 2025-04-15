@@ -27,7 +27,6 @@ class Client : public Response
 		std::string							_protocol;
 		std::string							_body;
 		std::map<std::string, std::string>	_header;
-		std::string							_autoIndexBody;
 		std::string							_reDirHeader;
 	public:
 		Client(void);
@@ -41,7 +40,6 @@ class Client : public Response
 
 		void		headerParsing(int fd, const t_config config);
 
-		std::string	getAutoIndex(void) const {return (_autoIndexBody);};
 		bool		getListen(void) const {return (_listen);};
 		std::string	getReDir(void) const {return (_reDirHeader);};
 		std::string	getMethod(void) const {return (_method);};
@@ -54,7 +52,7 @@ class Client : public Response
 		std::map<std::string, std::string>	getHeader(void) const {return _header;};
 		int			getFd(void) const {return _fd;};
 		void		checkPath(const t_config config);
-		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir);
+		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &reDir);
 		void		setStatusCode(std::string code) {_statusCode = code;};
 };
 

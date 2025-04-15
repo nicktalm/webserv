@@ -17,9 +17,10 @@ typedef struct s_response
 class Response
 {
 	protected:
+		bool		_responseReady;
+		bool		_autoindex;
 		std::string	_responseBuffer;
 		ssize_t		_bytesSend;
-		bool		_responseReady;
 	public:
 		Response(void);
 		virtual ~Response(void);
@@ -28,6 +29,7 @@ class Response
 		std::string	getResponseBuffer(void) {return _responseBuffer;};
 		ssize_t		getBytesSend(void) { return _bytesSend;};
 		bool		getReady(void) {return (_responseReady);};
+		bool		getAutoIndex(void) {return (_autoindex);};
 
 		// setter
 
