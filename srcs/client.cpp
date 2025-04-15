@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/15 17:01:08 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/15 22:04:56 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,7 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 				else
 				{
 					if (loc->autoindex)
-						this->_autoindex = true;
+						this->_autoIndex = true;
 				}
 			}
 			if (!loc->redir.first.empty() && !loc->redir.second.empty())
@@ -214,7 +214,7 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 	}
 	while ((openDir = readdir(dir)) != nullptr)
 	{
-		this->_files.insert(openDir.d_name);
+		this->_files.push_back(openDir->d_name);
 		if (openDir->d_type == DT_REG && openDir->d_name == file)
 		{
 			closedir(dir);
@@ -302,12 +302,12 @@ std::string	Client::createAutoIndex(const std::string &lastDir, const std::strin
 	button = isDir ? "<td></td>" : "<td><button onclick=\"deleteFile('" + name + "', this)\">Delete</button></td>";
 
 
-	entrie << "<tr>\n"
+	entrie << "<tr>\r\n"
 	<< "  " << displayName
 	<< "<a href=\"" << href << "\">" << href << "</a></td>"
 	<< fileSize << getTime(info.st_mtime)
 	<< button << "\n"
-	<< "</tr>\n";
+	<< "</tr>\r\n\r\n";
 	return (entrie.str());
 }
 

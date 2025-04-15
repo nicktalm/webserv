@@ -33,7 +33,8 @@ class Client : public Response
 		~Client(void);
 		void		appendMsg(char *msg, size_t size);
 		void		parseRequest(int fd, const t_config config);
-		void		createAutoIndex(const std::string &lastDir);
+		// void		createAutoIndex(const std::string &lastDir);
+		std::string	createAutoIndex(const std::string &lastDir, const std::string name);
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 		void		checkBodySize(void);

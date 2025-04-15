@@ -24,22 +24,27 @@ class Response
 		std::string					_responseBuffer;
 		ssize_t						_bytesSend;
 		std::vector<std::string>	_files;
+		int							_currentFile;
 	public:
 		Response(void);
 		virtual ~Response(void);
 
 		// getter
-		std::string	getResponseBuffer(void) {return _responseBuffer;} const;
-		ssize_t		getBytesSend(void) { return _bytesSend;} const;
-		bool		getReady(void) {return (_responseReady);} const;
-		bool		getAutoIndex(void) {return (_autoIndex);} const;
-		int			getAutoIndexPart(void) {return (_autoIndexPart);} const;
+		std::string					getResponseBuffer(void) const {return _responseBuffer;};
+		ssize_t						getBytesSend(void) const { return _bytesSend;};
+		bool						getReady(void) const {return (_responseReady);};
+		bool						getAutoIndex(void) const {return (_autoIndex);};
+		int							getAutoIndexPart(void) const {return (_autoIndexPart);};
+		std::vector<std::string>	getFiles(void) const {return (_files);};
+		int							getCurrentFileIndex(void) const {return (_currentFile);};
 
 		// setter
 
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
-		void		setBytesSend(const size_t bytes) {_bytesSend = bytes;};
+		void		setBytesSend(const ssize_t bytes) {_bytesSend = bytes;};
 		void		setReady(const bool ready) {_responseReady = ready;};
+		void		setAutoIndexPart(const int part) {_autoIndexPart = part;};
+		void		setCurrentFileIndex(const int index) {_currentFile = index;};
 	//GET request
 		std::string	getContentType(std::string file);
 		std::string	getStartLine(std::string protocol, std::string status_code);

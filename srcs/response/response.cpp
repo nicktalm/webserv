@@ -9,6 +9,8 @@ Response::Response(void)
 	_autoIndex = false;
 	_autoIndexPart = 0;
 	_bytesSend = 0;
+	_files = {};
+	_currentFile = 1;
 }
 
 Response::~Response(void) {}
