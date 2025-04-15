@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 typedef struct s_response
 {
@@ -17,19 +18,22 @@ typedef struct s_response
 class Response
 {
 	protected:
-		bool		_responseReady;
-		bool		_autoindex;
-		std::string	_responseBuffer;
-		ssize_t		_bytesSend;
+		bool						_responseReady;
+		bool						_autoIndex;
+		int							_autoIndexPart;
+		std::string					_responseBuffer;
+		ssize_t						_bytesSend;
+		std::vector<std::string>	_files;
 	public:
 		Response(void);
 		virtual ~Response(void);
 
 		// getter
-		std::string	getResponseBuffer(void) {return _responseBuffer;};
-		ssize_t		getBytesSend(void) { return _bytesSend;};
-		bool		getReady(void) {return (_responseReady);};
-		bool		getAutoIndex(void) {return (_autoindex);};
+		std::string	getResponseBuffer(void) {return _responseBuffer;} const;
+		ssize_t		getBytesSend(void) { return _bytesSend;} const;
+		bool		getReady(void) {return (_responseReady);} const;
+		bool		getAutoIndex(void) {return (_autoIndex);} const;
+		int			getAutoIndexPart(void) {return (_autoIndexPart);} const;
 
 		// setter
 

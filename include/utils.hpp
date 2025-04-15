@@ -23,8 +23,8 @@ namespace utils
 	extern std::map<std::string, std::string>	MIMETypes;
 
 	// Template for autoindex
-	const std::string autoindexTemplate = R"(
-		<!DOCTYPE html>
+	const std::string autoindexHead = R"(
+	<!DOCTYPE html>
 		<html lang="de">
 		<head>
 		  <meta charset="UTF-8">
@@ -70,8 +70,9 @@ namespace utils
 			  <th>size</th>
 			  <th>last change</th>
 			  <th>delete</th>
-			</tr>
-			{{entries}}
+			</tr>)";
+
+	const std::string autoindexBody = R"(
 		  </table>
 		
 		</body>

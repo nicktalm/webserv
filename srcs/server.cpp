@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/15 15:11:59 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/15 16:42:34 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -462,9 +462,37 @@ std::string	Server::handleGET(Client &client)
 		tmp << response.start_line << response.server_name << response.date << response.content_type << response.empty_line;
 		return (tmp.str());
 	}
-	else if (!client.getAutoIndex())
+	else if (client.getAutoIndex())
 	{
-		
+		if (client.getAutoIndexPart() == 0)
+		{
+			std::stringstream	tmp;
+			response.server_name = "Servername: " + this->_config.server_name + "\r\n";
+			response.date = "Date: " + utils::getDate() + "\r\n";
+			response.content_length = "Transfer-Encoding: chunked\r\n"
+			response.content_type = "Content-Type: text/html\r\n";
+			response.start_line = client.getStartLine(client.getProtocol(), client.getstatusCode()) + "\r\n";
+
+			tmp << response.start_line << response.server_name << response.date << response.content_type << response.content_length;
+			return (tmp.str());
+		}
+		else if (client.getAutoIndexPart() == 1)
+		{
+			std::string			tmp;
+			size_t				pos;
+			std::stringstream	size;
+
+			tmp = utils::autoindexHead;
+			while ((pos = tmp.find("{{path}}")) != std::string::npos)
+				tmp.replace(pos, 8, client.getPath());
+			size << std::hex << tmp.size();
+			tmp.insert(0, size.str() + "\r\n");
+			return (tmp);
+		}
+		else if (client.getAutoIndexPart() == 2)
+		{
+			
+		}
 	}
 	else
 	{

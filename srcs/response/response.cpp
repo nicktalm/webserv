@@ -6,7 +6,8 @@ Response::Response(void)
 {
 	_responseBuffer = "";
 	_responseReady = false;
-	_autoindex = false;
+	_autoIndex = false;
+	_autoIndexPart = 0;
 	_bytesSend = 0;
 }
 
