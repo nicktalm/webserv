@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 10:44:56 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/16 14:29:07 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,7 @@ void	Client::headerParsing(int fd, const t_config config)
 		{
 			_method = tmp[0];
 			_path = tmp[1];
+			std::cout << "path = " << _path << std::endl;
 			_protocol = tmp[2];
 			input.clear();
 			input.seekg(0);

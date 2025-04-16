@@ -26,35 +26,36 @@ class Client : public Response
 		std::string							_path;
 		std::string							_protocol;
 		std::string							_body;
-		std::map<std::string, std::string>	_header;
 		std::string							_reDirHeader;
+		std::map<std::string, std::string>	_header;
 	public:
 		Client(void);
 		~Client(void);
 		void		appendMsg(char *msg, size_t size);
 		void		parseRequest(int fd, const t_config config);
-		// void		createAutoIndex(const std::string &lastDir);
 		std::string	createAutoIndex(const std::string &lastDir, const std::string name);
 		void		checkFile(const std::string &lastDir, const std::string &file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 		void		checkBodySize(void);
-
-		void		headerParsing(int fd, const t_config config);
-
-		bool		getListen(void) const {return (_listen);};
-		std::string	getReDir(void) const {return (_reDirHeader);};
-		std::string	getMethod(void) const {return (_method);};
-		std::string	&getMsg(void) {return (_clientsMsg);};
-		std::string	getStatusCode(void) {return _statusCode;};
-		std::string	getProtocol(void) const {return _protocol;};
-		std::string	getPath(void);
-		std::string	&getBody(void) {return _body;};
-		std::string setBody(const std::string &body) {_body = body; return _body;};
-		std::map<std::string, std::string>	getHeader(void) const {return _header;};
-		int			getFd(void) const {return _fd;};
-		void		checkPath(const t_config config);
 		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &reDir);
-		void		setStatusCode(std::string code) {_statusCode = code;};
+		void		headerParsing(int fd, const t_config config);
+		void		checkPath(const t_config config);
+		
+		// getter
+		bool								getListen(void) const {return (_listen);};
+		int									getFd(void) const {return _fd;};
+		std::string							getReDir(void) const {return (_reDirHeader);};
+		std::string							getMethod(void) const {return (_method);};
+		std::string							getMsg(void) {return (_clientsMsg);};
+		std::string							getStatusCode(void) {return _statusCode;};
+		std::string							getProtocol(void) const {return _protocol;};
+		std::string							getPath(void);
+		std::string							getBody(void) {return _body;};
+		std::map<std::string, std::string>	getHeader(void) const {return _header;};
+		
+		// setter
+		void	setBody(const std::string &body) {_body = body;};
+		void	setStatusCode(std::string code) {_statusCode = code;};
 };
 
 std::string	getSize(off_t &bytes);
