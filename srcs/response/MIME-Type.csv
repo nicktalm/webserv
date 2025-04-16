@@ -102,7 +102,7 @@
 .dump,application/octet-stream
 .dv,video/x-dv
 .dvi,application/x-dvi
-.dwf,drawing/x-dwf,(old)
+.dwf,drawing/x-dwf(old)
 .dwf,model/vnd.dwf
 .dwg,application/acad
 .dwg,image/vnd.dwg
@@ -112,7 +112,7 @@
 .dxf,image/x-dwg
 .dxr,application/x-director
 .el,text/x-script.elisp
-.elc,application/x-bytecode.elisp,(compiled,elisp)
+.elc,application/x-bytecode.elisp(compiledelisp)
 .elc,application/x-elc
 .env,application/x-envoy
 .eps,application/postscript
@@ -216,6 +216,10 @@
 .jpg,image/pjpeg
 .jps,image/x-jps
 .js,application/x-javascript
+.js,application/javascript
+.js,application/ecmascript
+.js,text/javascript
+.js,text/ecmascript
 .jut,image/jutvision
 .kar,audio/midi
 .kar,music/x-karaoke
@@ -386,7 +390,7 @@
 .pvu,paleovu/x-pv
 .pwz,application/vnd.ms-powerpoint
 .py,text/x-script.phyton
-.pyc,applicaiton/x-bytecode.python
+.pyc,application/x-bytecode.python
 .qcp,audio/vnd.qcelp
 .qd3,x-world/x-3dmf
 .qd3d,x-world/x-3dmf

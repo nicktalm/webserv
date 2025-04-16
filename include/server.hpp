@@ -23,6 +23,7 @@ class Server
 	private:
 		std::vector<pollfd>			_clientsFd;
 		std::map<int, Client>		_clientsInfo;
+		std::map<int, Response>		_responseInfo;
 		const t_config				_config;
 		int							_socketFd;
 		struct addrinfo 			*_res;

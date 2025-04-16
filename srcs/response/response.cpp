@@ -2,6 +2,19 @@
 #include "../../include/utils.hpp"
 #include <iostream>
 
+Response::Response(void)
+{
+	_responseBuffer = "";
+	_responseReady = false;
+	_autoIndex = false;
+	_autoIndexPart = 0;
+	_bytesSend = 0;
+	_files = {};
+	_currentFile = 1;
+}
+
+Response::~Response(void) {}
+
 std::string Response::getErrorMsg(std::string error)
 {
 	const std::map<std::string, std::string> errorMessages = {

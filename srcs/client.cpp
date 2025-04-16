@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/14 12:22:06 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/16 10:44:56 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,7 @@ Client::Client(void)
 	_path = "";
 	_protocol = "";
 	_body = "";
-	_autoIndexBody = "";
 	_reDirHeader = "";
-	_responseBuffer = "";
-	_bytesSent = 0;
 	_header = {};
 }
 
@@ -134,26 +131,21 @@ std::string	Client::getPath(void)
 void	Client::checkPath(const t_config config)
 {
 	std::string	lastDir = "", firstDir = "", file = "";
-	bool		autoIndex = false, reDir = false;
+	bool		reDir = false;
 
 	if (!this->splitPath(lastDir, firstDir, file))
 	{
 		this->_statusCode = "404";
 		return ;
 	}
-	if (!this->checkLocation(config, firstDir, lastDir, file, autoIndex, reDir))
+	if (!this->checkLocation(config, firstDir, lastDir, file, reDir))
 		return ;
 	if (!reDir)
-	{
-		if (autoIndex)
-			this->createAutoIndex(lastDir);
-		else
 			this->checkFile(lastDir, file);
-	}
 	this->_path = lastDir + file;
 }
 
-bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &autoindex, bool &reDir)
+bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &reDir)
 {
 	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
 	{
@@ -172,7 +164,7 @@ bool	Client::checkLocation(const t_config config, const std::string &firstDir, s
 				else
 				{
 					if (loc->autoindex)
-						autoindex = true;
+						this->_autoIndex = true;
 				}
 			}
 			if (!loc->redir.first.empty() && !loc->redir.second.empty())
@@ -222,65 +214,101 @@ void	Client::checkFile(const std::string &lastDir, const std::string &file)
 	}
 	while ((openDir = readdir(dir)) != nullptr)
 	{
+		this->_files.push_back(openDir->d_name);
 		if (openDir->d_type == DT_REG && openDir->d_name == file)
 		{
 			closedir(dir);
 			return ;
 		}
 	}
-	std::cout << RED << "File doesn't exist" << RESET << std::endl;
-	this->_statusCode = "404";
+	if (!this->_autoIndex)
+	{
+		std::cout << RED << "File doesn't exist" << RESET << std::endl;
+		this->_statusCode = "404";
+	}
 	closedir(dir);
 }
 
-void	Client::createAutoIndex(const std::string &lastDir)
+// void	Client::createAutoIndex(const std::string &lastDir)
+// {
+// 	std::stringstream	entries;
+// 	DIR					*dir;
+// 	struct dirent		*openDir;
+
+// 	this->_autoIndexBody = utils::autoindexTemplate;
+// 	dir = opendir(lastDir.c_str());
+// 	if (!dir)
+// 	{
+// 		this->_statusCode = "404";
+// 		return ;
+// 	}
+// 	while ((openDir = readdir(dir)) != nullptr)
+// 	{
+// 		bool		isDir;
+// 		struct stat	info;
+// 		std::string	name = openDir->d_name;
+// 		std::string	href;
+// 		std::string	displayName;
+// 		std::string	fileSize;
+// 		std::string	dateChanged;
+// 		std::string	button;
+
+// 		if (name == ".")
+// 			continue;
+// 		std::string fullPath = lastDir + name;
+// 		if (stat(fullPath.c_str(), &info) != 0)
+// 			continue;
+// 		isDir = S_ISDIR(info.st_mode);
+// 		href = name + (isDir ? "/" : "");
+// 		displayName = isDir ? "<td class=\"directory\">" : "<td>";
+// 		fileSize = isDir ? "<td>-</td>" : getSize(info.st_size);
+// 		button = isDir ? "<td></td>" : "<td><button onclick=\"deleteFile('" + name + "', this)\">Delete</button></td>";
+// 		entries << "<tr>\n"
+// 		<< "  " << displayName
+// 		<< "<a href=\"" << href << "\">" << href << "</a></td>"
+// 		<< fileSize << getTime(info.st_mtime)
+// 		<< button << "\n"
+// 		<< "</tr>\n";
+// 	}
+// 	closedir(dir);
+// 	size_t pos;
+
+// 	while ((pos = this->_autoIndexBody.find("{{path}}")) != std::string::npos)
+// 		this->_autoIndexBody.replace(pos, 8, lastDir);
+// 	while ((pos = this->_autoIndexBody.find("{{entries}}")) != std::string::npos)
+// 		this->_autoIndexBody.replace(pos, 11, entries.str());
+// }
+
+std::string	Client::createAutoIndex(const std::string &lastDir, const std::string name)
 {
-	std::stringstream	entries;
-	DIR					*dir;
-	struct dirent		*openDir;
+	std::stringstream	entrie;
+	bool				isDir;
+	struct stat			info;
+	std::string			href;
+	std::string			displayName;
+	std::string			fileSize;
+	std::string			dateChanged;
+	std::string			button;
 
-	this->_autoIndexBody = utils::autoindexTemplate;
-	dir = opendir(lastDir.c_str());
-	if (!dir)
-	{
-		this->_statusCode = "404";
-		return ;
-	}
-	while ((openDir = readdir(dir)) != nullptr)
-	{
-		bool		isDir;
-		struct stat	info;
-		std::string	name = openDir->d_name;
-		std::string	href;
-		std::string	displayName;
-		std::string	fileSize;
-		std::string	dateChanged;
-		std::string	button;
+	if (name == ".")
+		return ("");
+	std::string fullPath = lastDir + name;
+	if (stat(fullPath.c_str(), &info) != 0)
+		return ("");
+	isDir = S_ISDIR(info.st_mode);
+	href = name + (isDir ? "/" : "");
+	displayName = isDir ? "<td class=\"directory\">" : "<td>";
+	fileSize = isDir ? "<td>-</td>" : getSize(info.st_size);
+	button = isDir ? "<td></td>" : "<td><button onclick=\"deleteFile('" + name + "', this)\">Delete</button></td>";
 
-		if (name == ".")
-			continue;
-		std::string fullPath = lastDir + name;
-		if (stat(fullPath.c_str(), &info) != 0)
-			continue;
-		isDir = S_ISDIR(info.st_mode);
-		href = name + (isDir ? "/" : "");
-		displayName = isDir ? "<td class=\"directory\">" : "<td>";
-		fileSize = isDir ? "<td>-</td>" : getSize(info.st_size);
-		button = isDir ? "<td></td>" : "<td><button onclick=\"deleteFile('" + name + "', this)\">Delete</button></td>";
-		entries << "<tr>\n"
-		<< "  " << displayName
-		<< "<a href=\"" << href << "\">" << href << "</a></td>"
-		<< fileSize << getTime(info.st_mtime)
-		<< button << "\n"
-		<< "</tr>\n";
-	}
-	closedir(dir);
-	size_t pos;
 
-	while ((pos = this->_autoIndexBody.find("{{path}}")) != std::string::npos)
-		this->_autoIndexBody.replace(pos, 8, lastDir);
-	while ((pos = this->_autoIndexBody.find("{{entries}}")) != std::string::npos)
-		this->_autoIndexBody.replace(pos, 11, entries.str());
+	entrie << "<tr>\n"
+	<< "  " << displayName
+	<< "<a href=\"" << href << "\">" << href << "</a></td>"
+	<< fileSize << getTime(info.st_mtime)
+	<< button << "\n"
+	<< "</tr>\n";
+	return (entrie.str());
 }
 
 std::string	getTime(std::time_t time)
