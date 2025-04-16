@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 14:18:15 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/16 15:08:06 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -318,7 +318,7 @@ std::string	trim_filending(const std::string& str)
 std::string Server::handlePOST(Client &client)
 {
 	std::cout << GREEN << "POST request" << RESET << std::endl;
-	std::cout << client.getPath() << std::endl;
+	// std::cout << client.getPath() << std::endl;
 	if (client.getPath() == "http/cgi-bin/register.py")
 	{
 		return (execute_cgi(client, "./http/cgi-bin/register.py"));
@@ -330,7 +330,7 @@ std::string Server::handlePOST(Client &client)
 	// std::cout << "Body: " << client.getBody() << std::endl;
 	std::string uploadDir = "./http/upload/";
 	std::string body = client.getBody();
-	std::cout << BLUE << client.getHeader()["Content-Type"] << RESET << std::endl;
+	// std::cout << BLUE << client.getHeader()["Content-Type"] << RESET << std::endl;
 	std::string content_type;
 	if (client.getHeader()["Content-Type"].find("multipart/form-data") != std::string::npos)
 		content_type = "multipart/form-data";
@@ -378,7 +378,7 @@ std::string Server::handlePOST(Client &client)
 		std::string content_type_raw = client.getHeader()["Content-Type"];
 		std::string content_type = trim(content_type_raw);
 	
-		std::cout << "Content-Type: [" << content_type << "]" << std::endl;
+		// std::cout << "Content-Type: [" << content_type << "]" << std::endl;
 	
 		std::string file_ending;
 		for (std::map<std::string, std::string>::iterator it = utils::MIMETypes.begin(); it != utils::MIMETypes.end(); ++it)
@@ -395,7 +395,7 @@ std::string Server::handlePOST(Client &client)
 			file_ending = ".bin"; // Fallback-Endung
 		}
 		// Benutze file_ending weiter für die Speicherung etc.
-		std::cout << "File ending: " << file_ending << std::endl;
+		// std::cout << "File ending: " << file_e nding << std::endl;
 		std::string filename = "uploaded_file_" + std::to_string(counter) + file_ending;
 		counter++;
 		std::string filePath = uploadDir + filename;
