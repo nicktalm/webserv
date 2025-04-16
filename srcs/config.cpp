@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/04/08 15:46:14 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/16 10:43:02 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 }
 
 
-void add_default_location(std::__1::vector<t_config> & files)
+void add_default_location(std::vector<t_config> & files)
 {
 	// Füge eine Standard-Location hinzu, falls keine Location mit path "/" existiert
 	for (auto& server : files)

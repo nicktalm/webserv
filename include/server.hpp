@@ -8,6 +8,7 @@
 #include "config.hpp"
 #include "client.hpp"
 #include "response.hpp"
+#include <fcntl.h>
 
 extern std::atomic<bool>	runner;
 
@@ -49,7 +50,7 @@ class Server
 std::string	trim(const std::string& line);
 std::string	to_lower(const std::string &str);
 bool check_config(const std::string &config_path, std::vector<t_config> &files);
-void add_default_location(std::__1::vector<t_config> &files);
+void add_default_location(std::vector<t_config> &files);
 bool process_server_block(const std::string &line, t_config &current_config, bool &in_server_block, bool &expect_server_brace);
 bool process_location_block(const std::string &line, t_location &current_location, bool &in_location_block, bool &expect_location_brace);
 bool process_closing_brace(const std::string& line, t_config& current_config, t_location& current_location, std::vector<t_config>& files, bool& in_server_block, bool& in_location_block);

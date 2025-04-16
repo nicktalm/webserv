@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/14 14:54:26 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/16 14:49:32 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <string>
 #include <fcntl.h>
 #include <fstream>
+#include <sys/fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
 #include "../include/response.hpp"
@@ -47,7 +48,10 @@ Server::Server(t_config config) : _config(config)
 	_socketFd = socket(_res->ai_family, _res->ai_socktype, _res->ai_protocol);
 	if (_socketFd == -1)
 		throw std::runtime_error("socket failed");
-	fcntl(_socketFd, F_SETFL, O_NONBLOCK);
+	if (fcntl(_socketFd, F_SETFL, O_NONBLOCK) == -1)
+	{
+		throw std::runtime_error("fcntl");
+	}
 
 	if (setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
 		throw std::runtime_error("setsockopt failed");
@@ -156,31 +160,32 @@ std::map<std::string, std::string> parseBody(std::string &body)
 
 std::string execute_cgi(Client &client, std::string path)
 {
-	int inputPipe[2], outputPipe[2];
-	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1)
+	int pipefd[2];
+	if (pipe(pipefd) == -1)
 	{
 		std::cerr << RED << "Pipe creation failed" << RESET << std::endl;
 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 	}
 
+	// if (fcntl(pipefd[0], F_SETFL, O_NONBLOCK) == -1 || fcntl(pipefd[1], F_SETFL, O_NONBLOCK) == -1)
+	// {
+	// 	if (pipefd[0] >= 0) close(pipefd[0]);
+	// 	if (pipefd[1] >= 0) close(pipefd[1]);
+	// 	std::cerr << RED << "fcntl failed" << RESET << std::endl;
+	// 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+	// }
+
 	pid_t pid = fork();
 	if (pid == -1)
 	{
-		close(inputPipe[0]);
-		close(inputPipe[1]);
-		close(outputPipe[0]);
-		close(outputPipe[1]);
+		close(pipefd[0]);
+		close(pipefd[1]);
 		std::cerr << RED << "Fork failed" << RESET << std::endl;
 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 	}
 	else if (pid == 0) // Child process
 	{
-		dup2(inputPipe[0], STDIN_FILENO);
-		close(inputPipe[0]);
-		close(inputPipe[1]);
-		close(outputPipe[0]);
-		dup2(outputPipe[1], STDOUT_FILENO);
-		close(outputPipe[1]);
+		dup2(pipefd[1], STDOUT_FILENO);
 		std::map<std::string, std::string> params = parseBody(client.getBody());
 
 		char *const args[] = {
@@ -196,23 +201,19 @@ std::string execute_cgi(Client &client, std::string path)
 	}
 	else // Parent process
 	{
-		close(inputPipe[0]);
-		write(inputPipe[1], client.getBody().c_str(), client.getBody().size());
-		close(inputPipe[1]);
-
-		close(outputPipe[1]);
+		dup2(pipefd[0], STDIN_FILENO);
+		close(pipefd[1]);
 		char buffer[1024];
 		std::string cgiOutput;
 		ssize_t bytesRead;
-		while ((bytesRead = read(outputPipe[0], buffer, sizeof(buffer))) > 0)
+		while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		{
 			cgiOutput.append(buffer, bytesRead);
 		}
-		close(outputPipe[0]);
-
+		close(pipefd[0]);
 		int status;
 		waitpid(pid, &status, 0);
-
+		std::cout << YELLOW << "CGI:\n" << cgiOutput << std::endl;
 		return cgiOutput;
 	}
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";

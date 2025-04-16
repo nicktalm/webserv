@@ -4,7 +4,7 @@ import os
 import sys
 
 # File to store registered users
-USER_FILE = "./http/users/users.txt"  # Replace with the actual path
+USER_FILE = "./http/users/users.txt"
 
 # Output HTTP headers
 print("HTTP/1.1 200 OK")
@@ -12,7 +12,20 @@ print("Content-Type: text/html\r\n\r\n")
 
 # Output the content
 print("<html>")
-print("<head><title>Login</title></head>")
+print("""
+	<head>
+		<title>Registration</title>
+		<style>
+			.btn{
+			color:white;
+			border: 2px solid black;
+			border-radius: 12px;
+			background-color: black;
+			padding: 10px;
+			}
+		</style>
+	</head>
+""")
 print("<body>")
 
 # Extract username and password from script arguments
@@ -29,7 +42,7 @@ if len(sys.argv) > 2:
                 if existing_username == username and existing_password == password:
                     print("<h1>Login Successful</h1>")
                     print(f"<p>Welcome back, {username}!</p>")
-                    print('<a href="/index.html">Go to main page</a>')
+                    print('<a class="btn" href="/index.html">Go to main page</a>')
                     print("</body></html>")
                     sys.exit(0)
             # If no match is found
