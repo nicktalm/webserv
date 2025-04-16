@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 15:02:51 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/16 15:04:06 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -498,7 +498,7 @@ std::string	Server::handleGET(Client &client)
 
 			tmp = utils::autoindexHead;
 			while ((pos = tmp.find("{{path}}")) != std::string::npos)
-			tmp.replace(pos, 8, client.getPath());
+				tmp.replace(pos, 8, client.getPath());
 			size << std::hex << tmp.size();
 			tmp.insert(0, size.str() + "\r\n");
 			tmp.append("\r\n");
