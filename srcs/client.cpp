@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/15 22:04:56 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/16 10:44:56 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -302,12 +302,12 @@ std::string	Client::createAutoIndex(const std::string &lastDir, const std::strin
 	button = isDir ? "<td></td>" : "<td><button onclick=\"deleteFile('" + name + "', this)\">Delete</button></td>";
 
 
-	entrie << "<tr>\r\n"
+	entrie << "<tr>\n"
 	<< "  " << displayName
 	<< "<a href=\"" << href << "\">" << href << "</a></td>"
 	<< fileSize << getTime(info.st_mtime)
 	<< button << "\n"
-	<< "</tr>\r\n\r\n";
+	<< "</tr>\n";
 	return (entrie.str());
 }
 

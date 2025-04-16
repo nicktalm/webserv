@@ -43,6 +43,7 @@ class Response
 		void		setResponseBuffer(const std::string &response) {_responseBuffer = response;};
 		void		setBytesSend(const ssize_t bytes) {_bytesSend = bytes;};
 		void		setReady(const bool ready) {_responseReady = ready;};
+		void		setAutoIndex(const bool set) {_autoIndex = set;};
 		void		setAutoIndexPart(const int part) {_autoIndexPart = part;};
 		void		setCurrentFileIndex(const int index) {_currentFile = index;};
 	//GET request
