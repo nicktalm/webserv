@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:23 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/07 17:08:38 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/15 16:39:08 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,9 @@ std::vector<std::unique_ptr<Server>>	utils::parsing(int argc, char **argv)
 	for (auto &config : files)
 		servers.emplace_back(std::make_unique<Server>(config));
 	parseMIME();
+	std::cout << GREEN << "MIME Types loaded" << RESET << std::endl;
+	// for (std::map<std::string, std::string>::iterator it = MIMETypes.begin(); it != MIMETypes.end(); ++it)
+	// 	std::cout << it->first << " : " << it->second << std::endl;
 	return (servers);
 }
 
@@ -78,7 +81,7 @@ void	utils::parseMIME(void)
 			std::stringstream	linestream(line);
 			std::string			key, value;
 
-			if (std::getline(linestream, key, ',') && std::getline(linestream, value))
+			if (std::getline(linestream, value, ',') && std::getline(linestream, key))
 				MIMETypes[key] = value;
 		}
 	}

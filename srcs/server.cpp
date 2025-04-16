@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/14 11:35:04 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/16 14:18:15 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,6 +217,104 @@ std::string execute_cgi(Client &client, std::string path)
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 }
 
+// Hilfsfunktion zum Trimmen
+std::string trim_server(const std::string &str) {
+	size_t first = str.find_first_not_of(" \r\n");
+	size_t last = str.find_last_not_of(" \r\n");
+	if (first == std::string::npos || last == std::string::npos)
+		return "";
+	return str.substr(first, last - first + 1);
+}
+
+// Pfad validieren – kein ../ oder /
+bool isValidFilename(const std::string &filename) {
+	return filename.find("..") == std::string::npos && filename.find("/") == std::string::npos && !filename.empty();
+}
+
+void parseMultipartFormData(const std::string &body, const std::string &boundary, const std::string &uploadDir) {
+	std::string fullBoundary = "--" + boundary;
+	std::string endBoundary = fullBoundary + "--";
+	size_t pos = 0;
+	size_t nextPart;
+
+	while ((pos = body.find(fullBoundary, pos)) != std::string::npos)
+	{
+		pos += fullBoundary.length();
+
+		if (body.compare(pos, 2, "--") == 0)
+			break;
+
+		if (body.compare(pos, 2, "\r\n") == 0)
+			pos += 2;
+
+		nextPart = body.find(fullBoundary, pos);
+		if (nextPart == std::string::npos)
+			break;
+
+		std::string part = body.substr(pos, nextPart - pos);
+		pos = nextPart;
+
+		size_t headerEnd = part.find("\r\n\r\n");
+		if (headerEnd == std::string::npos)
+			continue;
+
+		std::string headers = part.substr(0, headerEnd);
+		std::string content = part.substr(headerEnd + 4);
+		content = trim_server(content); // Letztes \r\n entfernen
+
+		size_t dispositionPos = headers.find("Content-Disposition:");
+		if (dispositionPos == std::string::npos)
+			continue;
+
+		std::string disposition = headers.substr(dispositionPos);
+		size_t namePos = disposition.find("name=\"");
+		if (namePos == std::string::npos)
+			continue;
+		namePos += 6;
+		size_t nameEnd = disposition.find("\"", namePos);
+		std::string fieldName = disposition.substr(namePos, nameEnd - namePos);
+
+		size_t filenamePos = disposition.find("filename=\"");
+		if (filenamePos != std::string::npos)
+		{
+			filenamePos += 10;
+			size_t filenameEnd = disposition.find("\"", filenamePos);
+			std::string filename = disposition.substr(filenamePos, filenameEnd - filenamePos);
+
+			if (!isValidFilename(filename))
+			{
+				std::cerr << "Ungültiger Dateiname: " << filename << std::endl;
+				continue;
+			}
+
+			std::string filePath = uploadDir + filename;
+			std::ofstream outFile(filePath, std::ios::binary);
+			if (!outFile.is_open()) {
+				std::cerr << "Fehler beim Öffnen von " << filePath << std::endl;
+				continue;
+			}
+			outFile.write(content.c_str(), content.size());
+			outFile.close();
+
+			std::cout << "✅ Datei gespeichert: " << filename << std::endl;
+		}
+		else
+		{
+			std::cout << "📄 Form-Feld: " << fieldName << " = " << content << std::endl;
+		}
+	}
+}
+
+std::string	trim_filending(const std::string& str)
+{
+	size_t first = str.find_first_not_of(" \t\n\r\f\v");
+	if (first == std::string::npos)
+		return "";
+	size_t last = str.find_last_not_of(" \t\n\r\f\v");
+	return str.substr(first, last - first + 1);
+}
+
+
 std::string Server::handlePOST(Client &client)
 {
 	std::cout << GREEN << "POST request" << RESET << std::endl;
@@ -238,14 +336,13 @@ std::string Server::handlePOST(Client &client)
 		content_type = "multipart/form-data";
 	else if (client.getHeader()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
 		content_type = "application/x-www-form-urlencoded";
-	else if (client.getHeader()["Content-Type"].find("text/plain") != std::string::npos)
-		content_type = "text/plain";
-	else
-		return (client.setStatusCode("415"), handleERROR(client));
+	// else if (client.getHeader()["Content-Type"].find("text/plain") != std::string::npos)
+	// 	content_type = "text/plain";
+	// else
+	// 	return (client.setStatusCode("415"), handleERROR(client));
 
 	if (content_type == "multipart/form-data")
 	{
-		// 1. Boundary aus Content-Type extrahieren
 		std::string contentTypeHeader = client.getHeader()["Content-Type"];
 		size_t boundaryPos = contentTypeHeader.find("boundary=");
 		if (boundaryPos == std::string::npos)
@@ -253,38 +350,10 @@ std::string Server::handlePOST(Client &client)
 		std::string boundary = contentTypeHeader.substr(boundaryPos + 9);
 		boundary.erase(std::remove(boundary.begin(), boundary.end(), '\r'), boundary.end());
 		boundary.erase(std::remove(boundary.begin(), boundary.end(), '\n'), boundary.end());
-		std::string boundaryInBody = "--" + boundary;
-		std::cout << GREEN << "Boundary: '" << boundary << "'" << RESET << std::endl;
-		std::cout << GREEN << "BoundaryInBody: '" << boundaryInBody << "'" << RESET << std::endl;
-		// 2. Filename extrahieren
-		size_t filenamePos = body.find("filename=\"");
-		if (filenamePos == std::string::npos)
-			return (client.setStatusCode("400"), handleERROR(client));
-		filenamePos += 10;
-		size_t filenameEnd = body.find("\"", filenamePos);
-		if (filenameEnd == std::string::npos)
-			return (client.setStatusCode("400"), handleERROR(client));
-		std::string filename = body.substr(filenamePos, filenameEnd - filenamePos);
-		std::cout << "Filename: " << filename << std::endl;
-		// 3. Anfang des Dateiinhalts finden (nach 2x \r\n)
-		size_t contentStart = body.find("\r\n\r\n", filenameEnd);
-		if (contentStart == std::string::npos)
-			return (client.setStatusCode("400"), handleERROR(client));
-		contentStart += 4;
-		// 4. Ende des Inhalts suchen (erste Boundary nach dem Inhalt)
-		size_t contentEnd = body.find("\r\n" + boundaryInBody, contentStart);
-		if (contentEnd == std::string::npos)
-			return (client.setStatusCode("400"), handleERROR(client));
-		// 5. Dateiinhalt extrahieren
-		std::string fileContent = body.substr(contentStart, contentEnd - contentStart);
-		// 6. In Datei schreiben
-		std::string filePath = uploadDir + filename;
-		std::ofstream outFile(filePath);
-		if (!outFile.is_open())
-			return (client.setStatusCode("500"), handleERROR(client));
-		outFile << fileContent;
-		outFile.close();
-		std::cout << GREEN << "Datei erfolgreich hochgeladen: " << filePath << RESET << std::endl;
+
+		parseMultipartFormData(body, boundary, uploadDir);
+		client.setStatusCode("200");
+		// evtl. handleSuccess(client);
 	}
 	else if (content_type == "application/x-www-form-urlencoded")
 	{
@@ -303,10 +372,31 @@ std::string Server::handlePOST(Client &client)
 		else
 			return (client.setStatusCode("500"), handleERROR(client));
 	}
-	else if (content_type == "text/plain")
+	else
 	{
 		static int counter = 1;
-		std::string filename = "test_text_plain_" + std::to_string(counter) + ".txt";
+		std::string content_type_raw = client.getHeader()["Content-Type"];
+		std::string content_type = trim(content_type_raw);
+	
+		std::cout << "Content-Type: [" << content_type << "]" << std::endl;
+	
+		std::string file_ending;
+		for (std::map<std::string, std::string>::iterator it = utils::MIMETypes.begin(); it != utils::MIMETypes.end(); ++it)
+		{
+			if (it->first == content_type)
+			{
+				file_ending = it->second;
+				break;
+			}
+		}
+		if (file_ending.empty())
+		{
+			std::cout << "WARNUNG: Unbekannter Content-Type, Dateiendung kann nicht ermittelt werden." << std::endl;
+			file_ending = ".bin"; // Fallback-Endung
+		}
+		// Benutze file_ending weiter für die Speicherung etc.
+		std::cout << "File ending: " << file_ending << std::endl;
+		std::string filename = "uploaded_file_" + std::to_string(counter) + file_ending;
 		counter++;
 		std::string filePath = uploadDir + filename;
 		std::ofstream outFile(filePath);
@@ -320,17 +410,13 @@ std::string Server::handlePOST(Client &client)
 		else
 			return (client.setStatusCode("500"), handleERROR(client));
 	}
-	else
-		return (client.setStatusCode("415"), handleERROR(client));
-	std::string response = "HTTP/1.1 200 OK\r\n";
-	response += "Content-Type: ";
-	response += content_type;
-	response += "\r\n";
-	response += "Content-Length: 0\r\n";
+
+	std::string response = "HTTP/1.1 303 See Other\r\n";
+	response += "Location: /websites/upload_success.html\r\n"; // URL zur Erfolgsseite
+	response += "Content-Length: 0\r\n"; // Keine Body-Inhalte
 	response += "Connection: close\r\n";
 	response += "\r\n";
-	response += "File uploaded successfully\r\n";
-	
+
 	return response;
 }
 

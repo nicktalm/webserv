@@ -640,3 +640,4 @@
 .zip,multipart/x-zip
 .zoo,application/octet-stream
 .zsh,text/x-script.zsh
+.json,application/json

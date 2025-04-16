@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/09 16:35:56 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/15 16:16:41 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ void	Client::headerParsing(int fd, const t_config config, std::stringstream &par
 		{
 			_method = tmp[0];
 			_path = tmp[1];
+			// std::cout << "PATH:" << _path << std::endl;
 			_protocol = tmp[2];
 			parse.clear();
 			parse.seekg(0);
