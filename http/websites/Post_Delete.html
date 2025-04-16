@@ -9,8 +9,7 @@
         function sendDelete(){
             file = document.getElementById('input1').value;
             const url = `/upload/${encodeURIComponent(file)}`;
-            fetch(url, {method: 'DELETE'})
-            // alert(url);
+            fetch(url, {method: 'DELETE'});
             return url;
         }
     </script>
@@ -56,7 +55,7 @@
         button:hover {
             background-color: #0056b3;
         }
-        input{
+        input {
             background-color: hsl(0, 0%, 62%);
             color: white;
             border: none;
@@ -68,7 +67,7 @@
         input:hover {
             background-color: hsl(0, 0%, 82%);
         }
-        #input1{
+        #input1 {
             margin: 10px;
         }
     </style>
@@ -76,14 +75,15 @@
 <body>
     <div class="container">
         <h1>Dateien hochladen</h1>
-        <form action="http://localhost:8080/websites/upload_success.html" method="POST" enctype="multipart/form-data">
+        <!-- Angepasste Form-Action -->
+        <form action="/upload/" method="POST" enctype="multipart/form-data">
             <input type="file" name="files[]" multiple required>
             <br><br>
             <button type="submit">Hochladen</button>
         </form>
         <h1>Delete uploaded data</h1>
         <input id='input1' placeholder="Please enter content to delete">
-        <button onclick=sendDelete()>Choose data to delete</button>
+        <button onclick="sendDelete()">Choose data to delete</button>
     </div>
 </body>
 </html>

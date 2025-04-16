@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 15:04:06 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/16 15:16:42 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -219,10 +219,109 @@ std::string execute_cgi(Client &client, std::string path)
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 }
 
+// Hilfsfunktion zum Trimmen
+std::string trim_server(const std::string &str) {
+	size_t first = str.find_first_not_of(" \r\n");
+	size_t last = str.find_last_not_of(" \r\n");
+	if (first == std::string::npos || last == std::string::npos)
+		return "";
+	return str.substr(first, last - first + 1);
+}
+
+// Pfad validieren – kein ../ oder /
+bool isValidFilename(const std::string &filename) {
+	return filename.find("..") == std::string::npos && filename.find("/") == std::string::npos && !filename.empty();
+}
+
+void parseMultipartFormData(const std::string &body, const std::string &boundary, const std::string &uploadDir) {
+	std::string fullBoundary = "--" + boundary;
+	std::string endBoundary = fullBoundary + "--";
+	size_t pos = 0;
+	size_t nextPart;
+
+	while ((pos = body.find(fullBoundary, pos)) != std::string::npos)
+	{
+		pos += fullBoundary.length();
+
+		if (body.compare(pos, 2, "--") == 0)
+			break;
+
+		if (body.compare(pos, 2, "\r\n") == 0)
+			pos += 2;
+
+		nextPart = body.find(fullBoundary, pos);
+		if (nextPart == std::string::npos)
+			break;
+
+		std::string part = body.substr(pos, nextPart - pos);
+		pos = nextPart;
+
+		size_t headerEnd = part.find("\r\n\r\n");
+		if (headerEnd == std::string::npos)
+			continue;
+
+		std::string headers = part.substr(0, headerEnd);
+		std::string content = part.substr(headerEnd + 4);
+		content = trim_server(content); // Letztes \r\n entfernen
+
+		size_t dispositionPos = headers.find("Content-Disposition:");
+		if (dispositionPos == std::string::npos)
+			continue;
+
+		std::string disposition = headers.substr(dispositionPos);
+		size_t namePos = disposition.find("name=\"");
+		if (namePos == std::string::npos)
+			continue;
+		namePos += 6;
+		size_t nameEnd = disposition.find("\"", namePos);
+		std::string fieldName = disposition.substr(namePos, nameEnd - namePos);
+
+		size_t filenamePos = disposition.find("filename=\"");
+		if (filenamePos != std::string::npos)
+		{
+			filenamePos += 10;
+			size_t filenameEnd = disposition.find("\"", filenamePos);
+			std::string filename = disposition.substr(filenamePos, filenameEnd - filenamePos);
+
+			if (!isValidFilename(filename))
+			{
+				std::cerr << "Ungültiger Dateiname: " << filename << std::endl;
+				continue;
+			}
+
+			std::string filePath = uploadDir + filename;
+			std::ofstream outFile(filePath, std::ios::binary);
+			if (!outFile.is_open()) {
+				std::cerr << "Fehler beim Öffnen von " << filePath << std::endl;
+				continue;
+			}
+			outFile.write(content.c_str(), content.size());
+			outFile.close();
+
+			std::cout << "✅ Datei gespeichert: " << filename << std::endl;
+		}
+		else
+		{
+			std::cout << "📄 Form-Feld: " << fieldName << " = " << content << std::endl;
+		}
+	}
+}
+
+std::string	trim_filending(const std::string& str)
+{
+	size_t first = str.find_first_not_of(" \t\n\r\f\v");
+	if (first == std::string::npos)
+		return "";
+	size_t last = str.find_last_not_of(" \t\n\r\f\v");
+	return str.substr(first, last - first + 1);
+}
+
+
 std::string Server::handlePOST(Client &client)
 {
+	client.setReady(true);
 	std::cout << GREEN << "POST request" << RESET << std::endl;
-	std::cout << client.getPath() << std::endl;
+	// std::cout << client.getPath() << std::endl;
 	if (client.getPath() == "http/cgi-bin/register.py")
 	{
 		return (execute_cgi(client, "./http/cgi-bin/register.py"));
@@ -234,78 +333,35 @@ std::string Server::handlePOST(Client &client)
 	// std::cout << "Body: " << client.getBody() << std::endl;
 	std::string uploadDir = "./http/upload/";
 	std::string body = client.getBody();
-	std::cout << BLUE << client.getHeader()["Content-Type"] << RESET << std::endl;
-
+	// std::cout << BLUE << client.getHeader()["Content-Type"] << RESET << std::endl;
 	std::string content_type;
 	if (client.getHeader()["Content-Type"].find("multipart/form-data") != std::string::npos)
 		content_type = "multipart/form-data";
 	else if (client.getHeader()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
 		content_type = "application/x-www-form-urlencoded";
-	else if (client.getHeader()["Content-Type"].find("text/plain") != std::string::npos)
-		content_type = "text/plain";
-	else
-	{
-		std::cerr << RED << "Unsupported Content-Type" << RESET << std::endl;
-		return "HTTP/1.1 415 Unsupported Media Type\r\n\r\n";
-	}
+	// else if (client.getHeader()["Content-Type"].find("text/plain") != std::string::npos)
+	// 	content_type = "text/plain";
+	// else
+	// 	return (client.setStatusCode("415"), handleERROR(client));
 
 	if (content_type == "multipart/form-data")
 	{
-		std::string boundary = client.getHeader()["Content-Type"];
-		boundary = boundary.substr(boundary.find("boundary=") + 9);
-		std::cout << RED << "Boundary: " << boundary << RESET << std::endl;
-		// Extract filename from the body
-		size_t filenamePos = body.find("filename=\"");
-		if (filenamePos == std::string::npos)
-		{
-			std::cerr << RED << "Filename not found in request body" << RESET << std::endl;
-			return "HTTP/1.1 400 Bad Request\r\n\r\n";
-		}
-		filenamePos += 10; // Move past 'filename="'
-		size_t filenameEnd = body.find("\"", filenamePos);
-		if (filenameEnd == std::string::npos)
-		{
-			std::cerr << RED << "Invalid filename format" << RESET << std::endl;
-			return "HTTP/1.1 400 Bad Request\r\n\r\n";
-		}
-		std::string filename = body.substr(filenamePos, filenameEnd - filenamePos);
-			// Extract file content from the body
-		size_t contentStart = body.find("\r\n\r\n", filenameEnd);
-		if (contentStart == std::string::npos)
-		{
-			std::cerr << RED << "File content not found in request body" << RESET << std::endl;
-			return "HTTP/1.1 400 Bad Request\r\n\r\n";
-		}
-		contentStart += 4; // Move past the "\r\n\r\n"
-		size_t contentEnd = body.find("------WebKitFormBoundary", contentStart);
-		if (contentEnd == std::string::npos)
-		{
-			std::cerr << RED << "Invalid file content format" << RESET << std::endl;
-			return "HTTP/1.1 400 Bad Request\r\n\r\n";
-		}
-		std::string fileContent = body.substr(contentStart, contentEnd - contentStart);
-	
-		// Write content to the file
-		std::string filePath = uploadDir + filename;
-		// std::cout << YELLOW << body << RESET << std::endl;
+		std::string contentTypeHeader = client.getHeader()["Content-Type"];
+		size_t boundaryPos = contentTypeHeader.find("boundary=");
+		if (boundaryPos == std::string::npos)
+			return (client.setStatusCode("400"), handleERROR(client));
+		std::string boundary = contentTypeHeader.substr(boundaryPos + 9);
+		boundary.erase(std::remove(boundary.begin(), boundary.end(), '\r'), boundary.end());
+		boundary.erase(std::remove(boundary.begin(), boundary.end(), '\n'), boundary.end());
 
-		std::ofstream outFile(filePath);
-		if (outFile.is_open())
-		{
-			outFile << fileContent;
-			outFile.close();
-			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
-		}
-		else
-		{
-			std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
-			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-		}
+		parseMultipartFormData(body, boundary, uploadDir);
+		client.setStatusCode("200");
+		// evtl. handleSuccess(client);
 	}
 	else if (content_type == "application/x-www-form-urlencoded")
 	{
 		static int counter = 1;
-		std::string filename = "test_x-www-form-urlencoded_" + std::to_string(counter) + ".txt";
+		std::string filename = "x-www-form-urlencoded_" + std::to_string(counter) + ".txt";
 		counter++;
 		std::string filePath = uploadDir + filename;
 		std::ofstream outFile(filePath);
@@ -317,44 +373,53 @@ std::string Server::handlePOST(Client &client)
 			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
 		}
 		else
-		{
-			std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
-			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-		}
-	}
-	else if (content_type == "text/plain")
-	{
-		static int counter = 1;
-		std::string filename = "test_text_plain_" + std::to_string(counter) + ".txt";
-		counter++;
-		std::string filePath = uploadDir + filename;
-		std::ofstream outFile(filePath);
-		if (outFile.is_open())
-		{
-			outFile << "Content-Type: " << content_type << "\r\n";
-			outFile << body;
-			outFile.close();
-			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
-		}
-		else
-		{
-			std::cerr << RED << "Error opening file for writing" << RESET << std::endl;
-			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-		}
+			return (client.setStatusCode("500"), handleERROR(client));
 	}
 	else
 	{
-		std::cerr << RED << "Unsupported Content-Type" << RESET << std::endl;
-		return "HTTP/1.1 415 Unsupported Media Type\r\n\r\n";
+		static int counter = 1;
+		std::string content_type_raw = client.getHeader()["Content-Type"];
+		std::string content_type = trim(content_type_raw);
+	
+		// std::cout << "Content-Type: [" << content_type << "]" << std::endl;
+	
+		std::string file_ending;
+		for (std::map<std::string, std::string>::iterator it = utils::MIMETypes.begin(); it != utils::MIMETypes.end(); ++it)
+		{
+			if (it->first == content_type)
+			{
+				file_ending = it->second;
+				break;
+			}
+		}
+		if (file_ending.empty())
+		{
+			std::cout << "WARNUNG: Unbekannter Content-Type, Dateiendung kann nicht ermittelt werden." << std::endl;
+			file_ending = ".bin"; // Fallback-Endung
+		}
+		// Benutze file_ending weiter für die Speicherung etc.
+		// std::cout << "File ending: " << file_e nding << std::endl;
+		std::string filename = "uploaded_file_" + std::to_string(counter) + file_ending;
+		counter++;
+		std::string filePath = uploadDir + filename;
+		std::ofstream outFile(filePath);
+		if (outFile.is_open())
+		{
+			outFile << "Content-Type: " << content_type << "\r\n";
+			outFile << body;
+			outFile.close();
+			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
+		}
+		else
+			return (client.setStatusCode("500"), handleERROR(client));
 	}
-	std::string response = "HTTP/1.1 200 OK\r\n";
-	response += "Content-Type: text/plain\r\n"; //a ANPASSEN
-	response += "Content-Length: 0\r\n";
+
+	std::string response = "HTTP/1.1 303 See Other\r\n";
+	response += "Location: /websites/upload_success.html\r\n"; // URL zur Erfolgsseite
+	response += "Content-Length: 0\r\n"; // Keine Body-Inhalte
 	response += "Connection: close\r\n";
 	response += "\r\n";
-	response += "File uploaded successfully\r\n";
-	
-	client.setReady(true);
+
 	return response;
 }
 
