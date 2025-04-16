@@ -59,4 +59,4 @@ void process_location_directives(const std::string& line, t_location& current_lo
 void process_server_directives(const std::string& line, t_config& current_config);
 void process_client_max_body_size(std::istringstream& iss, long& max_size, char& unit);
 void debug_parsed_configurations(const std::vector<t_config>& files);
-std::map<std::string, std::string>	parseBody(std::string &body);
+std::map<std::string, std::string>	parseBody(std::string body);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 15:16:42 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/16 16:44:36 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,15 +131,15 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			tmp[bytesRead] = '\0';
 			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
 			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
-			if (_clientsInfo[pollClient->fd].getStatusCode()[0] == '4' || _clientsInfo[pollClient->fd].getStatusCode()[0] == '5')
-				this->response(_clientsInfo[pollClient->fd], pollClient);
-			else if (!_clientsInfo[pollClient->fd].getListen())
+			if (_clientsInfo[pollClient->fd].getStatusCode() == "413")
+				this->disconnect(pollClient);
+			else if (!_clientsInfo[pollClient->fd].getListen() || _clientsInfo[pollClient->fd].getStatusCode()[0] == '4' || _clientsInfo[pollClient->fd].getStatusCode()[0] == '5')
 				pollClient->events = POLLOUT;
 		}
 	}
 }
 
-std::map<std::string, std::string> parseBody(std::string &body)
+std::map<std::string, std::string> parseBody(std::string body)
 {
 	std::map<std::string, std::string> parsedBody;
 	std::istringstream stream(body);
@@ -426,6 +426,7 @@ std::string Server::handlePOST(Client &client)
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
 	std::cout << BLUE << "Response" << RESET << std::endl;
+	std::cout << "client = " << client.getFd() << std::endl;
 	if (client.getBytesSend() == static_cast<ssize_t>(client.getResponseBuffer().size()))
 	{
 		if (client.getStatusCode()[0] == '4' || client.getStatusCode()[0] == '5')
