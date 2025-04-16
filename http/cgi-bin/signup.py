@@ -8,58 +8,47 @@ USER_FILE = "./http/users/users.txt"
 
 # Output HTTP headers
 print("HTTP/1.1 200 OK")
-print("Content-Type: text/html\r\n\r\n")
-
-# Output the content
-print("<html>")
-print("""
-	<head>
-		<title>Registration</title>
-		<style>
-			.btn{
-			color:white;
-			border: 2px solid black;
-			border-radius: 12px;
-			background-color: black;
-			padding: 10px;
-			}
-		</style>
-	</head>
-""")
-print("<body>")
+print("Content-Type: text/html")
 
 # Extract username and password from script arguments
 if len(sys.argv) > 2:
     username = sys.argv[1]
     password = sys.argv[2]
 
-    # Check if the username and password combination exists
+    # Validate username and password
     try:
         with open(USER_FILE, "r") as file:
             users = file.readlines()
             for user in users:
                 existing_username, existing_password = user.strip().split(":")
                 if existing_username == username and existing_password == password:
+                    # Send the Set-Cookie header to update the cookie
+                    print(f"Set-Cookie: user={username}; Path=/; HttpOnly\r\n")
+                    # Output the HTML content for success
+                    print("<html><body>")
                     print("<h1>Login Successful</h1>")
                     print(f"<p>Welcome back, {username}!</p>")
-                    print('<a class="btn" href="/index.html">Go to main page</a>')
+                    print('<a href="/index.html">Go to main page</a>')
                     print("</body></html>")
                     sys.exit(0)
             # If no match is found
+            print("\r\n")  # End of headers
+            print("<html><body>")
             print("<h1>Login Failed</h1>")
             print("<p>Invalid username or password.</p>")
             print('<a href="/index.html">Try again</a>')
+            print("</body></html>")
     except FileNotFoundError:
+        print("\r\n")  # End of headers
+        print("<html><body>")
         print("<h1>Login Failed</h1>")
         print("<p>No users are registered yet.</p>")
         print('<a href="/index.html">Go back</a>')
-    except Exception as e:
-        print("<h1>Login Failed</h1>")
-        print(f"<p>Error: {e}</p>")
+        print("</body></html>")
 else:
+    print("\r\n")  # End of headers
+    print("<html><body>")
     print("<h1>Login Failed</h1>")
     print("<p>Username and password not provided.</p>")
     print('<a href="/index.html">Go back</a>')
-
-print("</body>")
-print("</html>")
+    print("</body></html>")

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 15:16:42 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/16 15:42:14 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,6 +158,7 @@ std::map<std::string, std::string> parseBody(std::string &body)
 	return parsedBody;
 }
 
+//TODO fix blocking
 std::string execute_cgi(Client &client, std::string path)
 {
 	int pipefd[2];
