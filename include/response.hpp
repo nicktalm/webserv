@@ -21,10 +21,11 @@ class Response
 		bool						_responseReady;
 		bool						_autoIndex;
 		int							_autoIndexPart;
-		std::string					_responseBuffer;
-		ssize_t						_bytesSend;
-		std::vector<std::string>	_files;
 		int							_currentFile;
+		ssize_t						_bytesSend;
+		std::string					_responseBuffer;
+		std::string					_reDirHeader;
+		std::vector<std::string>	_files;
 	public:
 		Response(void);
 		virtual ~Response(void);

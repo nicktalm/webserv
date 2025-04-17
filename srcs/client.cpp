@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 16:44:31 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/17 12:35:10 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,6 @@ void	Client::headerParsing(int fd, const t_config config)
 		{
 			_method = tmp[0];
 			_path = tmp[1];
-			// std::cout << "PATH:" << _path << std::endl;
 			_protocol = tmp[2];
 			input.clear();
 			input.seekg(0);
@@ -131,154 +130,108 @@ std::string	Client::getPath(void)
 
 void	Client::checkPath(const t_config config)
 {
-	std::string	lastDir = "", firstDir = "", file = "";
-	bool		reDir = false;
+	std::string	fullDir = "", firstDir = "", file = "";
+	bool		test = false;
 
-	if (!this->splitPath(lastDir, firstDir, file))
+	if (!this->splitPath(fullDir, firstDir, file))
 	{
 		this->_statusCode = "404";
 		return ;
 	}
-	if (!this->checkLocation(config, firstDir, lastDir, file, reDir))
+	std::cout << "fullDir = " << fullDir << std::endl;
+	std::cout << "firstDir = " << firstDir << std::endl;
+	std::cout << "file = " << file << std::endl;
+	if (!this->findLocation(config, fullDir, test)
+		|| !this->checkLocation(fullDir, config.root)
+		|| !this->checkBodyLimit(config.max_size_server))
 		return ;
-	if (!reDir)
-			this->checkFile(lastDir, file);
-	this->_path = lastDir + file;
+	this->checkFile(fullDir, file);
 }
 
-bool	Client::checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &reDir)
+bool	Client::findLocation(const t_config config, const std::string &fullDir, bool &check)
 {
 	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
 	{
-		if (firstDir == loc->path)
+		if (loc->path == fullDir)
 		{
-			if (loc->methods.size() > 0 && std::find(loc->methods.begin(), loc->methods.end(), _method) != loc->methods.end())
-				return (_statusCode = "405", false);
-			if (!loc->root.empty())
-				lastDir.insert(0, loc->root);
-			else
-				lastDir.insert(0, config.root);
-			if (file.empty())
-			{
-				if (!loc->index.empty())
-					file = loc->index;
-				else
-				{
-					if (loc->autoindex)
-						this->_autoIndex = true;
-				}
-			}
-			if (!loc->redir.first.empty() && !loc->redir.second.empty())
-			{
-				if (loc->redir.first[0] == '3')
-				{
-					_statusCode = loc->redir.first;
-					_reDirHeader = "Location: " + loc->redir.second;
-				}
-				reDir = true;
-			}
-			bool	tmp = loc->max_size_location;
-			bool	tmp2 = config.max_size_server;
-			if (tmp || tmp2)
-			{
-				long sizeRequst = 0;
-				auto size = _header.find("Content-Length");
-				if (size != _header.end())
-					sizeRequst = std::stol(size->second);
-				if (tmp)
-				{
-					if (loc->max_size_location < sizeRequst)
-						return (_statusCode = "413", false);
-				}
-				else
-				{
-					if (config.max_size_server < sizeRequst)
-						return (_statusCode = "413", false);
-				}
-			}
-			return (true);
+			this->_locationInfo = *loc;
+			std::cout << "location = " << loc->path << std::endl;
+			check = true;
 		}
 	}
-	return (_statusCode = "404", false);
+	if (!check)
+		this->findLocation(config, fullDir.substr(fullDir.rfind('/', fullDir.size() - 1)), check);
+	if (!check)
+	{
+		std::cerr << RED << "Path not found" << RESET << std::endl;
+		this->_statusCode = "404";
+	}
+	return (check);
 }
 
-void	Client::checkFile(const std::string &lastDir, const std::string &file)
+bool	Client::checkLocation(std::string &fullDir, const std::string &mainRoot)
 {
-	DIR					*dir;
-	struct dirent		*openDir;
+	std::vector<std::string>	methods = this->_locationInfo.methods;
+	std::pair<std::string, std::string>	redir = this->_locationInfo.redir;
 
-	dir = opendir(lastDir.c_str());
-	if (!dir)
+	if (!redir.first.empty())
 	{
-		this->_statusCode = "404";
-		return ;
-	}
-	while ((openDir = readdir(dir)) != nullptr)
-	{
-		this->_files.push_back(openDir->d_name);
-		if (openDir->d_type == DT_REG && openDir->d_name == file)
+		if (redir.first[0] == '3' && !redir.second.empty())
 		{
-			closedir(dir);
-			return ;
+			_statusCode = redir.first;
+			_reDirHeader = "Location: " + redir.second;
 		}
+		else
+			_statusCode = redir.first;
+		return (true);
 	}
-	if (!this->_autoIndex)
-	{
-		std::cout << RED << "File doesn't exist" << RESET << std::endl;
-		this->_statusCode = "404";
-	}
-	closedir(dir);
+	
+	if (methods.size() > 0 && std::find(methods.begin(), methods.end(), this->_method) != methods.end())
+		return (_statusCode = "405", false);
+
+	if (!this->_locationInfo.root.empty())
+		fullDir.insert(0, this->_locationInfo.root);
+	else if (!mainRoot.empty())
+		fullDir.insert(0, mainRoot);
+	else
+		std::cerr << RED << "No Root found" << RESET << std::endl;
+	return (true);
 }
 
-// void	Client::createAutoIndex(const std::string &lastDir)
-// {
-// 	std::stringstream	entries;
-// 	DIR					*dir;
-// 	struct dirent		*openDir;
+bool	Client::checkBodyLimit(const long rootMaxSize)
+{
+	long	tmp = this->_locationInfo.max_size_location;
+	long	tmp2 = rootMaxSize;
 
-// 	this->_autoIndexBody = utils::autoindexTemplate;
-// 	dir = opendir(lastDir.c_str());
-// 	if (!dir)
-// 	{
-// 		this->_statusCode = "404";
-// 		return ;
-// 	}
-// 	while ((openDir = readdir(dir)) != nullptr)
-// 	{
-// 		bool		isDir;
-// 		struct stat	info;
-// 		std::string	name = openDir->d_name;
-// 		std::string	href;
-// 		std::string	displayName;
-// 		std::string	fileSize;
-// 		std::string	dateChanged;
-// 		std::string	button;
+	if (tmp || tmp2)
+	{
+		long sizeRequst = 0;
+		auto size = _header.find("Content-Length");
+		if (size != _header.end())
+			sizeRequst = std::stol(size->second);
+		if (tmp && tmp < sizeRequst)
+			return (_statusCode = "413", false);
+		if (tmp2 && tmp2 < sizeRequst)
+			return (_statusCode = "413", false);
+	}
+	return (true);
+}
 
-// 		if (name == ".")
-// 			continue;
-// 		std::string fullPath = lastDir + name;
-// 		if (stat(fullPath.c_str(), &info) != 0)
-// 			continue;
-// 		isDir = S_ISDIR(info.st_mode);
-// 		href = name + (isDir ? "/" : "");
-// 		displayName = isDir ? "<td class=\"directory\">" : "<td>";
-// 		fileSize = isDir ? "<td>-</td>" : getSize(info.st_size);
-// 		button = isDir ? "<td></td>" : "<td><button onclick=\"deleteFile('" + name + "', this)\">Delete</button></td>";
-// 		entries << "<tr>\n"
-// 		<< "  " << displayName
-// 		<< "<a href=\"" << href << "\">" << href << "</a></td>"
-// 		<< fileSize << getTime(info.st_mtime)
-// 		<< button << "\n"
-// 		<< "</tr>\n";
-// 	}
-// 	closedir(dir);
-// 	size_t pos;
-
-// 	while ((pos = this->_autoIndexBody.find("{{path}}")) != std::string::npos)
-// 		this->_autoIndexBody.replace(pos, 8, lastDir);
-// 	while ((pos = this->_autoIndexBody.find("{{entries}}")) != std::string::npos)
-// 		this->_autoIndexBody.replace(pos, 11, entries.str());
-// }
+void	Client::checkFile(std::string &fullDir, std::string file)
+{
+	if (file.empty())
+	{
+		if (!this->_locationInfo.index.empty())
+			file = this->_locationInfo.index;
+	}
+	if (access(fullDir.c_str(), F_OK))
+		this->_statusCode = "404";
+	else if (this->_method == "GET" && (access(fullDir.c_str(), X_OK) || access((fullDir + file).c_str(), R_OK)))
+		this->_statusCode = "403";
+	else if ((this->_method == "POST" || this->_method == "DELETE") && access(fullDir.c_str(), X_OK | W_OK))
+		this->_statusCode = "403";
+	fullDir.append(file);
+}
 
 std::string	Client::createAutoIndex(const std::string &lastDir, const std::string name)
 {
