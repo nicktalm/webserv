@@ -37,7 +37,7 @@ class Client : public Response
 		void		checkFile(std::string &fullDir, std::string file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 		void		checkBodySize(void);
-		bool		findLocation(const t_config config, const std::string &fullDir, bool &check);
+		bool		findLocation(const t_config config, std::string fullDir);
 		bool		checkLocation(std::string &fullDir, const std::string &mainRoot);
 		bool		checkBodyLimit(const long rootMaxSize);
 		void		headerParsing(int fd, const t_config config);

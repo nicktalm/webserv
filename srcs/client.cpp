@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/17 12:35:10 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/17 17:16:18 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,6 @@ std::string	Client::getPath(void)
 void	Client::checkPath(const t_config config)
 {
 	std::string	fullDir = "", firstDir = "", file = "";
-	bool		test = false;
 
 	if (!this->splitPath(fullDir, firstDir, file))
 	{
@@ -141,26 +140,29 @@ void	Client::checkPath(const t_config config)
 	std::cout << "fullDir = " << fullDir << std::endl;
 	std::cout << "firstDir = " << firstDir << std::endl;
 	std::cout << "file = " << file << std::endl;
-	if (!this->findLocation(config, fullDir, test)
+	if (!this->findLocation(config, fullDir)
 		|| !this->checkLocation(fullDir, config.root)
 		|| !this->checkBodyLimit(config.max_size_server))
 		return ;
 	this->checkFile(fullDir, file);
+	this->_path = fullDir;
+	std::cout << "end path = " << this->_path << std::endl;
 }
 
-bool	Client::findLocation(const t_config config, const std::string &fullDir, bool &check)
+bool	Client::findLocation(const t_config config, std::string fullDir)
 {
+	bool	check;
+	std::cout << "find fullDir = " << fullDir << std::endl;
 	for (auto loc = config.locations.begin(); loc != config.locations.end(); ++loc)
 	{
 		if (loc->path == fullDir)
 		{
 			this->_locationInfo = *loc;
 			std::cout << "location = " << loc->path << std::endl;
-			check = true;
+			return (true);
 		}
 	}
-	if (!check)
-		this->findLocation(config, fullDir.substr(fullDir.rfind('/', fullDir.size() - 1)), check);
+	check = this->findLocation(config, fullDir.substr(0, fullDir.rfind('/', fullDir.size() - 2) + 1));
 	if (!check)
 	{
 		std::cerr << RED << "Path not found" << RESET << std::endl;
@@ -219,17 +221,18 @@ bool	Client::checkBodyLimit(const long rootMaxSize)
 
 void	Client::checkFile(std::string &fullDir, std::string file)
 {
-	if (file.empty())
+	if (file.empty() && !this->_locationInfo.autoindex)
 	{
 		if (!this->_locationInfo.index.empty())
 			file = this->_locationInfo.index;
 	}
-	if (access(fullDir.c_str(), F_OK))
+	if (access((fullDir + file).c_str(), F_OK))
 		this->_statusCode = "404";
 	else if (this->_method == "GET" && (access(fullDir.c_str(), X_OK) || access((fullDir + file).c_str(), R_OK)))
 		this->_statusCode = "403";
 	else if ((this->_method == "POST" || this->_method == "DELETE") && access(fullDir.c_str(), X_OK | W_OK))
 		this->_statusCode = "403";
+	std::cout << "statusCode = " << this->_statusCode << std::endl;
 	fullDir.append(file);
 }
 
