@@ -6,7 +6,7 @@
 /*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/16 17:14:53 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/17 14:54:35 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,6 +158,26 @@ std::map<std::string, std::string> parseBody(std::string body)
 	return parsedBody;
 }
 
+std::string decodeURIcomponent(std::string &shoppinglist)
+{
+	std::string trimmedList;
+	for (unsigned long i = 0; i < shoppinglist.size(); i++)
+	{
+		if (shoppinglist[i] == '%' &&
+			shoppinglist[i + 1] == '2' &&
+			shoppinglist[i + 2] == 'C')
+			{
+				trimmedList += ',';
+				i += 2;
+			}
+		else if (shoppinglist[i] == '+')
+			trimmedList += " ";
+		else
+			trimmedList += shoppinglist[i];
+	}
+	return trimmedList;
+}
+
 //TODO fix blocking
 std::string execute_cgi(Client &client, std::string path)
 {
@@ -186,18 +206,40 @@ std::string execute_cgi(Client &client, std::string path)
 	}
 	else if (pid == 0) // Child process
 	{
-		dup2(pipefd[1], STDOUT_FILENO);
+		std::cout << client.getBody() << std::endl;
 		std::map<std::string, std::string> params = parseBody(client.getBody());
-
-		char *const args[] = {
-			const_cast<char *>(path.c_str()),
-			const_cast<char *>(params["username"].c_str()), 
-			const_cast<char *>(params["password"].c_str()),
-			nullptr};
-		if (execve(path.c_str(), args, nullptr) == -1)
+		std::string shoppingList = params["shopping_list"];
+		std::string cookie = client.getHeader()["Cookie"];
+		size_t i = cookie.find("=");
+		std::string username = cookie.substr(i + 1);;
+		shoppingList = decodeURIcomponent(shoppingList);
+		dup2(pipefd[1], STDOUT_FILENO);
+		if (path == "./http/cgi-bin/shopping_list.py")
 		{
-			std::cerr << RED << "Execve failed" << RESET << std::endl;
-			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+			char *const args[] = {
+				const_cast<char *>(path.c_str()),
+				const_cast<char *>(username.c_str()),
+				const_cast<char *>(shoppingList.c_str()),
+				nullptr};
+			if (execve(path.c_str(), args, nullptr) == -1)
+			{
+				std::cerr << RED << "Execve failed" << RESET << std::endl;
+				return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+			}
+		}
+		else
+		{
+			std::map<std::string, std::string> params = parseBody(client.getBody());
+			char *const args[] = {
+				const_cast<char *>(path.c_str()),
+				const_cast<char *>(params["username"].c_str()), 
+				const_cast<char *>(params["password"].c_str()),
+				nullptr};
+			if (execve(path.c_str(), args, nullptr) == -1)
+			{
+				std::cerr << RED << "Execve failed" << RESET << std::endl;
+				return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+			}
 		}
 	}
 	else // Parent process
@@ -322,7 +364,6 @@ std::string Server::handlePOST(Client &client)
 {
 	client.setReady(true);
 	std::cout << GREEN << "POST request" << RESET << std::endl;
-	// std::cout << client.getPath() << std::endl;
 	if (client.getPath() == "http/cgi-bin/register.py")
 	{
 		return (execute_cgi(client, "./http/cgi-bin/register.py"));
@@ -330,6 +371,10 @@ std::string Server::handlePOST(Client &client)
 	if (client.getPath() == "http/cgi-bin/signup.py")
 	{
 		return (execute_cgi(client, "./http/cgi-bin/signup.py"));
+	}
+	if (client.getPath() == "http/cgi-bin/shopping_list.py")
+	{
+		return (execute_cgi(client, "./http/cgi-bin/shopping_list.py"));
 	}
 	// std::cout << "Body: " << client.getBody() << std::endl;
 	std::string uploadDir = "./http/upload/";

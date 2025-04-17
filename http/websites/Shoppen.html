@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoppen</title>
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+    const addItemBtn = document.getElementById("add-item-btn");
+    const itemInput = document.getElementById("item-input");
+    const shoppingList = document.getElementById("shopping-list");
+    const shoppingListInput = document.getElementById("shopping-list-input");
+    const shoppingForm = document.getElementById("shopping-form");
+    const showListBtn = document.getElementById("show-list-btn");
+
+    showListBtn.addEventListener("click", async () => {
+                const response = await fetch("/cgi-bin/shopping_list.py?action=fetch");
+                const data = await response.json();
+                shoppingList.innerHTML = ""; // Clear the current list
+                data.items.forEach((item) => {
+                    addItemToList(item);
+                });
+            });
+    
+    addItemBtn.addEventListener("click", () => {
+        const item = itemInput.value.trim();
+        if (item) {
+            const listItem = document.createElement("li");
+            listItem.textContent = item;
+            const removeBtn = document.createElement("button");
+            removeBtn.textContent = "Remove";
+            removeBtn.style.marginLeft = "10px";
+            removeBtn.addEventListener("click", () => {
+                shoppingList.removeChild(listItem);
+                updateHiddenInput();
+            });
+            listItem.appendChild(removeBtn);
+            shoppingList.appendChild(listItem);
+            itemInput.value = "";
+            updateHiddenInput();
+        }
+    });
+
+    shoppingForm.addEventListener("submit", (event) => {
+        updateHiddenInput(); // Ensure the hidden input is updated before submission
+    });
+
+    function updateHiddenInput() {
+        const items = Array.from(shoppingList.children).map(
+            (li) => li.firstChild.textContent
+        );
+        shoppingListInput.value = items.join(", ");
+        console.log("Updated shopping list:", shoppingListInput.value);
+        }
+    });
+	</script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #d4f8e8, #a5d6a7);
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            background: rgb(4, 255, 109);
+            border: 2px solid black;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            background-color: #000000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input{
+            background-color: hsl(0, 0%, 62%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input:hover {
+            background-color: hsl(0, 0%, 82%);
+        }
+        input{
+            margin-left: 10px;
+        }
+		li{
+			margin: 10px;
+			text-align: left;
+		}
+        #show-list-btn{
+            margin: 10px;
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+		<form id="shopping-form" action="/cgi-bin/shopping_list.py" method="POST">
+			<h1>Shopping-List</h1>
+			<div id="input-container">
+				<input type="text" id="item-input" name="item" placeholder="Enter an item" />
+				<button type="button" id="add-item-btn">Add</button>
+			</div>
+			<ul id="shopping-list"></ul>
+			<input type="hidden" id="shopping-list-input" name="shopping_list" />
+			<br><br>
+			<button type="submit">Save Shopping List</button>
+		</form>
+        <button id="show-list-btn">Show Shopping List</button>
+    </div>
+</body>
+</html>
