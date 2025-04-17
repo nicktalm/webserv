@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/04/16 10:43:02 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/17 12:15:30 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,10 +203,10 @@ void process_location_directives(const std::string& line, t_location& current_lo
 	{
 		std::string status_code, redirect_url;
 		iss >> status_code >> redirect_url;
+		if (redirect_url.empty())
+			throw std::runtime_error("Error: Missing redirect URL in return directive");
 		if (status_code.length() != 3 || status_code[0] != '3' || !std::isdigit(status_code[1]) || !std::isdigit(status_code[2]))
-		{
 			throw std::runtime_error("Error: Invalid status code in return directive. Must be a 3xx code.");
-		}
 		current_location.redir = std::make_pair(status_code, redirect_url);
 	}
 	else if (key == "error_page")
@@ -216,9 +216,7 @@ void process_location_directives(const std::string& line, t_location& current_lo
 			current_location.error_page.emplace(error_code, error_path);
 	}
 	else
-	{
 		throw std::runtime_error("Unknown directive in location block");
-	}
 }
 
 void process_server_directives(const std::string& line, t_config& current_config)
