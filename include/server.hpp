@@ -41,6 +41,15 @@ class Server
 		void			IO_Error(int bytesRead, std::vector<pollfd>::iterator find);
 		std::string 	handleGET(Client &client);
 		std::string 	handlePOST(Client &client);
+
+		bool		 	isCGIScript(Client &client);
+		std::string 	handleCGIScript(Client &client);
+		std::string 	extractContentType(const std::string &headerValue);
+		bool			handleMultipartFormData(Client &client, const std::string &body, const std::string &uploadDir);
+		bool			handleURLEncoded(Client &client, const std::string &body, const std::string &uploadDir);
+		bool			handleRawUpload(Client &client, const std::string &body, const std::string &uploadDir);
+		std::string 	buildRedirectResponse(const std::string &location);
+
 		std::string		handleERROR(Client &client);
 		std::string 	handleDELETE(Client &client);
 		std::string 	create_response(const t_response &response);
