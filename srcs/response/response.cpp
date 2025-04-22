@@ -4,13 +4,13 @@
 
 Response::Response(void)
 {
-	_responseBuffer = "";
-	_responseReady = false;
-	_autoIndex = false;
-	_autoIndexPart = 0;
-	_bytesSend = 0;
-	_files = {};
-	_currentFile = 1;
+	this->_responseBuffer = "";
+	this->_responseHeader = false;
+	this->_responseReady = false;
+	this->_autoIndexPart = 0;
+	this->_bytesSend = 0;
+	this->_reDirHeader = "";
+	this->_dir = nullptr;
 }
 
 Response::~Response(void) {}
