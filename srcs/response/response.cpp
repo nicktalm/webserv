@@ -7,6 +7,7 @@ Response::Response(void)
 	this->_responseBuffer = "";
 	this->_responseHeader = false;
 	this->_responseReady = false;
+	this->_exeCGI = false;
 	this->_autoIndexPart = 0;
 	this->_bytesSend = 0;
 	this->_reDirHeader = "";
