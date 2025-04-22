@@ -26,7 +26,7 @@ class Client : public Response
 		std::string							_path;
 		std::string							_protocol;
 		std::string							_body;
-		std::string							_reDirHeader;
+		t_location							_locationInfo;
 		std::map<std::string, std::string>	_header;
 	public:
 		Client(void);
@@ -34,12 +34,15 @@ class Client : public Response
 		void		appendMsg(char *msg, size_t size);
 		void		parseRequest(int fd, const t_config config);
 		std::string	createAutoIndex(const std::string &lastDir, const std::string name);
-		void		checkFile(const std::string &lastDir, const std::string &file);
+		bool		checkFile(std::string &fullDir, std::string file);
 		bool		splitPath(std::string &fullpath, std::string &fiirstDir, std::string &file);
 		void		checkBodySize(void);
-		bool		checkLocation(const t_config config, const std::string &firstDir, std::string &lastDir, std::string &file, bool &reDir);
+		bool		findLocation(const t_config config, std::string fullDir);
+		bool		checkLocation(std::string &fullDir, const std::string &mainRoot);
+		bool		checkBodyLimit(const long rootMaxSize);
 		void		headerParsing(int fd, const t_config config);
 		void		checkPath(const t_config config);
+		void		clear(void);
 		
 		// getter
 		bool								getListen(void) const {return (_listen);};
@@ -52,6 +55,7 @@ class Client : public Response
 		std::string							getPath(void);
 		std::string							getBody(void) {return _body;};
 		std::map<std::string, std::string>	getHeader(void) const {return _header;};
+		t_location							getLocationInfo(void) const {return (_locationInfo);};
 		
 		// setter
 		void	setBody(const std::string &body) {_body = body;};

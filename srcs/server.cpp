@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/17 17:23:29 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/22 15:48:55 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -629,8 +629,7 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	if (client.getReady() && (currBytes == static_cast<ssize_t>(response.size())))
 	{
 		pollClient->events = POLLIN;
-		client.setReady(false);
-		client.setAutoIndex(false);
+		client.clear();
 	}
 }
 
@@ -643,7 +642,13 @@ std::string	Server::handleERROR(Client &client)
 
 	errorMsg = client.getErrorMsg(client.getStatusCode());
 	end = errorMsg.find(':');
-	path = errorMsg.substr(end + 2);
+	if (!client.getLocationInfo().error_page.empty() && client.getLocationInfo().error_page.find(client.getStatusCode()) != client.getLocationInfo().error_page.end())
+	{
+		path = client.getLocationInfo().error_page.find(client.getStatusCode())->second;
+		std::cout << "path = " << path << std::endl;
+	}
+	else
+		path = errorMsg.substr(end + 2);
 	if (!utils::readFile(path, response.body))
 		return (client.setStatusCode("404"), handleERROR(client));
 	response.start_line = "HTTP/1.1 " + client.getStatusCode() + " " + errorMsg.substr(0, end);
@@ -690,39 +695,39 @@ std::string Server::create_response(const t_response &response)
 std::string	Server::handleGET(Client &client)
 {
 	std::cout << PURPLE << "GetRequest" << RESET << std::endl;
-	t_response response;
-	std::string	path;
-	
-	path = client.getPath();
-	if (!client.getReDir().empty())
-	{
-		std::stringstream	tmp;
-		response.server_name = "Servername: " + this->_config.server_name + "\r\n";
-		response.date = "Date: " + utils::getDate() + "\r\n";
-		response.start_line = client.getStartLine(client.getProtocol(), client.getStatusCode()) + "\r\n";
-		response.content_type = client.getReDir() + "\r\n";
+	std::string	body;
 
-		tmp << response.start_line << response.server_name << response.date << response.content_type << response.empty_line;
-		client.setReady(true);
-		return (tmp.str());
+	if (!client.getHeaderReady())
+	{
+		std::stringstream	tmpHeader;
+
+		tmpHeader << client.getProtocol() << " " + client.getStatusCode() << " " << client.getErrorMsg(client.getStatusCode()) << "\r\n";
+		tmpHeader << "Server: " << this->_config.server_name << "\r\n";
+		tmpHeader << "Date: " << utils::getDate() << "\r\n";
+
+		if (client.getLocationInfo().autoindex && client.getPath().back() == '/')
+			tmpHeader << "Content-Type: text/html\r\n" << "Transfer-Encoding: chunked\r\n";
+		else if (!client.getReDir().empty())
+		{
+			tmpHeader << client.getReDir() << "\r\n";
+			client.setReady(true);
+		}
+		else
+		{
+			std::string	body;
+
+			if (!utils::readFile(client.getPath(), body))
+				return (client.setStatusCode("404"), handleERROR(client));
+			tmpHeader << "Content-Type: " << client.getContentType(client.getPath()) << "\r\n";
+			tmpHeader << "Content-Length: " << body.size() << "\r\n";
+		}
+		tmpHeader << "\r\n";
+		client.setHeaderReady(true);
+		return (tmpHeader.str());
 	}
-	else if (client.getAutoIndex())
+	if (client.getLocationInfo().autoindex && client.getPath().back() == '/')
 	{
 		if (client.getAutoIndexPart() == 0)
-		{
-			std::string	tmp;
-
-			response.server_name = "Server: " + this->_config.server_name + "\r\n";
-			response.date = "Date: " + utils::getDate() + "\r\n";
-			response.content_length = "Transfer-Encoding: chunked\r\n\r\n";
-			response.content_type = "Content-Type: text/html\r\n";
-			response.start_line = client.getStartLine(client.getProtocol(), client.getStatusCode()) + "\r\n";
-
-			tmp = response.start_line + response.server_name + response.date + response.content_type + response.content_length;
-			client.setAutoIndexPart(1);
-			return (tmp);
-		}
-		else if (client.getAutoIndexPart() == 1)
 		{
 			std::string			tmp;
 			size_t				pos;
@@ -734,30 +739,29 @@ std::string	Server::handleGET(Client &client)
 			size << std::hex << tmp.size();
 			tmp.insert(0, size.str() + "\r\n");
 			tmp.append("\r\n");
-			client.setAutoIndexPart(2);
+			client.setAutoIndexPart(1);
 			return (tmp);
 		}
-		else if (client.getAutoIndexPart() == 2)
+		else if (client.getAutoIndexPart() == 1)
 		{
-			std::vector<std::string>	tmp = client.getFiles();
-			std::string					fileName;
-			size_t						index = client.getCurrentFileIndex();
-			std::string					repo;
-			std::stringstream			size;
+			dirent				*entry;
+			std::string			repo;
+			std::stringstream	size;
 
-			if (index < tmp.size())
+			entry = readdir(client.getDir());
+			if (entry != nullptr && std::string(entry->d_name) == ".")
+				entry = readdir(client.getDir());
+			if (entry != nullptr)
 			{
-				fileName = tmp[index];
-				client.setCurrentFileIndex(++index);
-				repo = client.createAutoIndex(client.getPath(), fileName);
+				repo = client.createAutoIndex(client.getPath(), entry->d_name);
 				size << std::hex << repo.size();
 				repo.insert(0, size.str() + "\r\n");
 				repo.append("\r\n");
 				return (repo);
 			}
-			client.setAutoIndexPart(3);
+			client.setAutoIndexPart(2);
 		}
-		if (client.getAutoIndexPart() == 3)
+		if (client.getAutoIndexPart() == 2)
 		{
 			std::string	tmp = utils::autoindexBody;
 			std::stringstream	size;
@@ -765,10 +769,10 @@ std::string	Server::handleGET(Client &client)
 			size << std::hex << tmp.size();
 			tmp.insert(0, size.str() + "\r\n");
 			tmp.append("\r\n");
-			client.setAutoIndexPart(4);
+			client.setAutoIndexPart(3);
 			return (tmp);
 		}
-		if (client.getAutoIndexPart() == 4)
+		if (client.getAutoIndexPart() == 3)
 		{
 			client.setAutoIndexPart(0);
 			client.setReady(true);
@@ -777,16 +781,11 @@ std::string	Server::handleGET(Client &client)
 	}
 	else
 	{
-		if (!utils::readFile(path, response.body))
+		client.setReady(true);
+		if (!utils::readFile(client.getPath(), body))
 			return (client.setStatusCode("404"), handleERROR(client));
 	}
-	response.server_name = "Server: " + this->_config.server_name;
-	response.date = "Date: " + utils::getDate();
-	response.content_length = "Content-Length: " + std::to_string(response.body.size());
-	response.content_type = "Content-Type: " + client.getContentType(path);
-	response.start_line = client.getStartLine(client.getProtocol(), client.getStatusCode());
-	client.setReady(true);
-	return (Server::create_response(response));
+	return (body);
 }
 
 void	Server::disconnect(std::vector<pollfd>::iterator find)
