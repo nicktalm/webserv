@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/22 17:32:27 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/22 20:15:24 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,7 +178,7 @@ std::string decodeURIcomponent(std::string &shoppinglist)
 	return trimmedList;
 }
 
-std::string	executeCgiGet(Client &client)
+std::string	Server::executeCgiGet(Client &client)
 {
 	int		pipefd[2];
 	pid_t	pid;
@@ -200,31 +200,28 @@ std::string	executeCgiGet(Client &client)
 
 	if (pid == 0)
 	{
-		char											**args;
-		char											*envp[8];
 		std::map<std::string, std::string>				header = client.getHeader();
 		std::map<std::string, std::string>::iterator	tmp;
+		std::string										length = "";
+		std::string										type = "";
 
-		envp[0] = ("REQUEST_METHOD=" + client.getMethod()).c_str();
-		// envp[1] = ("QUERY_STRING=" + )
 		if ((tmp = header.find("Content-Length")) != header.end())
-			envp[2] = ("CONTENT_LENGTH=" + tmp->second).c_str();
+			length = tmp->second;
 		if ((tmp = header.find("Content-Type")) != header.end())
-			envp[3] = ("CONTENT_TYPE=" + tmp->second).c_str();
-		// REQUEST_METHOD	Die HTTP-Methode (z. B. GET, POST, DELETE, PUT, …)
-		// QUERY_STRING	Der Teil der URL nach dem ? (nur bei GET/HEAD)
-		// CONTENT_LENGTH	Die Länge des Request-Bodys (bei POST/PUT)
-		// CONTENT_TYPE	MIME-Typ des Request-Bodys (z. B. application/x-www-form-urlencoded)
-		// SCRIPT_NAME	Pfad zum CGI-Skript relativ zur Server-Root
-		// PATH_INFO	Zusätzliche Pfad-Info hinter dem Skript
-		// PATH_TRANSLATED	Das physische Dateisystem-Äquivalent zu PATH_INFO
-		// SERVER_NAME	Hostname des Servers
-		// SERVER_PORT	Port, über den die Verbindung läuft (z. B. 80)
-		// SERVER_PROTOCOL	HTTP-Version (z. B. HTTP/1.1)
-		// SERVER_SOFTWARE	Dein Servername/-version (frei wählbar z. B. webserv/1.0)
-		// GATEWAY_INTERFACE	Immer CGI/1.1
-		// REMOTE_ADDR	IP-Adresse des Clients
-		// REMOTE_HOST	Hostname des Clients (optional)
+			type = tmp->second;
+		char * const									envp[] =
+		{
+			const_cast<char *>(("REQUEST_METHOD=" + client.getMethod()).c_str()),
+			const_cast<char *>(("QUERY_STRING=" + client.getPath()).c_str()),
+			const_cast<char *>(("CONTENT_LENGTH=" + length).c_str()),
+			const_cast<char *>(("CONTENT_TYPE=" + type).c_str()),
+			const_cast<char *>(("SCRIPT_NAME=" + client.getPath()).c_str()),
+			const_cast<char *>(("SERVER_NAME=" + this->_config.server_name).c_str()),
+			const_cast<char *>(("SERVER_PORT=" + std::to_string(this->_config.port)).c_str()),
+			const_cast<char *>(("SERVER_PROTOCOL=" + client.getProtocol()).c_str()),
+			const_cast<char *>("HTTP_COOKIE="),
+			nullptr
+		};
 
 		if (close(pipefd[0]) == -1)
 		{
