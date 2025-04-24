@@ -19,6 +19,7 @@ class Client : public Response
 	private:
 		bool								_listen;
 		bool								_headerReady;
+		bool								_chunked;
 		int									_fd;
 		std::string							_clientsMsg;
 		std::string							_statusCode;

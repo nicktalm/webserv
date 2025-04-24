@@ -8,7 +8,6 @@
 #include "config.hpp"
 #include "client.hpp"
 #include "response.hpp"
-#include <fcntl.h>
 
 extern std::atomic<bool>	runner;
 
@@ -18,12 +17,12 @@ extern std::atomic<bool>	runner;
 #define BLUE    "\033[34m"
 #define YELLOW  "\033[33m"
 #define RESET   "\033[0m"
+
 class Server
 {
 	private:
 		std::vector<pollfd>			_clientsFd;
 		std::map<int, Client>		_clientsInfo;
-		std::map<int, Response>		_responseInfo;
 		const t_config				_config;
 		int							_socketFd;
 		struct addrinfo 			*_res;

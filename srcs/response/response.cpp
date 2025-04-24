@@ -14,7 +14,14 @@ Response::Response(void)
 	this->_dir = nullptr;
 }
 
-Response::~Response(void) {}
+Response::~Response(void)
+{
+	if (this->_dir != nullptr)
+	{
+		if (closedir(this->_dir) != -1)
+			this->_dir = nullptr;
+	}
+}
 
 std::string Response::getErrorMsg(std::string error)
 {

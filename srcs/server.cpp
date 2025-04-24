@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/24 12:32:26 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/24 21:45:22 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,8 @@ Server::Server(t_config config) : _config(config)
 	hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
 	tmp << config.port;
-	if (auto status = getaddrinfo(config.server_name.c_str(), tmp.str().c_str(), &hints, &_res) != 0)
+	int status = getaddrinfo(config.server_name.c_str(), tmp.str().c_str(), &hints, &_res);
+	if (status != 0)
 	{
 		std::stringstream	error;
 
@@ -59,7 +60,7 @@ Server::Server(t_config config) : _config(config)
 	if (bind(_socketFd, _res->ai_addr, _res->ai_addrlen) < 0)
 		throw std::runtime_error("bind failed");
 
-	if (listen(_socketFd, 10) < 0)
+	if (listen(_socketFd, 128) < 0)
 		throw std::runtime_error("listen failed");
 
 	_clientsFd.push_back({_socketFd, POLLIN, 0});
@@ -67,8 +68,11 @@ Server::Server(t_config config) : _config(config)
 
 Server::~Server(void)
 {
-	close(_socketFd);
-	freeaddrinfo(_res);
+	for (auto it = this->_clientsFd.rbegin(); it != this->_clientsFd.rend(); ++it)
+	{
+		if (it.base() != this->_clientsFd.end())
+			this->disconnect(it.base());
+	}
 }
 
 void	Server::run(void)
@@ -93,48 +97,6 @@ void	Server::run(void)
 				this->response(_clientsInfo[tmpFd], _clientsFd.begin() + it);
 			}
 			++it;
-		}
-	}
-}
-
-void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
-{
-	if (bytesRead < 0)
-		std::cerr << RED << "Recv failed" << RESET << std::endl;
-	this->disconnect(find);
-}
-
-void Server::request(std::vector<pollfd>::iterator pollClient)
-{
-	char				tmp[8192];
-
-	if (pollClient->fd == _socketFd) //new client trys to connect
-	{
-		int clientFd = accept(_socketFd, _res->ai_addr, &_res->ai_addrlen);
-		if (clientFd < 0)
-			std::cout << RED << "Client accept failed" << RESET << std::endl;
-		else
-		{
-			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
-			fcntl(clientFd, F_SETFL, O_NONBLOCK);
-			_clientsFd.push_back({clientFd, POLLIN, 0});
-			_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
-		}
-	}
-	else //existing client trys to connect
-	{
-		int bytesRead = recv(pollClient->fd, tmp, sizeof(tmp), 0);
-		if (bytesRead < 0 || (bytesRead == 0 && _clientsInfo[pollClient->fd].getMsg().empty()))
-			IO_Error(bytesRead, pollClient);
-		else
-		{
-			tmp[bytesRead] = '\0';
-			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
-			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
-			if (_clientsInfo[pollClient->fd].getStatusCode() == "413")
-				this->disconnect(pollClient);
-			else if (!_clientsInfo[pollClient->fd].getListen() || _clientsInfo[pollClient->fd].getStatusCode()[0] == '4' || _clientsInfo[pollClient->fd].getStatusCode()[0] == '5')
-				pollClient->events = POLLOUT;
 		}
 	}
 }
@@ -250,14 +212,15 @@ std::string	Server::executeCgiGet(Client &client)
 		perror("close");
 	if (dup2(pipefd[0], STDIN_FILENO) == -1)
 		perror("dup2");
-	int	status;
-	int result = waitpid(pid, &status, WNOHANG);
-	if (result == pid)
+	// int	status;
+	// int result = waitpid(pid, &status, WNOHANG);
+	// if (result == pid)
 		
-	else if (result == 0)
+	// else if (result == 0)
 		
-	else
+	// else
 		
+	return ("test");
 }
 
 //TODO fix blocking
