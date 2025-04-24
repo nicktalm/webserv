@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/22 20:15:24 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/24 12:32:26 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -209,20 +209,27 @@ std::string	Server::executeCgiGet(Client &client)
 			length = tmp->second;
 		if ((tmp = header.find("Content-Type")) != header.end())
 			type = tmp->second;
-		char * const									envp[] =
+		std::vector<std::string> env_strings =
 		{
-			const_cast<char *>(("REQUEST_METHOD=" + client.getMethod()).c_str()),
-			const_cast<char *>(("QUERY_STRING=" + client.getPath()).c_str()),
-			const_cast<char *>(("CONTENT_LENGTH=" + length).c_str()),
-			const_cast<char *>(("CONTENT_TYPE=" + type).c_str()),
-			const_cast<char *>(("SCRIPT_NAME=" + client.getPath()).c_str()),
-			const_cast<char *>(("SERVER_NAME=" + this->_config.server_name).c_str()),
-			const_cast<char *>(("SERVER_PORT=" + std::to_string(this->_config.port)).c_str()),
-			const_cast<char *>(("SERVER_PROTOCOL=" + client.getProtocol()).c_str()),
-			const_cast<char *>("HTTP_COOKIE="),
-			nullptr
+			"REQUEST_METHOD=" + client.getMethod(),
+			"QUERY_STRING=" + client.getPath(),
+			"CONTENT_LENGTH=" + length,
+			"CONTENT_TYPE=" + type,
+			"SCRIPT_NAME=" + client.getPath().substr(client.getPath().rfind('/') + 1),
+			"SERVER_NAME=" + this->_config.server_name,
+			"SERVER_PORT=" + std::to_string(this->_config.port),
+			"SERVER_PROTOCOL=" + client.getProtocol(),
+			"HTTP_COOKIE="
 		};
 
+		std::vector<char*> envp;
+		for (size_t i = 0; i < env_strings.size(); ++i)
+			envp.push_back(const_cast<char*>(env_strings[i].c_str()));
+		envp.push_back(nullptr);
+		char * const	args[] =
+		{
+			nullptr
+		};
 		if (close(pipefd[0]) == -1)
 		{
 			perror("close");
@@ -233,16 +240,24 @@ std::string	Server::executeCgiGet(Client &client)
 			perror("dup2");
 			exit(2);
 		}
-		if (execve(("./" + client.getPath()).c_str(), args, envp) == -1)
+		if (execve(("./" + client.getPath()).c_str(), args, envp.data()) == -1)
 		{
 			perror("execve");
 			exit(3);
 		}
 	}
-	else
-	{
+	if (close(pipefd[1]) == -1)
+		perror("close");
+	if (dup2(pipefd[0], STDIN_FILENO) == -1)
+		perror("dup2");
+	int	status;
+	int result = waitpid(pid, &status, WNOHANG);
+	if (result == pid)
 		
-	}
+	else if (result == 0)
+		
+	else
+		
 }
 
 //TODO fix blocking
@@ -656,7 +671,7 @@ std::string	Server::handleGET(Client &client)
 		tmpHeader << "Server: " << this->_config.server_name << "\r\n";
 		tmpHeader << "Date: " << utils::getDate() << "\r\n";
 
-		if (client.getLocationInfo().autoindex && client.getPath().back() == '/')
+		if ((client.getLocationInfo().autoindex && client.getPath().back() == '/') || client.getCGI())
 			tmpHeader << "Content-Type: text/html\r\n" << "Transfer-Encoding: chunked\r\n";
 		else if (!client.getReDir().empty())
 		{
@@ -729,6 +744,10 @@ std::string	Server::handleGET(Client &client)
 			client.setReady(true);
 			return ("0\r\n\r\n");
 		}
+	}
+	else if (client.getCGI())
+	{
+		return (executeCgiGet(client));
 	}
 	else
 	{

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/22 17:03:05 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/24 10:34:06 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,7 +144,7 @@ void	Client::checkPath(const t_config config)
 		return ;
 	this->_path = fullDir;
 	this->_dir = opendir(this->_path.c_str());
-	if (!this->_path.empty() && this->_path.find(".py") != this->_path.end())
+	if (!this->_path.empty() && this->_path.find(".py") != std::string::npos)
 		this->_exeCGI = true;
 }
 
