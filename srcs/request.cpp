@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/24 22:41:10 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/25 12:38:15 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,8 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 		else
 		{
 			buffer[bytesRead] = '\0';
+			std::cout << "buffer" << std::endl;
+			std::cout << buffer << std::endl;
 			_clientsInfo[pollClient->fd].appendMsg(buffer, bytesRead);
 			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
 			if (_clientsInfo[pollClient->fd].getStatusCode() == "413")
@@ -87,10 +89,15 @@ void	Client::parseRequest(int fd, const t_config config)
 				_listen = false;
 		}
 	}
-	else
+	else if (_clientsMsg.size() == 8192)
 	{
 		_fd = fd;
 		_statusCode = "431";
+	}
+	else
+	{
+		_fd = fd;
+		_statusCode = "400";
 	}
 	if (!_chunked)
 		this->checkBodySize();
@@ -142,7 +149,41 @@ void	Client::headerParsing(int fd, const t_config config)
 			if (encoded->second.find("chunked") != std::string::npos)
 				_chunked = true;
 		}
-		_body.append(input.str().substr(input.tellg()));
+		size_t	pos = _clientsMsg.find("\r\n\r\n");
+		if (!_chunked)
+		{
+			if (pos != std::string::npos)
+				_body.append(_clientsMsg.substr(pos + 4));
+		}
+		else
+		{
+			std::string	tmp;
+			int			chunkLen;
+
+			std::cout << "body chunked" << std::endl;
+			tmp = _clientsMsg.substr(pos + 4);
+			pos = tmp.find("\r\n");
+			if (pos != std::string::npos)
+				tmp = tmp.substr(pos + 2);
+			while (true)
+			{
+				pos = tmp.find("\r\n");
+				if (pos != std::string::npos)
+				{
+					std::cout << "pos = " << pos << std::endl;
+					std::cout << "sub = " << tmp.substr(0, pos) << std::endl;
+					std::string	test = tmp.substr(0, pos);
+					std::cout << "test = " << test.c_str() << std::endl;
+					chunkLen = std::stoi(test, nullptr, 16);
+					std::cout << "chunkLen = " << chunkLen << std::endl;
+					if (chunkLen == 0)
+						break ;
+					tmp = tmp.substr(pos + 2);
+				}
+				_body.append(tmp.substr(0, chunkLen));
+				tmp = tmp.substr(chunkLen + 2);
+			}
+		}
 		this->checkPath(config);
 	}
 	else

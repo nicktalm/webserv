@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/24 22:11:06 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/25 10:39:45 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ bool	Client::checkBodyLimit(const long rootMaxSize)
 	long	tmp = this->_locationInfo.max_size_location;
 	long	tmp2 = rootMaxSize;
 
-	if (tmp || tmp2)
+	if (!_chunked && (tmp || tmp2))
 	{
 		long sizeRequst = 0;
 		auto size = _header.find("Content-Length");

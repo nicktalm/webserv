@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:48 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/24 21:17:01 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/25 12:13:18 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,3 +51,4 @@ int main(int argc, char **argv)
 // TODO multiple cgi einbauen
 // TODO cookies
 // TODO transferEncoding = chunked muss fuer die request gemacht werden
+// TODO URL encoding
