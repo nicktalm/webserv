@@ -9,6 +9,14 @@
 #include "client.hpp"
 #include "response.hpp"
 #include <fcntl.h>
+#include <iostream>
+#include <netdb.h>
+#include <sstream>
+#include <fstream>
+#include <sys/fcntl.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <stdlib.h>
 
 extern std::atomic<bool>	runner;
 

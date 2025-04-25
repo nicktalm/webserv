@@ -7,12 +7,14 @@ import json
 USERS_FILE = "./http/users/users.txt"  
 DATA_DIR = "./http/users/data_shopping"
 
-username = sys.argv[1].strip() if len(sys.argv) > 1 else "unknown"
-shopping_list = sys.argv[2].strip() if len(sys.argv) > 2 else ""
+cookie_header = os.environ.get("COOKIE", "").strip()  # Use HTTP_COOKIE to get the Cookie header
+username = ""
+if "user=" in cookie_header:
+    username = cookie_header.split("user=")[1].split(";")[0]
+shopping_list = os.environ.get("SHOPPINGLIST", "")
 
 print("HTTP/1.1 200 OK")
-print("Content-Type: text/html\r\n")
-print(f"Set-Cookie: user={username}; Path=/; HttpOnly\r\n")
+print("Content-Type: text/html")
 
 # Check if the user exists in users.txt
 user_exists = False
@@ -24,7 +26,7 @@ if os.path.exists(USERS_FILE):
                 user_exists = True
                 break
 
-# If the user does not exist, return an error message
+#If the user does not exist, return an error message
 if not user_exists:
     print("<html>")
     print("<head><title>Error</title></head>")
@@ -35,6 +37,7 @@ if not user_exists:
     print("</html>")
     sys.exit(0)
 
+print(f"Set-Cookie: user={username}; Path=/; HttpOnly\r\n")
 # If the user exists, save the shopping list to a file
 shopping_list_file = os.path.join(DATA_DIR, f"{username}_shopping_list.txt")
 
@@ -69,16 +72,30 @@ print("</style>")
 print("</head>")
 print("<body>")
 print("<div class='container'>")
-print(f"<h1>Shopping List for {username}</h1>")
+print(f"<h1>Shopping Items added for {username}</h1>")
 
+#existing items
+if existing_items:
+    print("<h2>Existing items:</h2>")
+    print("<ul>")
+    for item in existing_items:
+        print(f"<li>{item}</li>")
+    print("</ul>")
+else:
+    print("<h2>Existing items:</h2>")
+    print("<p>No items added yet</p>")
+
+#new items
 if shopping_list:
+    print("<h2>Newly added items:</h2>")
     items = shopping_list.split(",")
     print("<ul>")
     for item in items:
         print(f"<li>{item.strip()}</li>")
     print("</ul>")
 else:
-    print("<p>No items in your shopping list.</p>")
+    print("<h2>Newly added items:</h2>")
+    print("<p>No items in your shopping list</p>")
 
 print('<a href="/websites/Shoppen.html">Go back</a>')
 print("</div>")

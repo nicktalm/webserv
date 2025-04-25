@@ -3,22 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/22 15:48:55 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/24 12:22:38 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include <netdb.h>
-#include <sstream>
-#include <string>
-#include <fcntl.h>
-#include <fstream>
-#include <sys/fcntl.h>
-#include <unistd.h>
-#include <dirent.h>
 #include "../include/response.hpp"
 #include "../include/utils.hpp"
 #include "../include/server.hpp"
@@ -158,110 +149,6 @@ std::map<std::string, std::string> parseBody(std::string body)
 	return parsedBody;
 }
 
-std::string decodeURIcomponent(std::string &shoppinglist)
-{
-	std::string trimmedList;
-	for (unsigned long i = 0; i < shoppinglist.size(); i++)
-	{
-		if (shoppinglist[i] == '%' &&
-			shoppinglist[i + 1] == '2' &&
-			shoppinglist[i + 2] == 'C')
-			{
-				trimmedList += ',';
-				i += 2;
-			}
-		else if (shoppinglist[i] == '+')
-			trimmedList += " ";
-		else
-			trimmedList += shoppinglist[i];
-	}
-	return trimmedList;
-}
-
-//TODO fix blocking
-std::string execute_cgi(Client &client, std::string path)
-{
-	int pipefd[2];
-	if (pipe(pipefd) == -1)
-	{
-		std::cerr << RED << "Pipe creation failed" << RESET << std::endl;
-		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-	}
-
-	// if (fcntl(pipefd[0], F_SETFL, O_NONBLOCK) == -1 || fcntl(pipefd[1], F_SETFL, O_NONBLOCK) == -1)
-	// {
-	// 	if (pipefd[0] >= 0) close(pipefd[0]);
-	// 	if (pipefd[1] >= 0) close(pipefd[1]);
-	// 	std::cerr << RED << "fcntl failed" << RESET << std::endl;
-	// 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-	// }
-
-	pid_t pid = fork();
-	if (pid == -1)
-	{
-		close(pipefd[0]);
-		close(pipefd[1]);
-		std::cerr << RED << "Fork failed" << RESET << std::endl;
-		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-	}
-	else if (pid == 0) // Child process
-	{
-		std::cout << client.getBody() << std::endl;
-		std::map<std::string, std::string> params = parseBody(client.getBody());
-		std::string shoppingList = params["shopping_list"];
-		std::string cookie = client.getHeader()["Cookie"];
-		size_t i = cookie.find("=");
-		std::string username = cookie.substr(i + 1);;
-		shoppingList = decodeURIcomponent(shoppingList);
-		dup2(pipefd[1], STDOUT_FILENO);
-		if (path == "./http/cgi-bin/shopping_list.py")
-		{
-			char *const args[] = {
-				const_cast<char *>(path.c_str()),
-				const_cast<char *>(username.c_str()),
-				const_cast<char *>(shoppingList.c_str()),
-				nullptr};
-			if (execve(path.c_str(), args, nullptr) == -1)
-			{
-				std::cerr << RED << "Execve failed" << RESET << std::endl;
-				return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-			}
-		}
-		else
-		{
-			std::map<std::string, std::string> params = parseBody(client.getBody());
-			char *const args[] = {
-				const_cast<char *>(path.c_str()),
-				const_cast<char *>(params["username"].c_str()), 
-				const_cast<char *>(params["password"].c_str()),
-				nullptr};
-			if (execve(path.c_str(), args, nullptr) == -1)
-			{
-				std::cerr << RED << "Execve failed" << RESET << std::endl;
-				return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-			}
-		}
-	}
-	else // Parent process
-	{
-		dup2(pipefd[0], STDIN_FILENO);
-		close(pipefd[1]);
-		char buffer[1024];
-		std::string cgiOutput;
-		ssize_t bytesRead;
-		while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-		{
-			cgiOutput.append(buffer, bytesRead);
-		}
-		close(pipefd[0]);
-		int status;
-		waitpid(pid, &status, 0);
-		std::cout << YELLOW << "CGI:\n" << cgiOutput << std::endl;
-		return cgiOutput;
-	}
-	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-}
-
 // Hilfsfunktion zum Trimmen
 std::string trim_server(const std::string &str)
 {
@@ -353,97 +240,6 @@ std::string	trim_filending(const std::string& str)
 	return str.substr(first, last - first + 1);
 }
 
-// std::string Server::handlePOST(Client &client)
-// {
-// 	client.setReady(true);
-// 	std::cout << GREEN << "POST request" << RESET << std::endl;
-// 	if (client.getPath() == "http/ cgi-bin/register.py")
-// 		return (execute_cgi(client, "./http/cgi-bin/register.py"));
-// 	if (client.getPath() == "http/cgi-bin/signup.py")
-// 		return (execute_cgi(client, "./http/cgi-bin/signup.py"));
-// 	// std::cout << "Body: " << client.getBody() << std::endl;
-// 	std::string uploadDir = "./http/upload/";
-// 	std::string body = client.getBody();
-// 	// std::cout << BLUE << client.getHeader()["Content-Type"] << RESET << std::endl;
-// 	std::string content_type;
-// 	if (client.getHeader()["Content-Type"].find("multipart/form-data") != std::string::npos)
-// 		content_type = "multipart/form-data";
-// 	else if (client.getHeader()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
-// 		content_type = "application/x-www-form-urlencoded";
-// 	if (content_type == "multipart/form-data")
-// 	{
-// 		std::string contentTypeHeader = client.getHeader()["Content-Type"];
-// 		size_t boundaryPos = contentTypeHeader.find("boundary=");
-// 		if (boundaryPos == std::string::npos)
-// 			return (client.setStatusCode("400"), handleERROR(client));
-// 		std::string boundary = contentTypeHeader.substr(boundaryPos + 9);
-// 		boundary.erase(std::remove(boundary.begin(), boundary.end(), '\r'), boundary.end());
-// 		boundary.erase(std::remove(boundary.begin(), boundary.end(), '\n'), boundary.end());
-
-// 		parseMultipartFormData(body, boundary, uploadDir);
-// 		client.setStatusCode("200");
-// 	}
-// 	else if (content_type == "application/x-www-form-urlencoded")
-// 	{
-// 		static int counter = 1;
-// 		std::string filename = "x-www-form-urlencoded_" + std::to_string(counter) + ".txt";
-// 		counter++;
-// 		std::string filePath = uploadDir + filename;
-// 		std::ofstream outFile(filePath);
-// 		if (outFile.is_open())
-// 		{
-// 			outFile << "Content-Type: " << content_type << "\r\n";
-// 			outFile << body;
-// 			outFile.close();
-// 			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
-// 		}
-// 		else
-// 			return (client.setStatusCode("500"), handleERROR(client));
-// 	}
-// 	else
-// 	{
-// 		static int counter = 1;
-// 		std::string content_type_raw = client.getHeader()["Content-Type"];
-// 		std::string content_type = trim(content_type_raw);
-	
-// 		std::string file_ending;
-// 		for (std::map<std::string, std::string>::iterator it = utils::MIMETypes.begin(); it != utils::MIMETypes.end(); ++it)
-// 		{
-// 			if (it->first == content_type)
-// 			{
-// 				file_ending = it->second;
-// 				break;
-// 			}
-// 		}
-// 		if (file_ending.empty())
-// 		{
-// 			std::cout << RED << "WARNUNG: Unbekannter Content-Type, Dateiendung kann nicht ermittelt werden." << RESET << std::endl;
-// 			return (client.setStatusCode("415"), handleERROR(client));
-// 		}
-// 		std::string filename = "uploaded_file_" + std::to_string(counter) + file_ending;
-// 		counter++;
-// 		std::string filePath = uploadDir + filename;
-// 		std::ofstream outFile(filePath);
-// 		if (outFile.is_open())
-// 		{
-// 			outFile << "Content-Type: " << content_type << "\r\n";
-// 			outFile << body;
-// 			outFile.close();
-// 			std::cout << GREEN << "File uploaded successfully to " << filePath << RESET << std::endl;
-// 		}
-// 		else
-// 			return (client.setStatusCode("500"), handleERROR(client));
-// 	}
-
-// 	std::string response = "HTTP/1.1 303 See Other\r\n";
-// 	response += "Location: /websites/upload_success.html\r\n";
-// 	response += "Content-Length: 0\r\n";
-// 	response += "Connection: close\r\n";
-// 	response += "\r\n";
-
-// 	return response;
-// }
-
 std::string Server::handlePOST(Client &client)
 {
 	client.setReady(true);
@@ -473,23 +269,6 @@ std::string Server::handlePOST(Client &client)
 	}
 
 	return buildRedirectResponse("/websites/upload_success.html");
-}
-
-bool Server::isCGIScript(Client &client)
-{
-	std::string path = client.getPath();
-	return path == "http/cgi-bin/register.py" || path == "http/cgi-bin/signup.py" || path == "http/cgi-bin/shopping_list.py";
-}
-
-std::string Server::handleCGIScript(Client &client)
-{
-	if (client.getPath() == "http/cgi-bin/register.py")
-		return execute_cgi(client, "./http/cgi-bin/register.py");
-	if (client.getPath() == "http/cgi-bin/signup.py")
-		return execute_cgi(client, "./http/cgi-bin/signup.py");
-	if (client.getPath() == "http/cgi-bin/shopping_list.py")
-		return (execute_cgi(client, "./http/cgi-bin/shopping_list.py"));
-	return "";
 }
 
 std::string Server::extractContentType(const std::string &headerValue)

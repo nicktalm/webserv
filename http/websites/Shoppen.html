@@ -11,16 +11,6 @@
     const shoppingList = document.getElementById("shopping-list");
     const shoppingListInput = document.getElementById("shopping-list-input");
     const shoppingForm = document.getElementById("shopping-form");
-    const showListBtn = document.getElementById("show-list-btn");
-
-    showListBtn.addEventListener("click", async () => {
-                const response = await fetch("/cgi-bin/shopping_list.py?action=fetch");
-                const data = await response.json();
-                shoppingList.innerHTML = ""; // Clear the current list
-                data.items.forEach((item) => {
-                    addItemToList(item);
-                });
-            });
     
     addItemBtn.addEventListener("click", () => {
         const item = itemInput.value.trim();
@@ -115,10 +105,6 @@
 			margin: 10px;
 			text-align: left;
 		}
-        #show-list-btn{
-            margin: 10px;
-            background-color: blue;
-        }
     </style>
 </head>
 <body>
@@ -132,9 +118,8 @@
 			<ul id="shopping-list"></ul>
 			<input type="hidden" id="shopping-list-input" name="shopping_list" />
 			<br><br>
-			<button type="submit">Save Shopping List</button>
+			<button type="submit">Save/Show Shopping List</button>
 		</form>
-        <button id="show-list-btn">Show Shopping List</button>
     </div>
 </body>
 </html>
