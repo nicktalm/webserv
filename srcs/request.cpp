@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/25 12:38:15 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/26 15:38:33 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,38 +150,29 @@ void	Client::headerParsing(int fd, const t_config config)
 				_chunked = true;
 		}
 		size_t	pos = _clientsMsg.find("\r\n\r\n");
-		if (!_chunked)
+		if (pos != std::string::npos)
 		{
-			if (pos != std::string::npos)
-				_body.append(_clientsMsg.substr(pos + 4));
-		}
-		else
-		{
-			std::string	tmp;
-			int			chunkLen;
-
-			std::cout << "body chunked" << std::endl;
-			tmp = _clientsMsg.substr(pos + 4);
-			pos = tmp.find("\r\n");
-			if (pos != std::string::npos)
-				tmp = tmp.substr(pos + 2);
-			while (true)
+			if (!_chunked)
+					_body.append(_clientsMsg.substr(pos + 4));
+			else
 			{
-				pos = tmp.find("\r\n");
-				if (pos != std::string::npos)
+				std::string	chunk = _clientsMsg.substr(pos + 4);
+
+				while (true)
 				{
-					std::cout << "pos = " << pos << std::endl;
-					std::cout << "sub = " << tmp.substr(0, pos) << std::endl;
-					std::string	test = tmp.substr(0, pos);
-					std::cout << "test = " << test.c_str() << std::endl;
-					chunkLen = std::stoi(test, nullptr, 16);
-					std::cout << "chunkLen = " << chunkLen << std::endl;
-					if (chunkLen == 0)
+					size_t		posValue = chunk.find("\r\n");
+					std::string	tmp;
+					std::string	value;
+					int			size;
+					
+					if (posValue == std::string::npos)
 						break ;
-					tmp = tmp.substr(pos + 2);
+					value = chunk.substr(0, posValue);
+					size = std::stoi(value, nullptr, 16);
+					tmp = chunk.substr(posValue + 2);
+					_body.append(tmp.substr(0, size));
+					chunk = tmp;
 				}
-				_body.append(tmp.substr(0, chunkLen));
-				tmp = tmp.substr(chunkLen + 2);
 			}
 		}
 		this->checkPath(config);
