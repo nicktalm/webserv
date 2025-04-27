@@ -19,6 +19,7 @@ class Client : public Response
 	private:
 		bool								_listen;
 		bool								_headerReady;
+		bool								_chunked;
 		int									_fd;
 		std::string							_clientsMsg;
 		std::string							_statusCode;
@@ -43,6 +44,8 @@ class Client : public Response
 		void		headerParsing(int fd, const t_config config);
 		void		checkPath(const t_config config);
 		void		clear(void);
+		void		parseChunk(std::string chunk);
+		void		urlEncoded(void);
 		
 		// getter
 		bool								getListen(void) const {return (_listen);};
@@ -52,7 +55,7 @@ class Client : public Response
 		std::string							getMsg(void) {return (_clientsMsg);};
 		std::string							getStatusCode(void) {return _statusCode;};
 		std::string							getProtocol(void) const {return _protocol;};
-		std::string							getPath(void);
+		std::string							getPath(void) const {return (_path);};
 		std::string							getBody(void) {return _body;};
 		std::map<std::string, std::string>	getHeader(void) const {return _header;};
 		t_location							getLocationInfo(void) const {return (_locationInfo);};

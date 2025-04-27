@@ -3,13 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/24 12:22:38 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/27 18:45:44 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
+#include <netdb.h>
+#include <sstream>
+#include <string>
+#include <fcntl.h>
+#include <fstream>
+#include <sys/fcntl.h>
+#include <unistd.h>
+#include <dirent.h>
 #include "../include/response.hpp"
 #include "../include/utils.hpp"
 #include "../include/server.hpp"
@@ -28,7 +37,8 @@ Server::Server(t_config config) : _config(config)
 	hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
 	tmp << config.port;
-	if (auto status = getaddrinfo(config.server_name.c_str(), tmp.str().c_str(), &hints, &_res) != 0)
+	int status = getaddrinfo(config.server_name.c_str(), tmp.str().c_str(), &hints, &_res);
+	if (status != 0)
 	{
 		std::stringstream	error;
 
@@ -50,7 +60,7 @@ Server::Server(t_config config) : _config(config)
 	if (bind(_socketFd, _res->ai_addr, _res->ai_addrlen) < 0)
 		throw std::runtime_error("bind failed");
 
-	if (listen(_socketFd, 10) < 0)
+	if (listen(_socketFd, 128) < 0)
 		throw std::runtime_error("listen failed");
 
 	_clientsFd.push_back({_socketFd, POLLIN, 0});
@@ -58,8 +68,11 @@ Server::Server(t_config config) : _config(config)
 
 Server::~Server(void)
 {
-	close(_socketFd);
-	freeaddrinfo(_res);
+	for (auto it = this->_clientsFd.rbegin(); it != this->_clientsFd.rend(); ++it)
+	{
+		if (it.base() != this->_clientsFd.end())
+			this->disconnect(it.base());
+	}
 }
 
 void	Server::run(void)
@@ -84,48 +97,6 @@ void	Server::run(void)
 				this->response(_clientsInfo[tmpFd], _clientsFd.begin() + it);
 			}
 			++it;
-		}
-	}
-}
-
-void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
-{
-	if (bytesRead < 0)
-		std::cerr << RED << "Recv failed" << RESET << std::endl;
-	this->disconnect(find);
-}
-
-void Server::request(std::vector<pollfd>::iterator pollClient)
-{
-	char				tmp[8192];
-
-	if (pollClient->fd == _socketFd) //new client trys to connect
-	{
-		int clientFd = accept(_socketFd, _res->ai_addr, &_res->ai_addrlen);
-		if (clientFd < 0)
-			std::cout << RED << "Client accept failed" << RESET << std::endl;
-		else
-		{
-			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
-			fcntl(clientFd, F_SETFL, O_NONBLOCK);
-			_clientsFd.push_back({clientFd, POLLIN, 0});
-			_clientsInfo.emplace(std::piecewise_construct, std::forward_as_tuple(clientFd), std::forward_as_tuple()); // Client wird direkt in die map geschrieben ohen kopie zu erstellen
-		}
-	}
-	else //existing client trys to connect
-	{
-		int bytesRead = recv(pollClient->fd, tmp, sizeof(tmp), 0);
-		if (bytesRead < 0 || (bytesRead == 0 && _clientsInfo[pollClient->fd].getMsg().empty()))
-			IO_Error(bytesRead, pollClient);
-		else
-		{
-			tmp[bytesRead] = '\0';
-			_clientsInfo[pollClient->fd].appendMsg(tmp, bytesRead);
-			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
-			if (_clientsInfo[pollClient->fd].getStatusCode() == "413")
-				this->disconnect(pollClient);
-			else if (!_clientsInfo[pollClient->fd].getListen() || _clientsInfo[pollClient->fd].getStatusCode()[0] == '4' || _clientsInfo[pollClient->fd].getStatusCode()[0] == '5')
-				pollClient->events = POLLOUT;
 		}
 	}
 }
@@ -245,8 +216,8 @@ std::string Server::handlePOST(Client &client)
 	client.setReady(true);
 	std::cout << GREEN << "POST request" << RESET << std::endl;
 
-	if (isCGIScript(client))
-		return handleCGIScript(client);
+	if (client.getCGI())
+		return (execute_cgi(client, "./" + client.getPath()));
 
 	std::string contentType = extractContentType(client.getHeader()["Content-Type"]);
 	std::string uploadDir = "./http/upload/";
@@ -371,7 +342,6 @@ std::string Server::buildRedirectResponse(const std::string &location)
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
 	std::cout << BLUE << "Response" << RESET << std::endl;
-	std::cout << "client = " << client.getFd() << std::endl;
 	if (client.getBytesSend() == static_cast<ssize_t>(client.getResponseBuffer().size()))
 	{
 		if (client.getStatusCode()[0] == '4' || client.getStatusCode()[0] == '5')
@@ -390,12 +360,15 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	ssize_t		bytes = 0;
 
 	// Send as much as possible
-	bytes = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
-	if (bytes <= 0)
+	if (!response.empty())
 	{
-		std::cout << RED << "send failed" << RESET << std::endl;
-		this->disconnect(pollClient);
-		return;
+		bytes = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
+		if (bytes <= 0)
+		{
+			std::cout << RED << "send failed" << RESET << std::endl;
+			this->disconnect(pollClient);
+			return;
+		}
 	}
 	ssize_t	currBytes = bytesSent + bytes;
 	client.setBytesSend(currBytes);
@@ -445,7 +418,14 @@ std::string Server::handleDELETE(Client &client)
 	std::string path = client.getPath();
 	if (std::remove(path.c_str()) != 0)
 	{
-		std::cout << RED << "File doesn't exist" << RESET << std::endl;
+		int errorCode = errno;
+		if (errorCode == ENOENT)
+			client.setStatusCode("404");
+		else if (errorCode == EACCES)
+			client.setStatusCode("403");
+		else
+			client.setStatusCode("500");
+		std::cout << RED; perror("remove"); std::cout <<  RESET;
 		return (handleERROR(client));
 	}
 	else
@@ -484,7 +464,7 @@ std::string	Server::handleGET(Client &client)
 		tmpHeader << "Server: " << this->_config.server_name << "\r\n";
 		tmpHeader << "Date: " << utils::getDate() << "\r\n";
 
-		if (client.getLocationInfo().autoindex && client.getPath().back() == '/')
+		if ((client.getLocationInfo().autoindex && client.getPath().back() == '/') || client.getCGI())
 			tmpHeader << "Content-Type: text/html\r\n" << "Transfer-Encoding: chunked\r\n";
 		else if (!client.getReDir().empty())
 		{
@@ -557,6 +537,11 @@ std::string	Server::handleGET(Client &client)
 			client.setReady(true);
 			return ("0\r\n\r\n");
 		}
+	}
+	else if (client.getCGI())
+	{
+		// return (executeCgiGet(client));
+		return ("lol");
 	}
 	else
 	{

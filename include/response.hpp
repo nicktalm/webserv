@@ -19,6 +19,7 @@ typedef struct s_response
 class Response
 {
 	protected:
+		bool						_exeCGI;
 		bool						_responseHeader;
 		bool						_responseReady;
 		int							_autoIndexPart;
@@ -33,6 +34,7 @@ class Response
 		// getter
 		bool						getHeaderReady(void) const {return (_responseHeader);};
 		bool						getReady(void) const {return (_responseReady);};
+		bool						getCGI(void) const {return (_exeCGI);};
 		int							getAutoIndexPart(void) const {return (_autoIndexPart);};
 		ssize_t						getBytesSend(void) const { return (_bytesSend);};
 		std::string					getResponseBuffer(void) const {return (_responseBuffer);};

@@ -6,10 +6,9 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/22 15:18:55 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/27 17:20:20 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include <dirent.h>
 #include <unistd.h>
@@ -23,6 +22,7 @@ Client::Client(void)
 {
 	_listen = false;
 	_headerReady = false;
+	_chunked = false;
 	_fd = 0;
 	_clientsMsg = "";
 	_statusCode = "";
@@ -34,76 +34,11 @@ Client::Client(void)
 	_header = {};
 }
 
-Client::~Client(void)
-{
-	close(_fd);
-}
+Client::~Client(void) {}
 
 void	Client::appendMsg(char *msg, size_t size)
 {
 	_clientsMsg.append(msg, size);
-}
-
-void	Client::parseRequest(int fd, const t_config config)
-{
-	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
-		this->headerParsing(fd, config);
-	else if (_headerReady)
-		_body.append(_clientsMsg);
-	else
-	{
-		_fd = fd;
-		_statusCode = "431";
-	}
-	this->checkBodySize();
-	if (_headerReady || _statusCode[0] == '4' || _statusCode[0] == '5')
-		_clientsMsg.clear();
-	if (_statusCode[0] == '4' || _statusCode[0] == '5')
-		this->_listen = false;
-}
-
-void	Client::headerParsing(int fd, const t_config config)
-{
-	std::stringstream			input(_clientsMsg);
-	std::vector<std::string>	tmp((std::istream_iterator<std::string>(input)), std::istream_iterator<std::string>());
-	std::string					line;
-	size_t						endOfLine;
-
-	_fd = fd;
-	_statusCode = "200";
-	if (tmp.size() >= 3)
-	{
-		if (tmp[0] != "GET" && tmp[0] != "POST" && tmp[0] != "DELETE")
-			_statusCode = "405";
-		else if (tmp[2] != "HTTP/1.1")
-			_statusCode = "505";
-		else
-		{
-			_method = tmp[0];
-			_path = tmp[1];
-			_protocol = tmp[2];
-			input.clear();
-			input.seekg(0);
-			std::getline(input, line);
-			while (std::getline(input, line))
-			{
-				if (line == "\r" || line.empty())
-					break ;
-				endOfLine = line.find(":");
-				if (endOfLine == std::string::npos)
-				{
-					_statusCode = "400";
-					break ;
-				}
-				_header.insert(std::pair<std::string, std::string>(line.substr(0, endOfLine), line.substr(endOfLine + 1)));
-			}
-		}
-		_body.append(input.str().substr(input.tellg()));
-		this->checkPath(config);
-	}
-	else
-		_statusCode = "404";
-	_headerReady = true;
 }
 
 void	Client::checkBodySize(void)
@@ -123,27 +58,25 @@ void	Client::checkBodySize(void)
 		this->_listen = true;
 }
 
-std::string	Client::getPath(void)
+void	Client::urlEncoded(void)
 {
-	return (this->_path);
-}
+	std::string	newPath;
+	std::string	value;
+	int			nbr;
 
-void	Client::checkPath(const t_config config)
-{
-	std::string	fullDir = "", firstDir = "", file = "";
-
-	if (!this->splitPath(fullDir, firstDir, file))
+	for (size_t	pos = 0; pos < _path.size(); ++pos)
 	{
-		this->_statusCode = "404";
-		return ;
+		if (_path[pos] == '%' && pos < _path.size() - 2)
+		{
+			value = _path.substr(pos + 1, 2);
+			nbr = std::stoi(value, nullptr, 16);
+			newPath += static_cast<char>(nbr);
+			pos += 2;
+			continue;
+		}
+		newPath += _path[pos];
 	}
-	if (!this->findLocation(config, fullDir)
-		|| !this->checkLocation(fullDir, config.root)
-		|| !this->checkBodyLimit(config.max_size_server)
-		|| !this->checkFile(fullDir, file))
-		return ;
-	this->_path = fullDir;
-	this->_dir = opendir(this->_path.c_str());
+	_path = newPath;
 }
 
 bool	Client::findLocation(const t_config config, std::string fullDir)
@@ -198,7 +131,7 @@ bool	Client::checkBodyLimit(const long rootMaxSize)
 	long	tmp = this->_locationInfo.max_size_location;
 	long	tmp2 = rootMaxSize;
 
-	if (tmp || tmp2)
+	if (!_chunked && (tmp || tmp2))
 	{
 		long sizeRequst = 0;
 		auto size = _header.find("Content-Length");
@@ -220,6 +153,8 @@ bool	Client::checkFile(std::string &fullDir, std::string file)
 	{
 		if (!this->_locationInfo.index.empty())
 			file = this->_locationInfo.index;
+		else
+			return (this->_statusCode = "403", false);
 	}
 	if (access((fullDir + file).c_str(), F_OK))
 		return (this->_statusCode = "404", false);
@@ -300,17 +235,17 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 {
 	size_t	end;
 
-	end = this->_path.rfind('/');
+	end = _path.rfind('/');
 	if (end == std::string::npos)
 		return (false);
-	fullPath = this->_path.substr(0, end + 1);
-	file = this->_path.substr(end + 1);
+	fullPath = _path.substr(0, end + 1);
+	file = _path.substr(end + 1);
 	if (end > 0)
 	{
-		end = this->_path.find('/', 1);
+		end = _path.find('/', 1);
 		if (end == std::string::npos)
 			firstDir = fullPath;
-		firstDir = this->_path.substr(0, end + 1);
+		firstDir = _path.substr(0, end + 1);
 	}
 	else
 		firstDir = fullPath;
@@ -319,22 +254,24 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 
 void	Client::clear(void)
 {
-	this->_listen = false;
-	this->_headerReady = false;
-	this->_clientsMsg.clear();
-	this->_statusCode = "200";
-	this->_method.clear();
-	this->_path.clear();
-	this->_protocol.clear();
-	this->_body.clear();
-	this->_header.clear();
-	this->_responseHeader = false;
-	this->_responseReady = false;
-	this->_autoIndexPart = 0;
-	this->_bytesSend = 0;
-	this->_responseBuffer.clear();
-	this->_reDirHeader.clear();
-	if (this->_dir != nullptr && closedir(this->_dir) == -1)
+	_listen = false;
+	_headerReady = false;
+	_chunked = false;
+	_clientsMsg.clear();
+	_statusCode = "200";
+	_method.clear();
+	_path.clear();
+	_protocol.clear();
+	_body.clear();
+	_header.clear();
+	_responseHeader = false;
+	_responseReady = false;
+	_autoIndexPart = 0;
+	_bytesSend = 0;
+	_responseBuffer.clear();
+	_reDirHeader.clear();
+	if (_dir != nullptr && closedir(_dir) == -1)
 		std::cerr << "closedir failed" << std::endl;
-	this->_dir = nullptr;
+	_dir = nullptr;
+	_exeCGI = false;
 }

@@ -8,15 +8,6 @@
 #include "config.hpp"
 #include "client.hpp"
 #include "response.hpp"
-#include <fcntl.h>
-#include <iostream>
-#include <netdb.h>
-#include <sstream>
-#include <fstream>
-#include <sys/fcntl.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <stdlib.h>
 
 extern std::atomic<bool>	runner;
 
@@ -26,12 +17,12 @@ extern std::atomic<bool>	runner;
 #define BLUE    "\033[34m"
 #define YELLOW  "\033[33m"
 #define RESET   "\033[0m"
+
 class Server
 {
 	private:
 		std::vector<pollfd>			_clientsFd;
 		std::map<int, Client>		_clientsInfo;
-		std::map<int, Response>		_responseInfo;
 		const t_config				_config;
 		int							_socketFd;
 		struct addrinfo 			*_res;
@@ -47,11 +38,11 @@ class Server
 		void			run(void);
 		void			response(Client &client, std::vector<pollfd>::iterator pollClient);
 		void			IO_Error(int bytesRead, std::vector<pollfd>::iterator find);
-		std::string 	handleGET(Client &client);
-		std::string 	handlePOST(Client &client);
+		std::string		handleGET(Client &client);
+		std::string		handlePOST(Client &client);
+		std::string		handleCGIScript(Client &client);
+		bool			isCGIScript(Client &client);
 
-		bool		 	isCGIScript(Client &client);
-		std::string 	handleCGIScript(Client &client);
 		std::string 	extractContentType(const std::string &headerValue);
 		bool			handleMultipartFormData(Client &client, const std::string &body, const std::string &uploadDir);
 		bool			handleURLEncoded(Client &client, const std::string &body, const std::string &uploadDir);
@@ -65,15 +56,16 @@ class Server
 };
 
 // checks the config file and returns a vector of t_config
-std::string	trim(const std::string& line);
-std::string	to_lower(const std::string &str);
-bool check_config(const std::string &config_path, std::vector<t_config> &files);
-void add_default_location(std::vector<t_config> &files);
-bool process_server_block(const std::string &line, t_config &current_config, bool &in_server_block, bool &expect_server_brace);
-bool process_location_block(const std::string &line, t_location &current_location, bool &in_location_block, bool &expect_location_brace);
-bool process_closing_brace(const std::string& line, t_config& current_config, t_location& current_location, std::vector<t_config>& files, bool& in_server_block, bool& in_location_block);
-void process_location_directives(const std::string& line, t_location& current_location);
-void process_server_directives(const std::string& line, t_config& current_config);
-void process_client_max_body_size(std::istringstream& iss, long& max_size, char& unit);
-void debug_parsed_configurations(const std::vector<t_config>& files);
+std::string							trim(const std::string& line);
+std::string							to_lower(const std::string &str);
+bool								check_config(const std::string &config_path, std::vector<t_config> &files);
+void								add_default_location(std::vector<t_config> &files);
+bool								process_server_block(const std::string &line, t_config &current_config, bool &in_server_block, bool &expect_server_brace);
+bool								process_location_block(const std::string &line, t_location &current_location, bool &in_location_block, bool &expect_location_brace);
+bool								process_closing_brace(const std::string& line, t_config& current_config, t_location& current_location, std::vector<t_config>& files, bool& in_server_block, bool& in_location_block);
+void								process_location_directives(const std::string& line, t_location& current_location);
+void								process_server_directives(const std::string& line, t_config& current_config);
+void								process_client_max_body_size(std::istringstream& iss, long& max_size, char& unit);
+void								debug_parsed_configurations(const std::vector<t_config>& files);
 std::map<std::string, std::string>	parseBody(std::string body);
+std::string							execute_cgi(Client &client, std::string path);

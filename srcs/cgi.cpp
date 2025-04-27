@@ -3,13 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/25 16:00:09 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/27 18:47:35 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
 #include "../include/server.hpp"
 
 std::string decodeURIcomponent(std::string &shoppinglist)

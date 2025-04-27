@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:23 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/15 16:39:08 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/04/27 17:45:55 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,15 +37,12 @@ std::vector<std::unique_ptr<Server>>	utils::parsing(int argc, char **argv)
 	for (auto &config : files)
 		servers.emplace_back(std::make_unique<Server>(config));
 	parseMIME();
-	std::cout << GREEN << "MIME Types loaded" << RESET << std::endl;
-	// for (std::map<std::string, std::string>::iterator it = MIMETypes.begin(); it != MIMETypes.end(); ++it)
-	// 	std::cout << it->first << " : " << it->second << std::endl;
 	return (servers);
 }
 
 bool	utils::readFile(std::string input, std::string &body)
 {
-	std::ifstream		file(input);
+	std::ifstream		file(input, std::ios::binary);
 	std::stringstream	buffer;
 	
 	if (!file)
