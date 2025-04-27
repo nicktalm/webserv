@@ -6,7 +6,7 @@
 /*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/24 21:45:22 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/27 15:58:06 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -521,7 +521,6 @@ std::string Server::buildRedirectResponse(const std::string &location)
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
 	std::cout << BLUE << "Response" << RESET << std::endl;
-	std::cout << "client = " << client.getFd() << std::endl;
 	if (client.getBytesSend() == static_cast<ssize_t>(client.getResponseBuffer().size()))
 	{
 		if (client.getStatusCode()[0] == '4' || client.getStatusCode()[0] == '5')

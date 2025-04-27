@@ -44,6 +44,7 @@ class Client : public Response
 		void		headerParsing(int fd, const t_config config);
 		void		checkPath(const t_config config);
 		void		clear(void);
+		void		parseChunk(std::string chunk);
 		
 		// getter
 		bool								getListen(void) const {return (_listen);};

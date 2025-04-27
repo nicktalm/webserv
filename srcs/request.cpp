@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/26 15:38:33 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/27 15:57:29 by lucabohn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,6 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 		else
 		{
 			buffer[bytesRead] = '\0';
-			std::cout << "buffer" << std::endl;
-			std::cout << buffer << std::endl;
 			_clientsInfo[pollClient->fd].appendMsg(buffer, bytesRead);
 			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
 			if (_clientsInfo[pollClient->fd].getStatusCode() == "413")
@@ -68,8 +66,6 @@ void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 
 void	Client::parseRequest(int fd, const t_config config)
 {
-	std::cout << "msg" << std::endl;
-	std::cout << _clientsMsg << std::endl;
 	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
 		this->headerParsing(fd, config);
 	else if (_headerReady)
@@ -77,17 +73,7 @@ void	Client::parseRequest(int fd, const t_config config)
 		if (!_chunked)
 			_body.append(_clientsMsg);
 		else
-		{
-			size_t		pos = _clientsMsg.find("\r\n");
-			std::string	size = _clientsMsg.substr(0, pos);
-
-			std::cout << "size = " << size << std::endl;
-			std::cout << "body = " << _clientsMsg.substr(pos + 1) << std::endl;
-			if (std::stoi(size, nullptr, 16) != 0)
-				_body.append(_clientsMsg.substr(pos + 1));
-			else
-				_listen = false;
-		}
+			this->parseChunk(_clientsMsg);
 	}
 	else if (_clientsMsg.size() == 8192)
 	{
@@ -158,21 +144,7 @@ void	Client::headerParsing(int fd, const t_config config)
 			{
 				std::string	chunk = _clientsMsg.substr(pos + 4);
 
-				while (true)
-				{
-					size_t		posValue = chunk.find("\r\n");
-					std::string	tmp;
-					std::string	value;
-					int			size;
-					
-					if (posValue == std::string::npos)
-						break ;
-					value = chunk.substr(0, posValue);
-					size = std::stoi(value, nullptr, 16);
-					tmp = chunk.substr(posValue + 2);
-					_body.append(tmp.substr(0, size));
-					chunk = tmp;
-				}
+				this->parseChunk(chunk);
 			}
 		}
 		this->checkPath(config);
@@ -180,4 +152,37 @@ void	Client::headerParsing(int fd, const t_config config)
 	else
 		_statusCode = "404";
 	_headerReady = true;
+}
+
+void	Client::parseChunk(std::string chunk)
+{
+	while (true)
+	{
+		size_t		posValue = chunk.find("\n");
+		std::string	tmp;
+		std::string	value;
+		int			size;
+
+		if (posValue == std::string::npos)
+			break ;
+		value = chunk.substr(0, posValue);
+		size = std::stoi(value, nullptr, 16);
+		if (size == 0)
+		{
+			_listen = false;
+			break ;
+		}
+		tmp = chunk.substr(posValue + 1);
+		int	i = 0;
+		int	end = 0;
+		while (i < size)
+		{
+			if (tmp[end] != '\r' && tmp[end] != '\n')
+				++i;
+			++end;
+		}
+		++end;
+		_body.append(tmp.substr(0, end));
+		chunk = tmp.substr(end + 1);
+	}
 }
