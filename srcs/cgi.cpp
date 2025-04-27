@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/27 18:47:35 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/27 20:06:15 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ std::string decodeURIcomponent(std::string &shoppinglist)
 }
 
 //TODO fix blocking
-std::string execute_cgi(Client &client, std::string path)
+std::string Server::execute_cgi(Client &client, std::string path)
 {
 	int pipefd[2];
 	if (pipe(pipefd) == -1)
@@ -44,66 +44,73 @@ std::string execute_cgi(Client &client, std::string path)
 		std::cerr << RED << "Pipe creation failed" << RESET << std::endl;
 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 	}
-	
-	// if (fcntl(pipefd[0], F_SETFL, O_NONBLOCK) == -1 || fcntl(pipefd[1], F_SETFL, O_NONBLOCK) == -1)
-	// {
-		// 	if (pipefd[0] >= 0) close(pipefd[0]);
-		// 	if (pipefd[1] >= 0) close(pipefd[1]);
-		// 	std::cerr << RED << "fcntl failed" << RESET << std::endl;
-		// 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-		// }
 		
-		pid_t pid = fork();
-		if (pid == -1)
+	pid_t pid = fork();
+	if (pid == -1)
+	{
+		close(pipefd[0]);
+		close(pipefd[1]);
+		std::cerr << RED; perror("fork"); std::cerr << RESET;
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+	}
+	else if (pid == 0) // Child process
+	{
+		std::map<std::string, std::string> params = parseBody(client.getBody());
+		std::string shoppingList = decodeURIcomponent(params["shopping_list"]);
+		std::vector<std::string> envpStrings;
+		std::string cookie = client.getHeader()["Cookie"];
+		// QUERY_STRING	Daten nach dem ? in der URL (bei GET)
+		// SCRIPT_NAME	Pfad zum Skript (relativ zum Root)
+		// PATH_INFO	Extra-Path-Info nach dem Skriptnamen
+		// PATH_TRANSLATED	Physischer Pfad zur Datei aus PATH_INFO
+		// REMOTE_ADDR	IP-Adresse des Clients
+		// REMOTE_HOST	(wenn DNS-Auflösung aktiv ist)
+		// HTTP_USER_AGENT	User-Agent des Browsers
+		// HTTP_COOKIE	Cookies, wenn vorhanden
+		// HTTP_REFERER	Referrer-URL
+		// HTTP_ACCEPT	Was der Client akzeptiert (z. B. HTML, JSON)
+		envpStrings.push_back("REQUEST_METHOD=" + client.getMethod());
+		envpStrings.push_back("CONTENT_TYPE" + client.getHeader()["Content-Type"]);
+		envpStrings.push_back("CONTENT_LENGTH" + client.getHeader()["Content-Length"]);
+		envpStrings.push_back("SERVER_NAME" + _config.server_name);
+		envpStrings.push_back("SERVER_PORT" + _config.port);
+		envpStrings.push_back("SERVER_PROTOCOL" + client.getProtocol());
+		envpStrings.push_back("" + );
+		envpStrings.push_back("COOKIE=" + cookie);
+		envpStrings.push_back("USERNAME=" + params["username"]);
+		envpStrings.push_back("PASSWORD=" + params["password"]);
+		envpStrings.push_back("SHOPPINGLIST=" + shoppingList);
+
+		std::vector<char*> envp;
+		for(size_t i = 0; i < envpStrings.size(); i++)
 		{
-			close(pipefd[0]);
-			close(pipefd[1]);
-			std::cerr << RED << "Fork failed" << RESET << std::endl;
+			envp.push_back(const_cast<char*>(envpStrings[i].c_str()));
+		}
+		envp.push_back(nullptr);
+		dup2(pipefd[1], STDOUT_FILENO);
+		char *const args[] = {const_cast<char *>(path.c_str()), nullptr};
+		if (execve(path.c_str(), args, envp.data()) == -1)
+		{
+			std::cerr << RED << "Execve failed" << RESET << std::endl;
 			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 		}
-		else if (pid == 0) // Child process
+	}
+	else // Parent process
+	{
+		dup2(pipefd[0], STDIN_FILENO);
+		close(pipefd[1]);
+		char buffer[1024];
+		std::string cgiOutput;
+		ssize_t bytesRead;
+		while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		{
-			// std::cout << client.getBody() << std::endl;
-			std::map<std::string, std::string> params = parseBody(client.getBody());
-			std::string shoppingList = decodeURIcomponent(params["shopping_list"]);
-			std::vector<std::string> envpStrings;
-			std::string cookie = client.getHeader()["Cookie"];
-			envpStrings.push_back("COOKIE=" + cookie);
-			envpStrings.push_back("USERNAME=" + params["username"]);
-			envpStrings.push_back("PASSWORD=" + params["password"]);
-			envpStrings.push_back("SHOPPINGLIST=" + shoppingList);
-
-			std::vector<char*> envp;
-			for(size_t i = 0; i < envpStrings.size(); i++)
-			{
-				envp.push_back(const_cast<char*>(envpStrings[i].c_str()));
-			}
-			envp.push_back(nullptr);
-			dup2(pipefd[1], STDOUT_FILENO);
-			char *const args[] = {const_cast<char *>(path.c_str()), nullptr};
-			if (execve(path.c_str(), args, envp.data()) == -1)
-			{
-				std::cerr << RED << "Execve failed" << RESET << std::endl;
-				return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-			}
+			cgiOutput.append(buffer, bytesRead);
 		}
-		else // Parent process
-		{
-			dup2(pipefd[0], STDIN_FILENO);
-			close(pipefd[1]);
-			char buffer[1024];
-			std::string cgiOutput;
-			ssize_t bytesRead;
-			while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-			{
-				cgiOutput.append(buffer, bytesRead);
-			}
-			close(pipefd[0]);
-			int status;
-			waitpid(pid, &status, 0);
-			// std::cout << YELLOW << "CGI:\n" << cgiOutput << std::endl;
-			return cgiOutput;
-		}
+		close(pipefd[0]);
+		int status;
+		waitpid(pid, &status, 0);
+		return cgiOutput;
+	}
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 }
 

@@ -42,6 +42,7 @@ class Server
 		std::string		handlePOST(Client &client);
 		std::string		handleCGIScript(Client &client);
 		bool			isCGIScript(Client &client);
+		std::string		execute_cgi(Client &client, std::string path);
 
 		std::string 	extractContentType(const std::string &headerValue);
 		bool			handleMultipartFormData(Client &client, const std::string &body, const std::string &uploadDir);
@@ -68,4 +69,3 @@ void								process_server_directives(const std::string& line, t_config& current
 void								process_client_max_body_size(std::istringstream& iss, long& max_size, char& unit);
 void								debug_parsed_configurations(const std::vector<t_config>& files);
 std::map<std::string, std::string>	parseBody(std::string body);
-std::string							execute_cgi(Client &client, std::string path);
