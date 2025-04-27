@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/27 15:58:06 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/27 18:29:16 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -539,12 +539,15 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	ssize_t		bytes = 0;
 
 	// Send as much as possible
-	bytes = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
-	if (bytes <= 0)
+	if (!response.empty())
 	{
-		std::cout << RED << "send failed" << RESET << std::endl;
-		this->disconnect(pollClient);
-		return;
+		bytes = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
+		if (bytes <= 0)
+		{
+			std::cout << RED << "send failed" << RESET << std::endl;
+			this->disconnect(pollClient);
+			return;
+		}
 	}
 	ssize_t	currBytes = bytesSent + bytes;
 	client.setBytesSend(currBytes);
@@ -594,7 +597,14 @@ std::string Server::handleDELETE(Client &client)
 	std::string path = client.getPath();
 	if (std::remove(path.c_str()) != 0)
 	{
-		std::cout << RED << "File doesn't exist" << RESET << std::endl;
+		int errorCode = errno;
+		if (errorCode == ENOENT)
+			client.setStatusCode("404");
+		else if (errorCode == EACCES)
+			client.setStatusCode("403");
+		else
+			client.setStatusCode("500");
+		std::cout << RED; perror("remove"); std::cout <<  RESET;
 		return (handleERROR(client));
 	}
 	else

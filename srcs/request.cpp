@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucabohn <lucabohn@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/27 15:57:29 by lucabohn         ###   ########.fr       */
+/*   Updated: 2025/04/27 17:20:37 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,6 +152,27 @@ void	Client::headerParsing(int fd, const t_config config)
 	else
 		_statusCode = "404";
 	_headerReady = true;
+}
+
+void	Client::checkPath(const t_config config)
+{
+	std::string	fullDir = "", firstDir = "", file = "";
+
+	this->urlEncoded();
+	if (!this->splitPath(fullDir, firstDir, file))
+	{
+		this->_statusCode = "404";
+		return ;
+	}
+	if (!this->findLocation(config, fullDir)
+		|| !this->checkLocation(fullDir, config.root)
+		|| !this->checkBodyLimit(config.max_size_server)
+		|| !this->checkFile(fullDir, file))
+		return ;
+	this->_path = fullDir;
+	this->_dir = opendir(this->_path.c_str());
+	if (!this->_path.empty() && this->_path.find(".py") != std::string::npos)
+		this->_exeCGI = true;
 }
 
 void	Client::parseChunk(std::string chunk)

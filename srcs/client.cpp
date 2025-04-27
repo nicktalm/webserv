@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/25 10:39:45 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/27 17:20:20 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,29 +58,25 @@ void	Client::checkBodySize(void)
 		this->_listen = true;
 }
 
-std::string	Client::getPath(void)
+void	Client::urlEncoded(void)
 {
-	return (this->_path);
-}
+	std::string	newPath;
+	std::string	value;
+	int			nbr;
 
-void	Client::checkPath(const t_config config)
-{
-	std::string	fullDir = "", firstDir = "", file = "";
-
-	if (!this->splitPath(fullDir, firstDir, file))
+	for (size_t	pos = 0; pos < _path.size(); ++pos)
 	{
-		this->_statusCode = "404";
-		return ;
+		if (_path[pos] == '%' && pos < _path.size() - 2)
+		{
+			value = _path.substr(pos + 1, 2);
+			nbr = std::stoi(value, nullptr, 16);
+			newPath += static_cast<char>(nbr);
+			pos += 2;
+			continue;
+		}
+		newPath += _path[pos];
 	}
-	if (!this->findLocation(config, fullDir)
-		|| !this->checkLocation(fullDir, config.root)
-		|| !this->checkBodyLimit(config.max_size_server)
-		|| !this->checkFile(fullDir, file))
-		return ;
-	this->_path = fullDir;
-	this->_dir = opendir(this->_path.c_str());
-	if (!this->_path.empty() && this->_path.find(".py") != std::string::npos)
-		this->_exeCGI = true;
+	_path = newPath;
 }
 
 bool	Client::findLocation(const t_config config, std::string fullDir)
