@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/28 19:03:39 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 19:57:33 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,21 +64,7 @@ std::string	Server::execute_cgi(Client &client)
 	if (pid == 0)
 		this->childProcess(client);
 	
-	if (dup2(pipeIn[1], STDOUT_FILENO) == -1 || dup2(pipeOut[0], STDIN_FILENO) == -1)
-	{
-		std::cerr << RED; perror("dup2"); std::cerr << RESET;
-		client.setStatusCode("500");
-		return (handleERROR(client));
-	}
 
-	if (close(pipeIn[0]) == -1 || close(pipeOut[1]) == -1)
-	{
-		std::cerr << RED; perror("close"); std::cerr << RESET;
-		client.setStatusCode("500");
-		return (handleERROR(client));
-	}
-
-	
 }
 
 void	Server::childProcess(Client &client)
@@ -109,8 +95,50 @@ void	Server::childProcess(Client &client)
 		std::cerr << RED; perror("execve"); std::cerr << RESET;
 		exit (500);
 	}
+}
 
-	
+void	Server::parentProcess(Client &client, pid_t pid)
+{
+	int		status;
+	int		childPid;
+
+	if (dup2(pipeIn[1], STDOUT_FILENO) == -1 || dup2(pipeOut[0], STDIN_FILENO) == -1)
+	{
+		std::cerr << RED; perror("dup2"); std::cerr << RESET;
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+
+	if (close(pipeIn[0]) == -1 || close(pipeOut[1]) == -1)
+	{
+		std::cerr << RED; perror("close"); std::cerr << RESET;
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+
+	if (write(pipeIn[1], client.getBody().c_str(), client.getBody().size()) == -1)
+	{
+		std::cerr << RED; perror("write"); std::cerr << RESET;
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+
+	childPid = waitpid(pid, &status, WNOHANG);
+	if (childPid == 0)
+		client.setChildReady(true);
+	else if (childPid == -1)
+	{
+		std::cerr << RED; perror("waitpid"); std::cerr << RESET;
+		client.setChildReady(false);
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+	else
+	{
+		
+		client.setChildReady(false);
+		break ;
+	}
 }
 
 std::string Server::execute_cgi(Client &client)

@@ -4,22 +4,23 @@
 
 Response::Response(void)
 {
-	this->_responseBuffer = "";
-	this->_responseHeader = false;
-	this->_responseReady = false;
-	this->_exeCGI = false;
-	this->_autoIndexPart = 0;
-	this->_bytesSend = 0;
-	this->_reDirHeader = "";
-	this->_dir = nullptr;
+	_responseBuffer = "";
+	_responseHeader = false;
+	_responseReady = false;
+	_waitForChild = false;
+	_exeCGI = false;
+	_autoIndexPart = 0;
+	_bytesSend = 0;
+	_reDirHeader = "";
+	_dir = nullptr;
 }
 
 Response::~Response(void)
 {
-	if (this->_dir != nullptr)
+	if (_dir != nullptr)
 	{
-		if (closedir(this->_dir) != -1)
-			this->_dir = nullptr;
+		if (closedir(_dir) != -1)
+			_dir = nullptr;
 	}
 }
 

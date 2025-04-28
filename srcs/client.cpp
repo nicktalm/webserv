@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/28 18:28:22 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 19:53:58 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,6 +304,7 @@ void	Client::clear(void)
 	_query.clear();
 	_responseHeader = false;
 	_responseReady = false;
+	_waitForChild = false;
 	_autoIndexPart = 0;
 	_bytesSend = 0;
 	_responseBuffer.clear();
