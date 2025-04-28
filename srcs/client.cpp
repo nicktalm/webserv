@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/28 11:17:29 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 17:05:21 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 
 Client::Client(void)
 {
-	_listen = false;
+	_listen = true;
 	_headerReady = false;
 	_chunked = false;
 	_fd = 0;
@@ -139,6 +139,9 @@ bool	Client::checkLocation(std::string &fullDir, const std::string &mainRoot)
 		fullDir.insert(0, mainRoot);
 	else
 		std::cerr << RED << "No Root found" << RESET << std::endl;
+	size_t	pos = fullDir.find(_locationInfo.path);
+	if (pos != std::string::npos)
+		fullDir.erase(pos + 1, _locationInfo.path.size() - 1);
 	return (true);
 }
 
@@ -270,7 +273,7 @@ bool	Client::splitPath(std::string &fullPath, std::string &firstDir, std::string
 
 void	Client::clear(void)
 {
-	_listen = false;
+	_listen = true;
 	_headerReady = false;
 	_chunked = false;
 	_clientsMsg.clear();

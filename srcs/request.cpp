@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/28 11:11:48 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 17:05:50 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,12 +80,12 @@ void	Client::parseRequest(int fd, const t_config config)
 		_fd = fd;
 		_statusCode = "431";
 	}
-	else
-	{
-		_fd = fd;
-		_statusCode = "400";
-	}
-	if (!_chunked)
+	// else
+	// {
+	// 	_fd = fd;
+	// 	_statusCode = "400";
+	// }
+	if (_headerReady && !_chunked)
 		this->checkBodySize();
 	if (_headerReady || _statusCode[0] == '4' || _statusCode[0] == '5')
 		_clientsMsg.clear();
@@ -105,9 +105,15 @@ void	Client::headerParsing(int fd, const t_config config)
 	if (tmp.size() >= 3)
 	{
 		if (tmp[0] != "GET" && tmp[0] != "POST" && tmp[0] != "DELETE")
+		{
 			_statusCode = "405";
+			return ;
+		}
 		else if (tmp[2] != "HTTP/1.1")
+		{
 			_statusCode = "505";
+			return ;
+		}
 		else
 		{
 			_method = tmp[0];
