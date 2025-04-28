@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/27 18:45:44 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 13:03:43 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,7 +217,7 @@ std::string Server::handlePOST(Client &client)
 	std::cout << GREEN << "POST request" << RESET << std::endl;
 
 	if (client.getCGI())
-		return (execute_cgi(client, "./" + client.getPath()));
+		return (execute_cgi(client));
 
 	std::string contentType = extractContentType(client.getHeader()["Content-Type"]);
 	std::string uploadDir = "./http/upload/";
@@ -460,29 +460,32 @@ std::string	Server::handleGET(Client &client)
 	{
 		std::stringstream	tmpHeader;
 
-		tmpHeader << client.getProtocol() << " " + client.getStatusCode() << " " << client.getErrorMsg(client.getStatusCode()) << "\r\n";
-		tmpHeader << "Server: " << this->_config.server_name << "\r\n";
-		tmpHeader << "Date: " << utils::getDate() << "\r\n";
-
-		if ((client.getLocationInfo().autoindex && client.getPath().back() == '/') || client.getCGI())
-			tmpHeader << "Content-Type: text/html\r\n" << "Transfer-Encoding: chunked\r\n";
-		else if (!client.getReDir().empty())
-		{
-			tmpHeader << client.getReDir() << "\r\n";
-			client.setReady(true);
-		}
-		else
-		{
-			std::string	body;
-
-			if (!utils::readFile(client.getPath(), body))
-				return (client.setStatusCode("404"), handleERROR(client));
-			tmpHeader << "Content-Type: " << client.getContentType(client.getPath()) << "\r\n";
-			tmpHeader << "Content-Length: " << body.size() << "\r\n";
-		}
-		tmpHeader << "\r\n";
 		client.setHeaderReady(true);
-		return (tmpHeader.str());
+		if (!client.getCGI())
+		{
+			tmpHeader << client.getProtocol() << " " + client.getStatusCode() << " " << client.getErrorMsg(client.getStatusCode()) << "\r\n";
+			tmpHeader << "Server: " << this->_config.server_name << "\r\n";
+			tmpHeader << "Date: " << utils::getDate() << "\r\n";
+
+			if ((client.getLocationInfo().autoindex && client.getPath().back() == '/') || client.getCGI())
+				tmpHeader << "Content-Type: text/html\r\n" << "Transfer-Encoding: chunked\r\n";
+			else if (!client.getReDir().empty())
+			{
+				tmpHeader << client.getReDir() << "\r\n";
+				client.setReady(true);
+			}
+			else
+			{
+				std::string	body;
+
+				if (!utils::readFile(client.getPath(), body))
+					return (client.setStatusCode("404"), handleERROR(client));
+				tmpHeader << "Content-Type: " << client.getContentType(client.getPath()) << "\r\n";
+				tmpHeader << "Content-Length: " << body.size() << "\r\n";
+			}
+			tmpHeader << "\r\n";
+			return (tmpHeader.str());
+		}
 	}
 	if (client.getLocationInfo().autoindex && client.getPath().back() == '/')
 	{
@@ -540,8 +543,8 @@ std::string	Server::handleGET(Client &client)
 	}
 	else if (client.getCGI())
 	{
-		// return (executeCgiGet(client));
-		return ("lol");
+		client.setReady(true);
+		return (this->execute_cgi(client));
 	}
 	else
 	{

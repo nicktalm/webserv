@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/27 17:20:20 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 11:17:29 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ Client::Client(void)
 	_path = "";
 	_protocol = "";
 	_body = "";
+	_query = "";
+	_exePath = "";
 	_reDirHeader = "";
 	_header = {};
 }
@@ -77,6 +79,20 @@ void	Client::urlEncoded(void)
 		newPath += _path[pos];
 	}
 	_path = newPath;
+}
+
+void	Client::queryStr(void)
+{
+	size_t		pos;
+	std::string	newPath;
+
+	pos = _path.find('?');
+	if (pos != std::string::npos)
+	{
+		_query = _path.substr(pos + 1);
+		newPath = _path.substr(0, pos);
+		_path = newPath;
+	}
 }
 
 bool	Client::findLocation(const t_config config, std::string fullDir)
@@ -263,7 +279,10 @@ void	Client::clear(void)
 	_path.clear();
 	_protocol.clear();
 	_body.clear();
+	_query.clear();
+	_exePath.clear();
 	_header.clear();
+	_query.clear();
 	_responseHeader = false;
 	_responseReady = false;
 	_autoIndexPart = 0;

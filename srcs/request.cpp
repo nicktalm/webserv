@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/27 17:20:37 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 11:11:48 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,9 +159,10 @@ void	Client::checkPath(const t_config config)
 	std::string	fullDir = "", firstDir = "", file = "";
 
 	this->urlEncoded();
+	this->queryStr();
 	if (!this->splitPath(fullDir, firstDir, file))
 	{
-		this->_statusCode = "404";
+		_statusCode = "404";
 		return ;
 	}
 	if (!this->findLocation(config, fullDir)
@@ -169,10 +170,14 @@ void	Client::checkPath(const t_config config)
 		|| !this->checkBodyLimit(config.max_size_server)
 		|| !this->checkFile(fullDir, file))
 		return ;
-	this->_path = fullDir;
-	this->_dir = opendir(this->_path.c_str());
-	if (!this->_path.empty() && this->_path.find(".py") != std::string::npos)
-		this->_exeCGI = true;
+	_path = fullDir;
+	_dir = opendir(_path.c_str());
+	if (!_path.empty() && (_path.find(".py") != std::string::npos || _path.find(".php") != std::string::npos))
+		_exeCGI = true;
+	if (_exeCGI && _path.find(".py") != std::string::npos)
+		_exePath = "/usr/bin/python3";
+	else if (_exeCGI)
+		_exePath = "/usr/bin/php";
 }
 
 void	Client::parseChunk(std::string chunk)

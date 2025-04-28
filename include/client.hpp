@@ -27,6 +27,8 @@ class Client : public Response
 		std::string							_path;
 		std::string							_protocol;
 		std::string							_body;
+		std::string							_query;
+		std::string							_exePath;
 		t_location							_locationInfo;
 		std::map<std::string, std::string>	_header;
 	public:
@@ -46,18 +48,21 @@ class Client : public Response
 		void		clear(void);
 		void		parseChunk(std::string chunk);
 		void		urlEncoded(void);
+		void		queryStr(void);
 		
 		// getter
 		bool								getListen(void) const {return (_listen);};
-		int									getFd(void) const {return _fd;};
+		int									getFd(void) const {return (_fd);};
 		std::string							getReDir(void) const {return (_reDirHeader);};
 		std::string							getMethod(void) const {return (_method);};
-		std::string							getMsg(void) {return (_clientsMsg);};
-		std::string							getStatusCode(void) {return _statusCode;};
-		std::string							getProtocol(void) const {return _protocol;};
+		std::string							getMsg(void) const {return (_clientsMsg);};
+		std::string							getStatusCode(void) {return (_statusCode);};
+		std::string							getProtocol(void) const {return (_protocol);};
 		std::string							getPath(void) const {return (_path);};
-		std::string							getBody(void) {return _body;};
-		std::map<std::string, std::string>	getHeader(void) const {return _header;};
+		std::string							getBody(void) const {return (_body);};
+		std::string							getQuery(void) const {return (_query);};
+		std::string							getExePath(void) const {return (_exePath);};
+		std::map<std::string, std::string>	getHeader(void) const {return (_header);};
 		t_location							getLocationInfo(void) const {return (_locationInfo);};
 		
 		// setter

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/27 20:06:15 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 13:02:03 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ std::string decodeURIcomponent(std::string &shoppinglist)
 }
 
 //TODO fix blocking
-std::string Server::execute_cgi(Client &client, std::string path)
+std::string Server::execute_cgi(Client &client)
 {
 	int pipefd[2];
 	if (pipe(pipefd) == -1)
@@ -52,44 +52,21 @@ std::string Server::execute_cgi(Client &client, std::string path)
 		close(pipefd[1]);
 		std::cerr << RED; perror("fork"); std::cerr << RESET;
 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-	}
+	}	
 	else if (pid == 0) // Child process
 	{
-		std::map<std::string, std::string> params = parseBody(client.getBody());
-		std::string shoppingList = decodeURIcomponent(params["shopping_list"]);
 		std::vector<std::string> envpStrings;
-		std::string cookie = client.getHeader()["Cookie"];
-		// QUERY_STRING	Daten nach dem ? in der URL (bei GET)
-		// SCRIPT_NAME	Pfad zum Skript (relativ zum Root)
-		// PATH_INFO	Extra-Path-Info nach dem Skriptnamen
-		// PATH_TRANSLATED	Physischer Pfad zur Datei aus PATH_INFO
-		// REMOTE_ADDR	IP-Adresse des Clients
-		// REMOTE_HOST	(wenn DNS-Auflösung aktiv ist)
-		// HTTP_USER_AGENT	User-Agent des Browsers
-		// HTTP_COOKIE	Cookies, wenn vorhanden
-		// HTTP_REFERER	Referrer-URL
-		// HTTP_ACCEPT	Was der Client akzeptiert (z. B. HTML, JSON)
-		envpStrings.push_back("REQUEST_METHOD=" + client.getMethod());
-		envpStrings.push_back("CONTENT_TYPE" + client.getHeader()["Content-Type"]);
-		envpStrings.push_back("CONTENT_LENGTH" + client.getHeader()["Content-Length"]);
-		envpStrings.push_back("SERVER_NAME" + _config.server_name);
-		envpStrings.push_back("SERVER_PORT" + _config.port);
-		envpStrings.push_back("SERVER_PROTOCOL" + client.getProtocol());
-		envpStrings.push_back("" + );
-		envpStrings.push_back("COOKIE=" + cookie);
-		envpStrings.push_back("USERNAME=" + params["username"]);
-		envpStrings.push_back("PASSWORD=" + params["password"]);
-		envpStrings.push_back("SHOPPINGLIST=" + shoppingList);
-
 		std::vector<char*> envp;
-		for(size_t i = 0; i < envpStrings.size(); i++)
-		{
-			envp.push_back(const_cast<char*>(envpStrings[i].c_str()));
-		}
-		envp.push_back(nullptr);
+
+		this->createEnv(client, envpStrings, envp);
+		
+		size_t	pos = client.getExePath().rfind('/');
+		std::string	exe = client.getExePath().substr(pos + 1);
+		std::string	scriptPath = client.getPath();
+		char *const args[] = {const_cast<char *>(exe.c_str()), const_cast<char *>(scriptPath.c_str()), nullptr};
 		dup2(pipefd[1], STDOUT_FILENO);
-		char *const args[] = {const_cast<char *>(path.c_str()), nullptr};
-		if (execve(path.c_str(), args, envp.data()) == -1)
+		close(pipefd[0]);
+		if (execve(client.getExePath().c_str(), args, envp.data()) == -1)
 		{
 			std::cerr << RED << "Execve failed" << RESET << std::endl;
 			return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
@@ -109,9 +86,31 @@ std::string Server::execute_cgi(Client &client, std::string path)
 		close(pipefd[0]);
 		int status;
 		waitpid(pid, &status, 0);
-		return cgiOutput;
+		return (cgiOutput);
 	}
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+}
+
+void	Server::createEnv(Client &client, std::vector<std::string> &envpStrings, std::vector<char *> &envs)
+{
+	std::string cookie = client.getHeader()["Cookie"];
+	// SCRIPT_NAME	Pfad zum Skript (relativ zum Root)
+	// PATH_INFO	Extra-Path-Info nach dem Skriptnamen
+	envpStrings.push_back("REQUEST_METHOD=" + client.getMethod());
+	envpStrings.push_back("CONTENT_TYPE=" + client.getHeader()["Content-Type"]);
+	envpStrings.push_back("CONTENT_LENGTH=" + client.getHeader()["Content-Length"]);
+	envpStrings.push_back("SERVER_NAME=" + _config.server_name);
+	envpStrings.push_back("SERVER_PORT=" + std::to_string(_config.port));
+	envpStrings.push_back("SERVER_PROTOCOL=" + client.getProtocol());
+	envpStrings.push_back("PATH_TRANSLATED=" + client.getPath());
+	envpStrings.push_back("HTTP_COOKIE=" + cookie);
+	envpStrings.push_back("QUERY_STRING=" + client.getQuery());
+
+	for(size_t i = 0; i < envpStrings.size(); i++)
+	{
+		envs.push_back(const_cast<char*>(envpStrings[i].c_str()));
+	}
+	envs.push_back(nullptr);
 }
 
 std::string Server::handleCGIScript(Client &client)
@@ -127,7 +126,7 @@ std::string Server::handleCGIScript(Client &client)
 	if (cgi_type == ".py") //hier mehr types adden wie .php etc.
 	{
 		std::string final_path = "./" + path;
-		return execute_cgi(client, final_path);
+		return execute_cgi(client);
 	}
 	return "";
 }
