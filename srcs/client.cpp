@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/28 17:05:21 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 18:28:22 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,12 +87,24 @@ void	Client::queryStr(void)
 	std::string	newPath;
 
 	pos = _path.find('?');
-	if (pos != std::string::npos)
-	{
-		_query = _path.substr(pos + 1);
-		newPath = _path.substr(0, pos);
-		_path = newPath;
-	}
+	if (pos == std::string::npos)
+		return ;
+	_query = _path.substr(pos + 1);
+	newPath = _path.substr(0, pos);
+	_path = newPath;
+}
+
+void	Client::pathInfo(void)
+{
+	size_t		pos;
+	std::string	newPath;
+
+	pos = _path.find(".py");
+	if (pos == std::string::npos)
+		return ;
+	_pathInfo = _path.substr(pos + 3);
+	newPath = _path.substr(0, pos + 3);
+	_path = newPath;
 }
 
 bool	Client::findLocation(const t_config config, std::string fullDir)
@@ -103,6 +115,7 @@ bool	Client::findLocation(const t_config config, std::string fullDir)
 		if (loc->path == fullDir)
 		{
 			this->_locationInfo = *loc;
+			std::cout << "location = " << loc->path << std::endl;
 			return (true);
 		}
 	}
@@ -142,6 +155,7 @@ bool	Client::checkLocation(std::string &fullDir, const std::string &mainRoot)
 	size_t	pos = fullDir.find(_locationInfo.path);
 	if (pos != std::string::npos)
 		fullDir.erase(pos + 1, _locationInfo.path.size() - 1);
+	std::cout << "fullDir in checkLocation = " << fullDir << std::endl;
 	return (true);
 }
 
@@ -168,6 +182,8 @@ bool	Client::checkFile(std::string &fullDir, std::string file)
 {
 	struct stat	info;
 
+	std::cout << "fullDir in checkFile = " << fullDir << std::endl;
+	std::cout << "file in checkFile = " << file << std::endl;
 	if (file.empty() && !this->_locationInfo.autoindex)
 	{
 		if (!this->_locationInfo.index.empty())

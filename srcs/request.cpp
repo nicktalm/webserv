@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/28 17:05:50 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 18:21:09 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,6 +166,7 @@ void	Client::checkPath(const t_config config)
 
 	this->urlEncoded();
 	this->queryStr();
+	this->pathInfo();
 	if (!this->splitPath(fullDir, firstDir, file))
 	{
 		_statusCode = "404";

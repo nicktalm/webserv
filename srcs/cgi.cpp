@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/28 13:02:03 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/28 19:03:39 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,83 @@ std::string decodeURIcomponent(std::string &shoppinglist)
 }
 
 //TODO fix blocking
+
+std::string	Server::execute_cgi(Client &client)
+{
+	int		pipeIn[2];
+	int		pipeOut[2];
+	pid_t	pid;
+
+	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
+	{
+		std::cerr << RED; std::cerr << perror("pipe"); << std::cerr << RESET;
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+
+	pid = fork();
+	if (pid == -1)
+	{
+		std::cerr << RED; perror("fork"); << std::cerr << RESET;
+		if (close(pipeIn[0]) == -1 || close(pipeIn[1]) == -1
+			|| close(pipeOut[0] == -1 || close(pipeOut[1] == -1)))
+			std::cerr << RED; perror("close"); std::cerr << RESET;
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+	
+	if (pid == 0)
+		this->childProcess(client);
+	
+	if (dup2(pipeIn[1], STDOUT_FILENO) == -1 || dup2(pipeOut[0], STDIN_FILENO) == -1)
+	{
+		std::cerr << RED; perror("dup2"); std::cerr << RESET;
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+
+	if (close(pipeIn[0]) == -1 || close(pipeOut[1]) == -1)
+	{
+		std::cerr << RED; perror("close"); std::cerr << RESET;
+		client.setStatusCode("500");
+		return (handleERROR(client));
+	}
+
+	
+}
+
+void	Server::childProcess(Client &client)
+{
+	std::vector<std::string> envpStrings;
+	std::vector<char*> envp;
+
+	this->createEnv(client, envpStrings, envp);
+	size_t	pos = client.getExePath().rfind('/');
+	std::string	exe = client.getExePath().substr(pos + 1);
+	std::string	scriptPath = client.getPath();
+	char *const args[] = {const_cast<char *>(exe.c_str()), const_cast<char *>(scriptPath.c_str()), nullptr};
+
+	if (dup2(pipeIn[0], STDIN_FILENO) == -1 || dup2(pipeOut[1], STDOUT_FILENO) == -1)
+	{
+		std::cerr << RED; perror("dup2"); std::cerr << RESET;
+		exit (500);
+	}
+	
+	if (close(pipeIn[1]) == -1 || close(pipeOut[0]) == -1)
+	{
+		std::cerr << RED; perror("close"); std::cerr << RESET;
+		exit (500);
+	}
+
+	if (execve(client.getExePath().c_str(), args, envp.data()) == -1)
+	{
+		std::cerr << RED; perror("execve"); std::cerr << RESET;
+		exit (500);
+	}
+
+	
+}
+
 std::string Server::execute_cgi(Client &client)
 {
 	int pipefd[2];
@@ -86,6 +163,8 @@ std::string Server::execute_cgi(Client &client)
 		close(pipefd[0]);
 		int status;
 		waitpid(pid, &status, 0);
+		std::cout << "output" << std::endl;
+		std::cout << cgiOutput << std::endl;
 		return (cgiOutput);
 	}
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n";
@@ -93,19 +172,20 @@ std::string Server::execute_cgi(Client &client)
 
 void	Server::createEnv(Client &client, std::vector<std::string> &envpStrings, std::vector<char *> &envs)
 {
-	std::string cookie = client.getHeader()["Cookie"];
-	// SCRIPT_NAME	Pfad zum Skript (relativ zum Root)
-	// PATH_INFO	Extra-Path-Info nach dem Skriptnamen
-	envpStrings.push_back("REQUEST_METHOD=" + client.getMethod());
-	envpStrings.push_back("CONTENT_TYPE=" + client.getHeader()["Content-Type"]);
+	envpStrings.push_back("AUTH_TYPE=null");
 	envpStrings.push_back("CONTENT_LENGTH=" + client.getHeader()["Content-Length"]);
+	envpStrings.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	envpStrings.push_back("PATH_INFO=" + client.getPathInfo());
+	envpStrings.push_back("PATH_TRANSLATED=" + client.getPath());
+	envpStrings.push_back("QUERY_STRING=" + client.getQuery());
+	envpStrings.push_back("SCRIPT_NAME=" + client.getPath());
 	envpStrings.push_back("SERVER_NAME=" + _config.server_name);
 	envpStrings.push_back("SERVER_PORT=" + std::to_string(_config.port));
 	envpStrings.push_back("SERVER_PROTOCOL=" + client.getProtocol());
-	envpStrings.push_back("PATH_TRANSLATED=" + client.getPath());
-	envpStrings.push_back("HTTP_COOKIE=" + cookie);
-	envpStrings.push_back("QUERY_STRING=" + client.getQuery());
-
+	envpStrings.push_back("HTTP_COOKIE=" + client.getHeader()["Cookie"]);
+	envpStrings.push_back("REQUEST_METHOD=" + client.getMethod());
+	envpStrings.push_back("CONTENT_TYPE=" + client.getHeader()["Content-Type"]);
+	
 	for(size_t i = 0; i < envpStrings.size(); i++)
 	{
 		envs.push_back(const_cast<char*>(envpStrings[i].c_str()));

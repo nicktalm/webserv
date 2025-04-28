@@ -44,6 +44,7 @@ class Server
 		bool			isCGIScript(Client &client);
 		std::string		execute_cgi(Client &client);
 		void			createEnv(Client &client, std::vector<std::string> &envpStrings, std::vector<char *> &envs);
+		void			childProcess(Client &client);
 
 		std::string 	extractContentType(const std::string &headerValue);
 		bool			handleMultipartFormData(Client &client, const std::string &body, const std::string &uploadDir);

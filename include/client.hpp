@@ -29,6 +29,7 @@ class Client : public Response
 		std::string							_body;
 		std::string							_query;
 		std::string							_exePath;
+		std::string							_pathInfo;
 		t_location							_locationInfo;
 		std::map<std::string, std::string>	_header;
 	public:
@@ -49,6 +50,7 @@ class Client : public Response
 		void		parseChunk(std::string chunk);
 		void		urlEncoded(void);
 		void		queryStr(void);
+		void		pathInfo(void);
 		
 		// getter
 		bool								getListen(void) const {return (_listen);};
@@ -62,6 +64,7 @@ class Client : public Response
 		std::string							getBody(void) const {return (_body);};
 		std::string							getQuery(void) const {return (_query);};
 		std::string							getExePath(void) const {return (_exePath);};
+		std::string							getPathInfo(void) const {return (_pathInfo);};
 		std::map<std::string, std::string>	getHeader(void) const {return (_header);};
 		t_location							getLocationInfo(void) const {return (_locationInfo);};
 		

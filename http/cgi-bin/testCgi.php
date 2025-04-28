@@ -40,6 +40,5 @@ $content_length = strlen($html_body);
 header("Content-Length: $content_length");
 
 // Gib den Body aus
-echo $header;
 echo $html_body;
 ?>
