@@ -5,8 +5,8 @@ import os
 import datetime
 
 # Beginne den Output und den Header
-print("HTTP1.1 200 OK")
-print("Content-type: text/html")  # Setzt den Content-Type für HTML
+print("Status: 200 OK")  # Dies ist der Status-Header, nicht HTTP/1.1
+print("Content-Type: text/html")  # Setzt den Content-Type für HTML
 print("Cache-Control: no-cache")  # Verhindert Caching der Antwort
 print("Date:", datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT"))  # Das aktuelle Datum und Uhrzeit
 print("Server: Python CGI Server")  # Setzt den Server-Header
@@ -42,6 +42,7 @@ content_length = len(html_body)
 
 # Setze den Content-Length-Header
 print(f"Content-Length: {content_length}")
+print()  # Leere Zeile, um die Header von der Body-Inhalte zu trennen
 
 # Gib den Body aus
 print(html_body)

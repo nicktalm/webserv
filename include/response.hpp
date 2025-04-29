@@ -24,7 +24,9 @@ class Response
 		bool						_responseReady;
 		bool						_waitForChild;
 		int							_autoIndexPart;
+		int							_CGIOutput;
 		ssize_t						_bytesSend;
+		pid_t						_childId;
 		std::string					_responseBuffer;
 		std::string					_reDirHeader;
 		DIR							*_dir;
@@ -38,7 +40,9 @@ class Response
 		bool						getCGI(void) const {return (_exeCGI);};
 		bool						getChildReady(void) const {return (_waitForChild);};
 		int							getAutoIndexPart(void) const {return (_autoIndexPart);};
+		int							getCGIOutput(void) const {return (_CGIOutput);};
 		ssize_t						getBytesSend(void) const { return (_bytesSend);};
+		pid_t						getChildId(void) const {return (_childId);};
 		std::string					getResponseBuffer(void) const {return (_responseBuffer);};
 		DIR							*getDir(void) const {return (_dir);};
 
@@ -50,6 +54,8 @@ class Response
 		void		setReady(const bool ready) {_responseReady = ready;};
 		void		setAutoIndexPart(const int part) {_autoIndexPart = part;};
 		void		setChildReady(const bool ready) {_waitForChild = ready;};
+		void		setChildId(const pid_t id) {_childId = id;};
+		void		setCGIOutput(const int pipe) {_CGIOutput = pipe;};
 	//GET request
 		std::string	getContentType(std::string file);
 		std::string	getStartLine(std::string protocol, std::string status_code);

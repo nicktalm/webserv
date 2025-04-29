@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/28 19:53:58 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/29 17:07:16 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,8 @@ Client::Client(void)
 	_body = "";
 	_query = "";
 	_exePath = "";
-	_reDirHeader = "";
+	_pathInfo = "";
+	_locationInfo = {};
 	_header = {};
 }
 
@@ -115,7 +116,6 @@ bool	Client::findLocation(const t_config config, std::string fullDir)
 		if (loc->path == fullDir)
 		{
 			this->_locationInfo = *loc;
-			std::cout << "location = " << loc->path << std::endl;
 			return (true);
 		}
 	}
@@ -155,7 +155,6 @@ bool	Client::checkLocation(std::string &fullDir, const std::string &mainRoot)
 	size_t	pos = fullDir.find(_locationInfo.path);
 	if (pos != std::string::npos)
 		fullDir.erase(pos + 1, _locationInfo.path.size() - 1);
-	std::cout << "fullDir in checkLocation = " << fullDir << std::endl;
 	return (true);
 }
 
@@ -182,8 +181,6 @@ bool	Client::checkFile(std::string &fullDir, std::string file)
 {
 	struct stat	info;
 
-	std::cout << "fullDir in checkFile = " << fullDir << std::endl;
-	std::cout << "file in checkFile = " << file << std::endl;
 	if (file.empty() && !this->_locationInfo.autoindex)
 	{
 		if (!this->_locationInfo.index.empty())
@@ -300,17 +297,20 @@ void	Client::clear(void)
 	_body.clear();
 	_query.clear();
 	_exePath.clear();
+	_pathInfo.clear();
 	_header.clear();
-	_query.clear();
+
+	_exeCGI = false;
 	_responseHeader = false;
 	_responseReady = false;
 	_waitForChild = false;
 	_autoIndexPart = 0;
+	_CGIOutput = 0;
 	_bytesSend = 0;
+	_childId = 0;
 	_responseBuffer.clear();
 	_reDirHeader.clear();
 	if (_dir != nullptr && closedir(_dir) == -1)
 		std::cerr << "closedir failed" << std::endl;
 	_dir = nullptr;
-	_exeCGI = false;
 }

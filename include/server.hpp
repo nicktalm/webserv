@@ -31,32 +31,33 @@ class Server
 		Server(t_config config);
 		~Server(void);
 
-		int				getSocketfd(void) {return _socketFd;};
-		int				getPort(void) {return _config.port;};
-		std::string		getRoot(void) {return (_config.root);};
-		void			request(std::vector<pollfd>::iterator clientFd);
-		void			run(void);
-		void			response(Client &client, std::vector<pollfd>::iterator pollClient);
-		void			IO_Error(int bytesRead, std::vector<pollfd>::iterator find);
-		std::string		handleGET(Client &client);
-		std::string		handlePOST(Client &client);
-		std::string		handleCGIScript(Client &client);
-		bool			isCGIScript(Client &client);
-		std::string		execute_cgi(Client &client);
-		void			createEnv(Client &client, std::vector<std::string> &envpStrings, std::vector<char *> &envs);
-		void			childProcess(Client &client);
-		void			parentProcess(Client &client, pid_t pid);
+		int			getSocketfd(void) {return _socketFd;};
+		int			getPort(void) {return _config.port;};
+		std::string	getRoot(void) {return (_config.root);};
+		void		request(std::vector<pollfd>::iterator clientFd);
+		void		run(void);
+		void		response(Client &client, std::vector<pollfd>::iterator pollClient);
+		void		IO_Error(int bytesRead, std::vector<pollfd>::iterator find);
+		std::string	handleGET(Client &client);
+		std::string	handlePOST(Client &client);
+		bool		execute_cgi(Client &client);
+		void		createEnv(Client &client, std::vector<std::string> &envpStrings, std::vector<char *> &envs);
+		void		childProcess(Client &client, int *pipeIn, int *pipeOut);
+		bool		parentProcess(Client &client, int *pipeIn, int *pipeOut);
+		bool		waitingroom(Client &client);
+		std::string	readFromFd(Client &client);
+		std::string	checkCGIOutput(Client &client, char *buffer);
 
-		std::string 	extractContentType(const std::string &headerValue);
-		bool			handleMultipartFormData(Client &client, const std::string &body, const std::string &uploadDir);
-		bool			handleURLEncoded(Client &client, const std::string &body, const std::string &uploadDir);
-		bool			handleRawUpload(Client &client, const std::string &body, const std::string &uploadDir);
-		std::string 	buildRedirectResponse(const std::string &location);
+		std::string	extractContentType(const std::string &headerValue);
+		bool		handleMultipartFormData(Client &client, const std::string &body, const std::string &uploadDir);
+		bool		handleURLEncoded(Client &client, const std::string &body, const std::string &uploadDir);
+		bool		handleRawUpload(Client &client, const std::string &body, const std::string &uploadDir);
+		std::string	buildRedirectResponse(const std::string &location);
 
-		std::string		handleERROR(Client &client);
-		std::string 	handleDELETE(Client &client);
-		std::string 	create_response(const t_response &response);
-		void			disconnect(std::vector<pollfd>::iterator find);
+		std::string	handleERROR(Client &client);
+		std::string	handleDELETE(Client &client);
+		std::string	create_response(const t_response &response);
+		void		disconnect(std::vector<pollfd>::iterator find);
 };
 
 // checks the config file and returns a vector of t_config

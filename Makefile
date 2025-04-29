@@ -15,7 +15,8 @@ SRCS := main.cpp \
 		utils.cpp \
 		response/response.cpp \
 		request.cpp \
-		cgi.cpp
+		cgi.cpp \
+		methods.cpp
 
 OBJ = $(SRCS:.cpp=.o)
 OBJS_PATH = $(addprefix $(OBJDIR), $(OBJ))

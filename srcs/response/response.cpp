@@ -4,13 +4,15 @@
 
 Response::Response(void)
 {
-	_responseBuffer = "";
+	_exeCGI = false;
 	_responseHeader = false;
 	_responseReady = false;
 	_waitForChild = false;
-	_exeCGI = false;
 	_autoIndexPart = 0;
+	_CGIOutput = 0;
 	_bytesSend = 0;
+	_childId = 0;
+	_responseBuffer = "";
 	_reDirHeader = "";
 	_dir = nullptr;
 }

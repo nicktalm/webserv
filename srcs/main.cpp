@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:48 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/27 16:02:34 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/29 16:10:28 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,4 +50,3 @@ int main(int argc, char **argv)
 
 // TODO multiple cgi einbauen
 // TODO cookies
-// TODO URL encoding
