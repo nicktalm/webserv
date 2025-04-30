@@ -2,29 +2,43 @@
 
 import os
 import sys
+import urllib.parse
 
 # File to store registered users
 USER_FILE = "./http/users/users.txt"
 
-# Output HTTP headers
-print("HTTP/1.1 200 OK")
-print("Content-Type: text/html")
+# POST-Datenlänge herausfinden
+content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
-# Extract username and password from script arguments
-username = os.environ.get("USERNAME", "")
-password = os.environ.get("PASSWORD", "")
-print("Username: ", username)
-print("Password ", password)
+# POST-Daten von stdin lesen
+post_data = sys.stdin.read(content_length)
 
-    # Validate username and password
+# POST-Daten parsen
+params = urllib.parse.parse_qs(post_data)
 
+# Zugriff auf einzelne Felder
+username = params.get('username', [''])[0]
+password = params.get('password', [''])[0]
+
+def send_response(body, cookie=None):
+    """Hilfsfunktion um HTTP-Header + Body auszugeben."""
+    print("Status: 200 OK")
+    if cookie:
+        print(f"Set-Cookie: {cookie}")
+    print("Content-Type: text/html")
+    content_len = len(body.encode('utf-8'))
+    print(f"Content-Length: {content_len}")
+    print("\r\n" + body)
+
+# Validate username and password
 if not username or not password:
-    print("\r\n")  # End of headers
-    print("<html><body>")
-    print("<h1>Login Failed</h1>")
-    print("<p>Username and password not provided.</p>")
-    print('<a href="/index.html">Go back</a>')
-    print("</body></html>")
+    body = """<html><body>
+<h1>Login Failed</h1>
+<p>Username and password not provided.</p>
+<a href="/index.html">Go back</a>
+</body></html>"""
+    send_response(body)
+    sys.exit(0)
 
 try:
     with open(USER_FILE, "r") as file:
@@ -32,26 +46,25 @@ try:
         for user in users:
             existing_username, existing_password = user.strip().split(":")
             if existing_username == username and existing_password == password:
-                # Send the Set-Cookie header to update the cookie
-                print(f"Set-Cookie: user={username}; Path=/; HttpOnly\r\n")
-                # Output the HTML content for success
-                print("<html><body>")
-                print("<h1>Login Successful</h1>")
-                print(f"<p>Welcome back, {username}!</p>")
-                print('<a href="/index.html">Go to main page</a>')
-                print("</body></html>")
+                body = f"""<html><body>
+<h1>Login Successful</h1>
+<p>Welcome back, {username}!</p>
+<a href="/index.html">Go to main page</a>
+</body></html>"""
+                cookie = f"user={username}; Path=/; HttpOnly"
+                send_response(body, cookie)
                 sys.exit(0)
-        # If no match is found
-        print("\r\n")  # End of headers
-        print("<html><body>")
-        print("<h1>Login Failed</h1>")
-        print("<p>Invalid username or password.</p>")
-        print('<a href="/index.html">Try again</a>')
-        print("</body></html>")
+        # Kein Match gefunden
+        body = """<html><body>
+<h1>Login Failed</h1>
+<p>Invalid username or password.</p>
+<a href="/index.html">Try again</a>
+</body></html>"""
+        send_response(body)
 except FileNotFoundError:
-    print("\r\n")  # End of headers
-    print("<html><body>")
-    print("<h1>Login Failed</h1>")
-    print("<p>No users are registered yet.</p>")
-    print('<a href="/index.html">Go back</a>')
-    print("</body></html>")
+    body = """<html><body>
+<h1>Login Failed</h1>
+<p>No users are registered yet.</p>
+<a href="/index.html">Go back</a>
+</body></html>"""
+    send_response(body)

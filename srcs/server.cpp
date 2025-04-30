@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/29 17:35:09 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 11:37:42 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -247,8 +247,6 @@ std::string	Server::checkCGIOutput(Client &client, char *buffer)
 	std::string	tmp(buffer);
 	size_t		pos;
 
-	std::cout << "tmp" << std::endl;
-	std::cout << tmp << std::endl;
 	pos = tmp.find("Status:");
 	if (pos != std::string::npos)
 		tmp.replace(pos, pos + 7, "HTTP/1.1");

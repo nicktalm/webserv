@@ -2,6 +2,7 @@
 
 import os
 import sys
+import urllib.parse
 
 # File to store registered users
 USER_FILE = "./http/users/users.txt"  # Replace with the actual path
@@ -11,22 +12,34 @@ print("HTTP/1.1 200 OK")
 print("Content-Type: text/html")
 
 # Extract username and password from environment variables
-username = os.environ.get("USERNAME", "")
-password = os.environ.get("PASSWORD", "")
-print("Username ", username)
-print("Password ", password)
+# Content-Length ermitteln
+content_length = int(os.environ.get('CONTENT_LENGTH', 0))
+
+# POST-Daten von stdin lesen
+post_data = sys.stdin.read(content_length)
+
+# POST-Daten parsen
+params = urllib.parse.parse_qs(post_data)
+
+# Zugriff auf einzelne Felder
+username = params.get('username', [''])[0]
+password = params.get('password', [''])[0]
+
+html = ""
 
 # Check if username and password are provided
 if not username or not password:
-    # Output the HTML content for missing arguments
-    print("\r\n")  # End of headers
-    print("<html>")
-    print("<body>")
-    print("<h1>Registration Failed</h1>")
-    print("<p>Username and password not provided.</p>")
-    print('<a href="/index.html">Go back</a>')
-    print("</body>")
-    print("</html>")
+    html = """<html>
+<body>
+<h1>Registration Failed</h1>
+<p>Username and password not provided.</p>
+<a href="/index.html">Go back</a>
+</body>
+</html>"""
+    content_length = len(html.encode('utf-8'))
+    print(f"Content-Length: {content_length}")
+    print()
+    print(html)
     sys.exit(0)
 
 # Check if the username already exists
@@ -37,14 +50,17 @@ try:
             existing_username = user.split(":")[0].strip()
             if existing_username == username:
                 # Output the HTML content for failure
-                print("\r\n")  # End of headers
-                print("<html>")
-                print("<body>")
-                print("<h1>Registration Failed</h1>")
-                print(f"<p>Username '{username}' is already taken.</p>")
-                print('<a href="/index.html">Go back</a>')
-                print("</body>")
-                print("</html>")
+                html = f"""<html>
+<body>
+<h1>Registration Failed</h1>
+<p>Username '{username}' is already taken.</p>
+<a href="/index.html">Go back</a>
+</body>
+</html>"""
+                content_length = len(html.encode('utf-8'))
+                print(f"Content-Length: {content_length}")
+                print()
+                print(html)
                 sys.exit(0)
 except FileNotFoundError:
     # If the file doesn't exist, proceed with registration
@@ -55,33 +71,40 @@ try:
     with open(USER_FILE, "a") as file:
         file.write(f"{username}:{password}\n")
     # Send the Set-Cookie header
-    print(f"Set-Cookie: user={username}; Path=/; HttpOnly\r\n")
+    print(f"Set-Cookie: user={username}; Path=/; HttpOnly")
     # Output the HTML content for success
-    print("<html>")
-    print("<body>")
-    print("""
-        <head>
-            <title>Registration</title>
-            <style>
-                .btn{
-                color:white;
-                border: 2px solid black;
-                border-radius: 12px;
-                background-color: black;
-                padding: 10px;
-                }
-            </style>
-        </head>
-    """)
-    print("<h1>Registration Successful</h1>")
-    print(f"<p>Welcome, {username}!</p>")
-    print('<a class="btn" href="/index.html">Go to main page</a>')
+    html = f"""<html>
+<head>
+    <title>Registration</title>
+    <style>
+        .btn {{
+            color: white;
+            border: 2px solid black;
+            border-radius: 12px;
+            background-color: black;
+            padding: 10px;
+        }}
+    </style>
+</head>
+<body>
+    <h1>Registration Successful</h1>
+    <p>Welcome, {username}!</p>
+    <a class="btn" href="/index.html">Go to main page</a>
+</body>
+</html>"""
+    content_length = len(html.encode('utf-8'))
+    print(f"Content-Length: {content_length}")
+    print()
+    print(html)
 except Exception as e:
     # Output the HTML content for failure
-    print("\r\n")  # End of headers
-    print("<html>")
-    print("<body>")
-    print("<h1>Registration Failed</h1>")
-    print(f"<p>Error: {e}</p>")
-    print("</body>")
-    print("</html>")
+    html_error = f"""<html>
+    <body>
+        <h1>Registration Failed</h1>
+        <p>Error: {e}</p>
+    </body>
+    </html>"""
+    content_length = len(html_error.encode('utf-8'))  # Use html_error here for content length
+    print(f"Content-Length: {content_length}")
+    print()
+    print(html_error)

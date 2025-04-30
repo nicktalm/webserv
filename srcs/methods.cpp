@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/29 17:14:19 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 11:17:57 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,7 +141,7 @@ std::string	Server::handleGET(Client &client)
 
 std::string Server::handlePOST(Client &client)
 {
-	std::cout << GREEN << "POST request" << RESET << std::endl;
+	// std::cout << GREEN << "POST request" << RESET << std::endl;
 
 	if (client.getCGI())
 	{
