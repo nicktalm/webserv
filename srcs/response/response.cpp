@@ -8,6 +8,7 @@ Response::Response(void)
 	_responseHeader = false;
 	_responseReady = false;
 	_waitForChild = false;
+	_firstTime = false;
 	_autoIndexPart = 0;
 	_CGIOutput = 0;
 	_bytesSend = 0;

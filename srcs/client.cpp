@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/29 17:07:16 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 13:38:19 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,6 +304,7 @@ void	Client::clear(void)
 	_responseHeader = false;
 	_responseReady = false;
 	_waitForChild = false;
+	_firstTime = false;
 	_autoIndexPart = 0;
 	_CGIOutput = 0;
 	_bytesSend = 0;

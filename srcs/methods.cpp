@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/30 12:01:57 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 13:46:41 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,30 +104,7 @@ std::string	Server::handleGET(Client &client)
 		}
 	}
 	else if (client.getCGI())
-	{
-		static bool	firstTime = false;
-		bool	check = true;
-
-		if (!firstTime)
-		{
-			if (!client.getChildReady())
-				check = this->execute_cgi(client);
-			else
-				check = this->waitingroom(client);
-			if (!client.getChildReady())
-				firstTime = true;
-		}
-		if (check && !client.getChildReady())
-		{
-			std::string	tmp;
-
-			tmp = this->readFromFd(client);
-			if (client.getReady())
-				firstTime = false;
-			return (tmp);
-		}
-		return ("");
-	}
+		return (this->checkCGI(client));
 	else
 	{
 		client.setReady(true);
@@ -140,30 +117,7 @@ std::string	Server::handleGET(Client &client)
 std::string Server::handlePOST(Client &client)
 {
 	if (client.getCGI())
-	{
-		static bool	firstTime = false;
-		bool	check = true;
-
-		if (!firstTime)
-		{
-			if (!client.getChildReady())
-				check = this->execute_cgi(client);
-			else
-				check = this->waitingroom(client);
-			if (!client.getChildReady())
-				firstTime = true;
-		}
-		if (check && !client.getChildReady())
-		{
-			std::string	tmp;
-
-			tmp = this->readFromFd(client);
-			if (client.getReady())
-				firstTime = false;
-			return (tmp);
-		}
-		return ("");
-	}
+		return (this->checkCGI(client));
 
 	client.setReady(true);
 	std::string contentType = extractContentType(client.getHeader()["Content-Type"]);
@@ -191,6 +145,8 @@ std::string Server::handlePOST(Client &client)
 
 std::string Server::handleDELETE(Client &client)
 {
+	if (client.getCGI())
+		return (this->checkCGI(client));
 	std::string path = client.getPath();
 	if (std::remove(path.c_str()) != 0)
 	{

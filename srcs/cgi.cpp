@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/29 17:12:07 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 13:39:59 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,31 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "../include/server.hpp"
+
+std::string	Server::checkCGI(Client &client)
+{
+	bool	check = true;
+
+	if (!client.getFirstTime())
+	{
+		if (!client.getChildReady())
+			check = this->execute_cgi(client);
+		else
+			check = this->waitingroom(client);
+		if (!client.getChildReady())
+			client.setFirstTime(true);
+	}
+	if (check && !client.getChildReady())
+	{
+		std::string	tmp;
+
+		tmp = this->readFromFd(client);
+		if (client.getReady())
+			client.setFirstTime(false);
+		return (tmp);
+	}
+	return ("");
+}
 
 bool	Server::execute_cgi(Client &client)
 {
