@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/30 12:13:32 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 15:05:18 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <iterator>
 #include "../include/server.hpp"
 
 void Server::request(std::vector<pollfd>::iterator pollClient)
@@ -155,7 +156,7 @@ void	Client::headerParsing(int fd, const t_config config)
 			}
 		}
 		this->checkPath(config);
-		this->printStatus();
+		// this->printStatus();
 	}
 	else
 		_statusCode = "404";

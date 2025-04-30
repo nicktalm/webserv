@@ -23,6 +23,7 @@ class Response
 		bool						_responseHeader;
 		bool						_responseReady;
 		bool						_waitForChild;
+		bool						_firstTime;
 		int							_autoIndexPart;
 		int							_CGIOutput;
 		ssize_t						_bytesSend;
@@ -39,6 +40,7 @@ class Response
 		bool						getReady(void) const {return (_responseReady);};
 		bool						getCGI(void) const {return (_exeCGI);};
 		bool						getChildReady(void) const {return (_waitForChild);};
+		bool						getFirstTime(void) const {return (_firstTime);};
 		int							getAutoIndexPart(void) const {return (_autoIndexPart);};
 		int							getCGIOutput(void) const {return (_CGIOutput);};
 		ssize_t						getBytesSend(void) const { return (_bytesSend);};
@@ -56,6 +58,7 @@ class Response
 		void		setChildReady(const bool ready) {_waitForChild = ready;};
 		void		setChildId(const pid_t id) {_childId = id;};
 		void		setCGIOutput(const int pipe) {_CGIOutput = pipe;};
+		void		setFirstTime(const bool check) {_firstTime = check;};
 	//GET request
 		std::string	getContentType(std::string file);
 		std::string	getStartLine(std::string protocol, std::string status_code);

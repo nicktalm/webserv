@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/29 17:07:16 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 15:04:59 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sys/stat.h>
+#include <algorithm>
 #include "../include/client.hpp"
 #include "../include/utils.hpp"
 
@@ -304,6 +305,7 @@ void	Client::clear(void)
 	_responseHeader = false;
 	_responseReady = false;
 	_waitForChild = false;
+	_firstTime = false;
 	_autoIndexPart = 0;
 	_CGIOutput = 0;
 	_bytesSend = 0;

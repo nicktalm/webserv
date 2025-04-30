@@ -47,6 +47,7 @@ class Server
 		bool		waitingroom(Client &client);
 		std::string	readFromFd(Client &client);
 		std::string	checkCGIOutput(Client &client, char *buffer);
+		std::string	checkCGI(Client &client);
 
 		std::string	extractContentType(const std::string &headerValue);
 		bool		handleMultipartFormData(Client &client, const std::string &body, const std::string &uploadDir);

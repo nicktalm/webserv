@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/30 13:46:34 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/04/30 15:04:17 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <cstring>
+#include <algorithm>
 #include "../include/response.hpp"
 #include "../include/utils.hpp"
 #include "../include/server.hpp"
