@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/29 17:12:07 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 13:32:43 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ bool	Server::parentProcess(Client &client, int *pipeIn, int *pipeOut)
 {
 	if (write(pipeIn[1], client.getBody().c_str(), client.getBody().size()) == -1)
 	{
-		std::cerr << RED; perror("write"); std::cerr << RESET;
+		std::cerr << RED << "Write failed" << RESET << std::endl;
 		client.setStatusCode("500");
 		return (false);
 	}
@@ -100,7 +100,6 @@ bool	Server::parentProcess(Client &client, int *pipeIn, int *pipeOut)
 		std::cerr << RED; perror("fcntl"); std::cerr << RESET;
 		return (false);
 	}
-
 	client.setCGIOutput(pipeOut[0]);
 	return (this->waitingroom(client));
 }

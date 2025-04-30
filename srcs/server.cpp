@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/30 12:14:22 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 13:46:34 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -250,7 +250,20 @@ std::string	Server::checkCGIOutput(Client &client, char *buffer)
 	pos = tmp.find("Status:");
 	if (pos != std::string::npos)
 		tmp.replace(pos, pos + 7, "HTTP/1.1");
+	else
+	{
+		client.setStatusCode("400");
+		client.setReady(true);
+		return ("");
+	}
 	pos = tmp.find("Content-Length:");
+	if (pos == std::string::npos)
+	{
+		client.setStatusCode("400");
+		client.setReady(true);
+		return ("");
+	}
+	pos = tmp.find("Content-Type:");
 	if (pos == std::string::npos)
 	{
 		client.setStatusCode("400");
