@@ -15,15 +15,20 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # Hole das Formular-Datenobjekt
 form = cgi.FieldStorage()
 
-# Antwort-Header ausgeben
-print("HTTP/1.1 200 OK")  # Status muss "HTTP/1.1 200 OK" sein
-print("Content-Type: text/html")
-
-# Verarbeite den Upload
-if "file" not in form:
-    print("Content-Length: 67")
+# --- Hilfsfunktion für HTML-Antworten ---
+def print_html_response(html_content, status="200 OK"):
+    """Gibt eine komplette HTTP-Antwort mit dynamischer Content-Length zurück."""
+    html_bytes = html_content.encode('utf-8')
+    print(f"HTTP/1.1 {status}")
+    print("Content-Type: text/html; charset=utf-8")
+    print(f"Content-Length: {len(html_bytes)}")
     print()
-    print("<html><body><h1>Fehler: Keine Datei hochgeladen!</h1></body></html>")
+    print(html_content)
+
+# --- Upload verarbeiten ---
+if "file" not in form:
+    html_error = "<html><body><h1>Fehler: Keine Datei hochgeladen!</h1></body></html>"
+    print_html_response(html_error, status="400 Bad Request")
     exit(1)
 
 file_item = form["file"]
@@ -31,20 +36,19 @@ if file_item.filename:
     filename = os.path.basename(file_item.filename)  # Verhindert Path Injection
     filepath = os.path.join(UPLOAD_DIR, filename)
 
+    # Datei speichern
     with open(filepath, "wb") as f:
         f.write(file_item.file.read())
 
-    # Erfolgsantwort
-    print("Content-Length: 158")
-    print()
-    print(f"""<html>
+    # Erfolgreiche Antwort
+    html_success = f"""<html>
 <head><title>Upload Erfolgreich</title></head>
 <body>
     <h1>Datei erfolgreich hochgeladen!</h1>
     <p>Gespeichert als: {filename}</p>
 </body>
-</html>""")
+</html>"""
+    print_html_response(html_success)
 else:
-    print("Content-Length: 63")
-    print()
-    print("<html><body><h1>Fehler: Keine Datei gewählt!</h1></body></html>")
+    html_error = "<html><body><h1>Fehler: Keine Datei gewählt!</h1></body></html>"
+    print_html_response(html_error, status="400 Bad Request")

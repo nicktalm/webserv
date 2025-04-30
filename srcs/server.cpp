@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/30 11:37:42 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/04/30 12:14:22 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -401,7 +401,6 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	if (client.getReady() && (currBytes == static_cast<ssize_t>(response.size())))
 	{
 		pollClient->events = POLLIN;
-		std::cout << RED << "here" << RESET << std::endl;
 		client.clear();
 	}
 }

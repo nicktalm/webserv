@@ -51,6 +51,7 @@ class Client : public Response
 		void		urlEncoded(void);
 		void		queryStr(void);
 		void		pathInfo(void);
+		void		printStatus(void);
 		
 		// getter
 		bool								getListen(void) const {return (_listen);};
