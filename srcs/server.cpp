@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/05 13:01:57 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/05 15:33:32 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -233,13 +233,9 @@ std::string	Server::readFromFd(Client &client)
 	}
 	else if (bytesRead == 0)
 	{
-		pid_t	id = client.getCGIOutput();
-		if (close(id) == -1)
-		{
-			std::cerr << RED; perror("close"); std::cerr << RESET;
-			client.setStatusCode("500");
+		int	id = client.getCGIOutput();
+		if (!client.handleFd(close, id))
 			return ("");
-		}
 		client.setReady(true);
 		return ("");
 	}

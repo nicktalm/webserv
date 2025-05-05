@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/04/30 15:06:35 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/05 15:43:54 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,21 +46,19 @@ bool	Server::execute_cgi(Client &client)
 	int		pipeIn[2];
 	int		pipeOut[2];
 
-	std::cout << RED << "Start CGI" << RESET << std::endl;
-	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
-	{
-		std::cerr << RED; perror("pipe"); std::cerr << RESET;
-		client.setStatusCode("500");
+	if (!client.handleFd(pipe, pipeIn))
 		return (false);
-	}
+	if (!client.handleFd(pipe, pipeOut))
+		return (false);
 
 	client.setChildId(fork());
 	if (client.getChildId() == -1)
 	{
 		std::cerr << RED; perror("fork"); std::cerr << RESET;
-		if (close(pipeIn[0]) == -1 || close(pipeIn[1]) == -1
-			|| close(pipeOut[0]) == -1 || close(pipeOut[1]) == -1)
-			std::cerr << RED; perror("close"); std::cerr << RESET;
+		client.handleFd(close, pipeIn[0]);
+		client.handleFd(close, pipeIn[1]);
+		client.handleFd(close, pipeOut[0]);
+		client.handleFd(close, pipeOut[1]);
 		client.setStatusCode("500");
 		return (false);
 	}
@@ -84,18 +82,27 @@ void	Server::childProcess(Client &client, int *pipeIn, int *pipeOut)
 	std::string	scriptPath = client.getPath();
 	char *const args[] = {const_cast<char *>(exe.c_str()), const_cast<char *>(scriptPath.c_str()), nullptr};
 
-	if (dup2(pipeIn[0], STDIN_FILENO) == -1 || dup2(pipeOut[1], STDOUT_FILENO) == -1)
+	if (!client.handleFd(dup2, pipeIn[0], STDIN_FILENO))
 	{
-		std::cerr << RED; perror("dup2"); std::cerr << RESET;
-		exit (500);
+		client.handleFd(close, pipeIn[0]);
+		client.handleFd(close, pipeIn[1]);
+		client.handleFd(close, pipeOut[0]);
+		client.handleFd(close, pipeOut[1]);
+		exit(500);
 	}
-	
-	if (close(pipeIn[1]) == -1 || close(pipeOut[0]) == -1
-		|| close(pipeIn[0]) == -1 || close(pipeOut[1]) == -1)
+	if (!client.handleFd(dup2, pipeOut[1], STDOUT_FILENO))
 	{
-		std::cerr << RED; perror("close"); std::cerr << RESET;
-		exit (500);
+		client.handleFd(close, pipeIn[0]);
+		client.handleFd(close, pipeIn[1]);
+		client.handleFd(close, pipeOut[0]);
+		client.handleFd(close, pipeOut[1]);
+		exit(500);
 	}
+
+	client.handleFd(close, pipeIn[0]);
+	client.handleFd(close, pipeIn[1]);
+	client.handleFd(close, pipeOut[0]);
+	client.handleFd(close, pipeOut[1]);
 
 	if (execve(client.getExePath().c_str(), args, envp.data()) == -1)
 	{
@@ -110,22 +117,20 @@ bool	Server::parentProcess(Client &client, int *pipeIn, int *pipeOut)
 	{
 		std::cerr << RED << "Write failed" << RESET << std::endl;
 		client.setStatusCode("500");
+		client.handleFd(close, pipeIn[0]);
+		client.handleFd(close, pipeIn[1]);
+		client.handleFd(close, pipeOut[0]);
+		client.handleFd(close, pipeOut[1]);
 		return (false);
 	}
 
-	if (close(pipeIn[0]) == -1 || close(pipeOut[1]) == -1
-		|| close(pipeIn[1]) == -1)
-	{
-		std::cerr << RED; perror("close"); std::cerr << RESET;
-		client.setStatusCode("500");
-		return (false);
-	}
+	client.handleFd(close, pipeIn[0]);
+	client.handleFd(close, pipeIn[1]);
+	client.handleFd(close, pipeOut[1]);
 
-	if (fcntl(pipeOut[0], F_SETFL, O_NONBLOCK) == -1)
-	{
-		std::cerr << RED; perror("fcntl"); std::cerr << RESET;
+	if (!client.handleFd(fcntl, pipeOut[0], F_SETFL, O_NONBLOCK))
 		return (false);
-	}
+
 	client.setCGIOutput(pipeOut[0]);
 	return (this->waitingroom(client));
 }

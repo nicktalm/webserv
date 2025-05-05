@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/30 13:51:38 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/05 15:06:52 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,7 @@ std::string	Server::handleERROR(Client &client)
 
 	errorMsg = client.getErrorMsg(client.getStatusCode());
 	end = errorMsg.find(':');
+	std::cout << "errorMsg = " << errorMsg << std::endl;
 	if (!client.getLocationInfo().error_page.empty() && client.getLocationInfo().error_page.find(client.getStatusCode()) != client.getLocationInfo().error_page.end())
 		path = client.getLocationInfo().error_page.find(client.getStatusCode())->second;
 	else

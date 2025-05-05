@@ -76,8 +76,8 @@
     <div class="container">
         <h1>Dateien hochladen</h1>
         <!-- Angepasste Form-Action -->
-        <form action="/cgi-bin/testCgi.php" method="POST" enctype="multipart/form-data">
-            <input type="file" name="files[]" multiple required>
+        <form action="/cgi-bin/fileUpload.py" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" multiple required>
             <br><br>
             <button type="submit">Hochladen</button>
         </form>

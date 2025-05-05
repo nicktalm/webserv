@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   client.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/05 11:45:31 by lbohm             #+#    #+#             */
+/*   Updated: 2025/05/05 15:28:22 by lbohm            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include <vector>
@@ -5,6 +17,7 @@
 #include <string>
 #include <sstream>
 #include <ctime>
+#include <iostream>
 #include "config.hpp"
 #include "response.hpp"
 
@@ -52,6 +65,18 @@ class Client : public Response
 		void		queryStr(void);
 		void		pathInfo(void);
 		void		printStatus(void);
+
+		template<typename Func, typename... ARGS>
+		bool	handleFd(Func func, ARGS... args)
+		{
+			if (func(args...) == -1)
+			{
+				std::cerr << RED; perror("fd funktion:"); std::cerr << RESET;
+				this->setStatusCode("500");
+				return (false);
+			}
+			return (true);
+		}
 		
 		// getter
 		bool								getListen(void) const {return (_listen);};

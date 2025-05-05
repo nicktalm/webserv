@@ -19,7 +19,7 @@ form = cgi.FieldStorage()
 def print_html_response(html_content, status="200 OK"):
     """Gibt eine komplette HTTP-Antwort mit dynamischer Content-Length zurück."""
     html_bytes = html_content.encode('utf-8')
-    print(f"HTTP/1.1 {status}")
+    print(f"Status: {status}")
     print("Content-Type: text/html; charset=utf-8")
     print(f"Content-Length: {len(html_bytes)}")
     print()
