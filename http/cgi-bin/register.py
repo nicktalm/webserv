@@ -8,7 +8,7 @@ import urllib.parse
 USER_FILE = "./http/users/users.txt"  # Replace with the actual path
 
 # Output HTTP headers
-print("HTTP/1.1 200 OK")
+print("Status: 200 OK")
 print("Content-Type: text/html")
 
 # Extract username and password from environment variables

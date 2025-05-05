@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/04/30 15:05:18 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/05 13:06:35 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,7 +156,6 @@ void	Client::headerParsing(int fd, const t_config config)
 			}
 		}
 		this->checkPath(config);
-		// this->printStatus();
 	}
 	else
 		_statusCode = "404";

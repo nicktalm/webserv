@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/30 15:04:17 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/05 13:01:57 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,11 +70,15 @@ Server::Server(t_config config) : _config(config)
 
 Server::~Server(void)
 {
-	for (auto it = this->_clientsFd.rbegin(); it != this->_clientsFd.rend(); ++it)
+	for (auto it = _clientsFd.rbegin(); it != _clientsFd.rend(); ++it)
 	{
-		if (it.base() != this->_clientsFd.end())
+		if (it.base() != _clientsFd.end())
 			this->disconnect(it.base());
 	}
+	std::cout << YELLOW << "Server closed" << RESET << std::endl;
+	close(_clientsFd.begin()->fd);
+	_clientsFd.erase(_clientsFd.begin());
+	freeaddrinfo(_res);
 }
 
 void	Server::run(void)
@@ -374,7 +378,6 @@ std::string Server::buildRedirectResponse(const std::string &location)
 
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
-	// std::cout << "response id: " << client.getFd() << std::endl;
 	if (client.getBytesSend() == static_cast<ssize_t>(client.getResponseBuffer().size()))
 	{
 		if (client.getStatusCode()[0] == '4' || client.getStatusCode()[0] == '5')
@@ -439,7 +442,8 @@ void	Server::disconnect(std::vector<pollfd>::iterator find)
 {
 	std::cout << YELLOW << "Client disconnected: " << find->fd << RESET << std::endl;
 	auto del = _clientsInfo.find(find->fd);
-	_clientsInfo.erase(del);
+	if (del != _clientsInfo.end())
+		_clientsInfo.erase(del);
 	close(find->fd);
 	_clientsFd.erase(find);
 }

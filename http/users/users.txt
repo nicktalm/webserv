@@ -1,12 +1,1 @@
-tesst:test
-w:w
-ty:ty
-was:was
-lol:123
-y:y
-o:o
-rew:rew
-Tolettentiefseetaucher:1
-yu:yu
 Luca:12345
-luca:luca

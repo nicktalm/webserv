@@ -24,7 +24,7 @@ OBJS_PATH = $(addprefix $(OBJDIR), $(OBJ))
 all: $(OBJDIR) $(NAME)
 
 $(NAME): $(OBJS_PATH)
-		$(CC) $(CPPFLAGS) $(OBJS_PATH) -o $(NAME) -fsanitize=address
+		$(CC) $(CPPFLAGS) $(OBJS_PATH) -o $(NAME)
 
 $(OBJDIR)%.o: %.cpp | $(OBJDIR)
 		@mkdir -p $(dir $@)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:48 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/29 16:10:28 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/05 10:51:37 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,3 @@ int main(int argc, char **argv)
 	}
 	return EXIT_SUCCESS;
 }
-
-// TODO multiple cgi einbauen
-// TODO cookies
