@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   methods.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/05 15:06:52 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/06 14:23:45 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,28 +119,30 @@ std::string Server::handlePOST(Client &client)
 	if (client.getCGI())
 		return (this->checkCGI(client));
 
-	client.setReady(true);
-	std::string contentType = extractContentType(client.getHeader()["Content-Type"]);
-	std::string uploadDir = "./http/upload/";
-	std::string body = client.getBody();
+	client.setStatusCode("405");
+	return (this->handleERROR(client));
+	// client.setReady(true);
+	// std::string contentType = extractContentType(client.getHeader()["Content-Type"]);
+	// std::string uploadDir = "./http/upload/";
+	// std::string body = client.getBody();
 
-	if (contentType == "multipart/form-data")
-	{
-		if (!handleMultipartFormData(client, body, uploadDir))
-			return handleERROR(client);
-	}
-	else if (contentType == "application/x-www-form-urlencoded")
-	{
-		if (!handleURLEncoded(client, body, uploadDir))
-			return handleERROR(client);
-	}
-	else
-	{
-		if (!handleRawUpload(client, body, uploadDir))
-			return handleERROR(client);
-	}
+	// if (contentType == "multipart/form-data")
+	// {
+	// 	if (!handleMultipartFormData(client, body, uploadDir))
+	// 		return handleERROR(client);
+	// }
+	// else if (contentType == "application/x-www-form-urlencoded")
+	// {
+	// 	if (!handleURLEncoded(client, body, uploadDir))
+	// 		return handleERROR(client);
+	// }
+	// else
+	// {
+	// 	if (!handleRawUpload(client, body, uploadDir))
+	// 		return handleERROR(client);
+	// }
 
-	return buildRedirectResponse("/websites/upload_success.html");
+	// return buildRedirectResponse("/websites/upload_success.html");
 }
 
 std::string Server::handleDELETE(Client &client)
@@ -175,7 +177,6 @@ std::string	Server::handleERROR(Client &client)
 
 	errorMsg = client.getErrorMsg(client.getStatusCode());
 	end = errorMsg.find(':');
-	std::cout << "errorMsg = " << errorMsg << std::endl;
 	if (!client.getLocationInfo().error_page.empty() && client.getLocationInfo().error_page.find(client.getStatusCode()) != client.getLocationInfo().error_page.end())
 		path = client.getLocationInfo().error_page.find(client.getStatusCode())->second;
 	else
@@ -183,7 +184,7 @@ std::string	Server::handleERROR(Client &client)
 	if (!utils::readFile(path, response.body))
 		return (client.setStatusCode("404"), handleERROR(client));
 	response.start_line = "HTTP/1.1 " + client.getStatusCode() + " " + errorMsg.substr(0, end);
-	response.server_name = "Servername: " + this->_config.server_name;
+	response.server_name = "Server: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();
 	response.content_length = "Content-Length: " + std::to_string(response.body.size());
 	response.content_type = "Content-Type: " + client.getContentType(path);

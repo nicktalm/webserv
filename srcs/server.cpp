@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/05 15:33:32 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/06 12:34:29 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -229,12 +229,12 @@ std::string	Server::readFromFd(Client &client)
 		std::cerr << RED << "read failed" << RESET << std::endl;
 		client.setStatusCode("500");
 		client.setReady(true);
+		client.handleFd(close, client.getCGIOutput());
 		return ("");
 	}
 	else if (bytesRead == 0)
 	{
-		int	id = client.getCGIOutput();
-		if (!client.handleFd(close, id))
+		if (!client.handleFd(close, client.getCGIOutput()))
 			return ("");
 		client.setReady(true);
 		return ("");

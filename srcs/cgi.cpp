@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/05 15:43:54 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/06 14:45:35 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,16 +49,16 @@ bool	Server::execute_cgi(Client &client)
 	if (!client.handleFd(pipe, pipeIn))
 		return (false);
 	if (!client.handleFd(pipe, pipeOut))
+	{
+		client.handleFds(close, pipeIn[0], pipeIn[1]);
 		return (false);
-
+	}
+	
 	client.setChildId(fork());
 	if (client.getChildId() == -1)
 	{
 		std::cerr << RED; perror("fork"); std::cerr << RESET;
-		client.handleFd(close, pipeIn[0]);
-		client.handleFd(close, pipeIn[1]);
-		client.handleFd(close, pipeOut[0]);
-		client.handleFd(close, pipeOut[1]);
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
 		client.setStatusCode("500");
 		return (false);
 	}
@@ -77,37 +77,26 @@ void	Server::childProcess(Client &client, int *pipeIn, int *pipeOut)
 	std::vector<char*> envp;
 
 	this->createEnv(client, envpStrings, envp);
-	size_t	pos = client.getExePath().rfind('/');
-	std::string	exe = client.getExePath().substr(pos + 1);
 	std::string	scriptPath = client.getPath();
-	char *const args[] = {const_cast<char *>(exe.c_str()), const_cast<char *>(scriptPath.c_str()), nullptr};
+	char *const args[] = {const_cast<char *>(scriptPath.c_str()), nullptr};
 
 	if (!client.handleFd(dup2, pipeIn[0], STDIN_FILENO))
 	{
-		client.handleFd(close, pipeIn[0]);
-		client.handleFd(close, pipeIn[1]);
-		client.handleFd(close, pipeOut[0]);
-		client.handleFd(close, pipeOut[1]);
-		exit(500);
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		exit(1);
 	}
 	if (!client.handleFd(dup2, pipeOut[1], STDOUT_FILENO))
 	{
-		client.handleFd(close, pipeIn[0]);
-		client.handleFd(close, pipeIn[1]);
-		client.handleFd(close, pipeOut[0]);
-		client.handleFd(close, pipeOut[1]);
-		exit(500);
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		exit(1);
 	}
 
-	client.handleFd(close, pipeIn[0]);
-	client.handleFd(close, pipeIn[1]);
-	client.handleFd(close, pipeOut[0]);
-	client.handleFd(close, pipeOut[1]);
+	client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
 
-	if (execve(client.getExePath().c_str(), args, envp.data()) == -1)
+	if (execve(scriptPath.c_str(), args, envp.data()) == -1)
 	{
 		std::cerr << RED; perror("execve"); std::cerr << RESET;
-		exit (500);
+		exit (1);
 	}
 }
 
@@ -117,19 +106,17 @@ bool	Server::parentProcess(Client &client, int *pipeIn, int *pipeOut)
 	{
 		std::cerr << RED << "Write failed" << RESET << std::endl;
 		client.setStatusCode("500");
-		client.handleFd(close, pipeIn[0]);
-		client.handleFd(close, pipeIn[1]);
-		client.handleFd(close, pipeOut[0]);
-		client.handleFd(close, pipeOut[1]);
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
 		return (false);
 	}
 
-	client.handleFd(close, pipeIn[0]);
-	client.handleFd(close, pipeIn[1]);
-	client.handleFd(close, pipeOut[1]);
+	client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[1]);
 
 	if (!client.handleFd(fcntl, pipeOut[0], F_SETFL, O_NONBLOCK))
+	{
+		client.handleFd(close, pipeOut[0]);
 		return (false);
+	}
 
 	client.setCGIOutput(pipeOut[0]);
 	return (this->waitingroom(client));
@@ -159,7 +146,8 @@ bool	Server::waitingroom(Client &client)
 
 		if (WEXITSTATUS(status))
 		{
-			client.setStatusCode(std::to_string(WEXITSTATUS(status)));
+			// client.setStatusCode(std::to_string(WEXITSTATUS(status)));
+			client.setStatusCode("500");
 			return (false);
 		}
 	}

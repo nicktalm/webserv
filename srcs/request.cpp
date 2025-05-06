@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/05 15:34:45 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/06 13:52:53 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,12 +192,26 @@ void	Client::checkPath(const t_config config)
 		return ;
 	_path = fullDir;
 	_dir = opendir(_path.c_str());
-	if (!_path.empty() && (_path.find(".py") != std::string::npos || _path.find(".php") != std::string::npos))
-		_exeCGI = true;
-	if (_exeCGI && _path.find(".py") != std::string::npos)
-		_exePath = "/usr/bin/python3";
-	else if (_exeCGI)
-		_exePath = "/usr/bin/php";
+	size_t	pos =  _path.rfind('.');
+	if (pos != std::string::npos)
+	{
+		std::string	tmp = _path.substr(pos);
+
+		for (auto it = config.locations.begin(); it != config.locations.end(); ++it)
+		{
+			if (tmp == it->path)
+			{
+				_exeCGI = true;
+				break ;
+			}
+		}
+	}
+	// if (!_path.empty() && (_path.find(".py") != std::string::npos || _path.find(".php") != std::string::npos))
+	// 	_exeCGI = true;
+	// if (_exeCGI && _path.find(".py") != std::string::npos)
+	// 	_exePath = "/usr/bin/python3";
+	// else if (_exeCGI)
+	// 	_exePath = "/usr/bin/php";
 }
 
 void	Client::parseChunk(std::string chunk)

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/05 11:45:31 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/05 15:28:22 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/06 12:36:13 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,16 @@ class Client : public Response
 				return (false);
 			}
 			return (true);
+		}
+
+		template<typename Func, typename... ARGS>
+		bool	handleFds(Func func, ARGS... args)
+		{
+			bool	ret = true;
+
+			((func(args) == -1
+				? (std::cerr << RED, perror("fd funktion"), std::cerr << RESET, this->setStatusCode("500"), ret = false) : 0), ...);
+			return (ret);
 		}
 		
 		// getter
