@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:23 by lbohm             #+#    #+#             */
-/*   Updated: 2025/04/27 17:45:55 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 17:07:29 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ void	utils::parseMIME(void)
 			std::stringstream	linestream(line);
 			std::string			key, value;
 
-			if (std::getline(linestream, value, ',') && std::getline(linestream, key))
+			if (std::getline(linestream, key, ',') && std::getline(linestream, value))
 				MIMETypes[key] = value;
 		}
 	}

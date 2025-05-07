@@ -41,7 +41,7 @@ std::string Response::getErrorMsg(std::string error)
 		{"403", "Forbidden: error_pages/403.html"},
 		{"404", "Not Found: error_pages/404.html"},
 		{"405", "Method Not Allowed: error_pages/405.html"},
-		{"408", "Request Timeout: error_pages/504.html"},
+		{"408", "Request Timeout: error_pages/408.html"},
 		{"413", "Payload Too Large: error_pages/413.html"},
 		{"431", "Request Header Fields Too Large: error_pages/431.html"},
 		{"500", "Internal Server Error: error_pages/500.html"},
