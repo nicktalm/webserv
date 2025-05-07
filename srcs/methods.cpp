@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/07 14:32:21 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 17:20:56 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,6 +169,7 @@ std::string	Server::handleERROR(Client &client)
 		if (!utils::readFile(path, response.body))
 			response.body = "";
 	}
+
 	response.start_line = "HTTP/1.1 " + client.getStatusCode() + " " + errorMsg.substr(0, end);
 	response.server_name = "Server: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();

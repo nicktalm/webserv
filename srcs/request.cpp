@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/07 15:04:20 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 17:21:13 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 	{
 		int clientFd = accept(_socketFd, _res->ai_addr, &_res->ai_addrlen);
 		if (clientFd < 0)
-			std::cout << RED << "Client accept failed" << RESET << std::endl;
+			std::cerr << RED << "Client accept failed" << RESET << std::endl;
 		else
 		{
 			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
@@ -120,7 +120,6 @@ void	Client::headerParsing(int fd, const t_config config)
 		{
 			_method = tmp[0];
 			_path = tmp[1];
-			std::cout << "path = " << _path << std::endl;
 			_protocol = tmp[2];
 			input.clear();
 			input.seekg(0);
@@ -207,12 +206,6 @@ void	Client::checkPath(const t_config config)
 			}
 		}
 	}
-	// if (!_path.empty() && (_path.find(".py") != std::string::npos || _path.find(".php") != std::string::npos))
-	// 	_exeCGI = true;
-	// if (_exeCGI && _path.find(".py") != std::string::npos)
-	// 	_exePath = "/usr/bin/python3";
-	// else if (_exeCGI)
-	// 	_exePath = "/usr/bin/php";
 }
 
 void	Client::parseChunk(std::string chunk)

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/07 15:22:10 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 17:22:30 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,13 +156,14 @@ bool	Server::waitingroom(Client &client)
 		if (!client.getChildReady())
 			client.setTimeToExe(std::chrono::system_clock::now());
 		auto	diff = std::chrono::system_clock::now() - client.getTimeToExe();
-		if (std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() >= 5000)
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() >= 10000)
 		{
-			std::cout << "child = " << client.getChildId() << std::endl;
 			if (kill(client.getChildId(), SIGTERM) == -1)
+			{
 				std::cerr << RED; perror("kill"); std::cerr << RESET;
+			}
 			client.setChildReady(false);
-			client.setStatusCode("408");
+			client.setStatusCode("504");
 			return (false);
 		}
 		client.setChildReady(true);
@@ -181,7 +182,6 @@ bool	Server::waitingroom(Client &client)
 
 		if (WEXITSTATUS(status))
 		{
-			std::cout << "here" << std::endl;
 			client.setStatusCode("500");
 			return (false);
 		}

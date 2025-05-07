@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 12:07:48 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/05 10:51:37 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 17:20:38 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ std::atomic<bool>	runner = true;
 
 void	signalHandler(int signal)
 {
-	std::cout << YELLOW << "\rInterrupt signal " << signal << " received" << RESET << std::endl;
+	std::cerr << YELLOW << "\rInterrupt signal " << signal << " received" << RESET << std::endl;
 	runner = false;
 }
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	}
 	catch (std::exception &e)
 	{
-		std::cout << RED << e.what() << RESET << std::endl;
+		std::cerr << RED << e.what() << RESET << std::endl;
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
