@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/07 23:47:57 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/05/08 00:23:47 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,11 @@
 
 void Server::request(std::vector<pollfd>::iterator pollClient)
 {
-	char	buffer[8192];
+	char		buffer[8192];
 
 	if (pollClient->fd == _socketFd) //new client trys to connect
 	{
-		int clientFd = accept(_socketFd, _res->ai_addr, &_res->ai_addrlen);
+		int clientFd = accept(_socketFd, nullptr, nullptr);
 		if (clientFd < 0)
 			std::cerr << RED << "Client accept failed" << RESET << std::endl;
 		else
@@ -50,10 +50,10 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			buffer[bytesRead] = '\0';
 			_clientsInfo[pollClient->fd].appendMsg(buffer, bytesRead);
 			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
-			if (_clientsInfo[pollClient->fd].getStatusCode() == "413")
-				this->disconnect(pollClient);
-			else if (!_clientsInfo[pollClient->fd].getListen()
-						|| _clientsInfo[pollClient->fd].getStatusCode()[0] == '4'
+			std::cout << "statusCode = " << _clientsInfo[pollClient->fd].getStatusCode() << std::endl;
+			std::cout << "listen = " << _clientsInfo[pollClient->fd].getListen() << std::endl;
+			if (!_clientsInfo[pollClient->fd].getListen()
+						|| (_clientsInfo[pollClient->fd].getStatusCode()[0] == '4' && _clientsInfo[pollClient->fd].getStatusCode() != "413")
 						|| _clientsInfo[pollClient->fd].getStatusCode()[0] == '5')
 				pollClient->events = POLLOUT;
 		}
@@ -69,6 +69,7 @@ void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 
 void	Client::parseRequest(int fd, const t_config config)
 {
+	// std::cout << "msg size = " << _clientsMsg.size() << std::endl;
 	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
 		this->headerParsing(fd, config);
 	else if (_headerReady)
@@ -83,16 +84,11 @@ void	Client::parseRequest(int fd, const t_config config)
 		_fd = fd;
 		_statusCode = "431";
 	}
-	// else
-	// {
-	// 	_fd = fd;
-	// 	_statusCode = "400";
-	// }
 	if (_headerReady && !_chunked)
 		this->checkBodySize();
-	if (_headerReady || _statusCode[0] == '4' || _statusCode[0] == '5')
+	if (_headerReady || (_statusCode[0] == '4' && _statusCode != "413") || _statusCode[0] == '5')
 		_clientsMsg.clear();
-	if (_statusCode[0] == '4' || _statusCode[0] == '5')
+	if ((_statusCode[0] == '4' && _statusCode != "413") || _statusCode[0] == '5')
 		this->_listen = false;
 }
 

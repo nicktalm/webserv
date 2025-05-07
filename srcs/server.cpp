@@ -6,7 +6,7 @@
 /*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 00:21:09 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/05/08 00:23:37 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ Server::Server(t_config config) : _config(config)
 	if (bind(_socketFd, _res->ai_addr, _res->ai_addrlen) < 0)
 		throw std::runtime_error("bind failed");
 
-	if (listen(_socketFd, 128) < 0)
+	if (listen(_socketFd, SOMAXCONN) < 0)
 		throw std::runtime_error("listen failed");
 
 	_clientsFd.push_back({_socketFd, POLLIN, 0});
@@ -90,7 +90,7 @@ void	Server::run(void)
 	{
 		for (size_t it = 0; it < _clientsFd.size();)
 		{
-			if (_clientsFd[it].revents & POLLHUP) //client disconnected or hung up
+			if (_clientsFd[it].revents & POLLHUP || _clientsFd[it].revents & POLLERR || _clientsFd[it].revents & POLLNVAL) //client disconnected or hung up
 			{
 				this->disconnect(_clientsFd.begin() + it);
 				continue;
@@ -374,6 +374,7 @@ std::string Server::buildRedirectResponse(const std::string &location)
 
 void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 {
+	std::cout << "response" << std::endl;
 	if (client.getBytesSend() == static_cast<ssize_t>(client.getResponseBuffer().size()))
 	{
 		if (client.getStatusCode()[0] == '4' || client.getStatusCode()[0] == '5')

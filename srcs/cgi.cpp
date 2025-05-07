@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/07 17:25:04 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 21:50:40 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,15 +123,17 @@ void	Server::childProcess(Client &client, int *pipeIn, int *pipeOut)
 	if (!client.handleFd(dup2, pipeIn[0], STDIN_FILENO))
 	{
 		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		std::cerr << "first" << std::endl;
 		exit(1);
 	}
 	if (!client.handleFd(dup2, pipeOut[1], STDOUT_FILENO))
 	{
 		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		std::cerr << "second" << std::endl;
 		exit(1);
 	}
-
 	client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+	std::cerr << "before execve" << std::endl;
 	if (execve(scriptname.c_str(), args, envp.data()) == -1)
 	{
 		std::cerr << RED; perror("execve"); std::cerr << RESET;
@@ -198,6 +200,7 @@ bool	Server::waitingroom(Client &client)
 
 		if (WEXITSTATUS(status))
 		{
+			std::cout << "test = " << WEXITSTATUS(status) << std::endl;
 			client.setStatusCode("500");
 			return (false);
 		}
