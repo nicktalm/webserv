@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/06 13:52:53 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 15:04:20 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,6 +120,7 @@ void	Client::headerParsing(int fd, const t_config config)
 		{
 			_method = tmp[0];
 			_path = tmp[1];
+			std::cout << "path = " << _path << std::endl;
 			_protocol = tmp[2];
 			input.clear();
 			input.seekg(0);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   methods.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/06 14:23:45 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 14:32:21 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,28 +121,6 @@ std::string Server::handlePOST(Client &client)
 
 	client.setStatusCode("405");
 	return (this->handleERROR(client));
-	// client.setReady(true);
-	// std::string contentType = extractContentType(client.getHeader()["Content-Type"]);
-	// std::string uploadDir = "./http/upload/";
-	// std::string body = client.getBody();
-
-	// if (contentType == "multipart/form-data")
-	// {
-	// 	if (!handleMultipartFormData(client, body, uploadDir))
-	// 		return handleERROR(client);
-	// }
-	// else if (contentType == "application/x-www-form-urlencoded")
-	// {
-	// 	if (!handleURLEncoded(client, body, uploadDir))
-	// 		return handleERROR(client);
-	// }
-	// else
-	// {
-	// 	if (!handleRawUpload(client, body, uploadDir))
-	// 		return handleERROR(client);
-	// }
-
-	// return buildRedirectResponse("/websites/upload_success.html");
 }
 
 std::string Server::handleDELETE(Client &client)
@@ -165,7 +143,9 @@ std::string Server::handleDELETE(Client &client)
 	else
 		std::cout << GREEN << "DELETE successful" << RESET << std::endl;
 	client.setReady(true);
-	return "HTTP/1.1 204 No Content\r\n\r\n";
+	client.setStatusCode("204");
+	return (this->handleERROR(client));
+	// return "HTTP/1.1 204 No Content\r\n\r\n";
 }
 
 std::string	Server::handleERROR(Client &client)
@@ -180,9 +160,15 @@ std::string	Server::handleERROR(Client &client)
 	if (!client.getLocationInfo().error_page.empty() && client.getLocationInfo().error_page.find(client.getStatusCode()) != client.getLocationInfo().error_page.end())
 		path = client.getLocationInfo().error_page.find(client.getStatusCode())->second;
 	else
-		path = errorMsg.substr(end + 2);
-	if (!utils::readFile(path, response.body))
-		return (client.setStatusCode("404"), handleERROR(client));
+	{
+		if (end != std::string::npos)
+			path = errorMsg.substr(end + 2);
+	}
+	if (end != std::string::npos)
+	{
+		if (!utils::readFile(path, response.body))
+			response.body = "";
+	}
 	response.start_line = "HTTP/1.1 " + client.getStatusCode() + " " + errorMsg.substr(0, end);
 	response.server_name = "Server: " + this->_config.server_name;
 	response.date = "Date: " + utils::getDate();

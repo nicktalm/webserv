@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/05 11:45:31 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/06 12:36:13 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 14:50:15 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <sstream>
 #include <ctime>
 #include <iostream>
+#include <chrono>
 #include "config.hpp"
 #include "response.hpp"
 
@@ -30,21 +31,22 @@
 class Client : public Response
 {
 	private:
-		bool								_listen;
-		bool								_headerReady;
-		bool								_chunked;
-		int									_fd;
-		std::string							_clientsMsg;
-		std::string							_statusCode;
-		std::string							_method;
-		std::string							_path;
-		std::string							_protocol;
-		std::string							_body;
-		std::string							_query;
-		std::string							_exePath;
-		std::string							_pathInfo;
-		t_location							_locationInfo;
-		std::map<std::string, std::string>	_header;
+		bool									_listen;
+		bool									_headerReady;
+		bool									_chunked;
+		int										_fd;
+		std::string								_clientsMsg;
+		std::string								_statusCode;
+		std::string								_method;
+		std::string								_path;
+		std::string								_protocol;
+		std::string								_body;
+		std::string								_query;
+		std::string								_exePath;
+		std::string								_pathInfo;
+		t_location								_locationInfo;
+		std::map<std::string, std::string>		_header;
+		std::chrono::system_clock::time_point	_timeToExe;
 	public:
 		Client(void);
 		~Client(void);
@@ -89,24 +91,26 @@ class Client : public Response
 		}
 		
 		// getter
-		bool								getListen(void) const {return (_listen);};
-		int									getFd(void) const {return (_fd);};
-		std::string							getReDir(void) const {return (_reDirHeader);};
-		std::string							getMethod(void) const {return (_method);};
-		std::string							getMsg(void) const {return (_clientsMsg);};
-		std::string							getStatusCode(void) {return (_statusCode);};
-		std::string							getProtocol(void) const {return (_protocol);};
-		std::string							getPath(void) const {return (_path);};
-		std::string							getBody(void) const {return (_body);};
-		std::string							getQuery(void) const {return (_query);};
-		std::string							getExePath(void) const {return (_exePath);};
-		std::string							getPathInfo(void) const {return (_pathInfo);};
-		std::map<std::string, std::string>	getHeader(void) const {return (_header);};
-		t_location							getLocationInfo(void) const {return (_locationInfo);};
+		bool									getListen(void) const {return (_listen);};
+		int										getFd(void) const {return (_fd);};
+		std::string								getReDir(void) const {return (_reDirHeader);};
+		std::string								getMethod(void) const {return (_method);};
+		std::string								getMsg(void) const {return (_clientsMsg);};
+		std::string								getStatusCode(void) {return (_statusCode);};
+		std::string								getProtocol(void) const {return (_protocol);};
+		std::string								getPath(void) const {return (_path);};
+		std::string								getBody(void) const {return (_body);};
+		std::string								getQuery(void) const {return (_query);};
+		std::string								getExePath(void) const {return (_exePath);};
+		std::string								getPathInfo(void) const {return (_pathInfo);};
+		std::map<std::string, std::string>		getHeader(void) const {return (_header);};
+		t_location								getLocationInfo(void) const {return (_locationInfo);};
+		std::chrono::system_clock::time_point	getTimeToExe(void) const {return (_timeToExe);};
 		
 		// setter
 		void	setBody(const std::string &body) {_body = body;};
 		void	setStatusCode(std::string code) {_statusCode = code;};
+		void	setTimeToExe(std::chrono::system_clock::time_point time) {_timeToExe = time;};
 };
 
 std::string	getSize(off_t &bytes);

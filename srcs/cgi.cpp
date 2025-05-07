@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/06 14:45:35 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 15:22:10 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <chrono>
+#include <signal.h>
 #include "../include/server.hpp"
 
 std::string	Server::checkCGI(Client &client)
@@ -54,6 +56,27 @@ bool	Server::execute_cgi(Client &client)
 		return (false);
 	}
 	
+	if (!client.handleFd(fcntl, pipeIn[0], F_SETFL, O_NONBLOCK))
+	{
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		return (false);
+	}
+	if (!client.handleFd(fcntl, pipeIn[1], F_SETFL, O_NONBLOCK))
+	{
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		return (false);
+	}
+	if (!client.handleFd(fcntl, pipeOut[0], F_SETFL, O_NONBLOCK))
+	{
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		return (false);
+	}
+	if (!client.handleFd(fcntl, pipeOut[1], F_SETFL, O_NONBLOCK))
+	{
+		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
+		return (false);
+	}
+
 	client.setChildId(fork());
 	if (client.getChildId() == -1)
 	{
@@ -96,7 +119,7 @@ void	Server::childProcess(Client &client, int *pipeIn, int *pipeOut)
 	if (execve(scriptPath.c_str(), args, envp.data()) == -1)
 	{
 		std::cerr << RED; perror("execve"); std::cerr << RESET;
-		exit (1);
+		exit(1);
 	}
 }
 
@@ -130,6 +153,18 @@ bool	Server::waitingroom(Client &client)
 	childPid = waitpid(client.getChildId(), &status, WNOHANG);
 	if (childPid == 0)
 	{
+		if (!client.getChildReady())
+			client.setTimeToExe(std::chrono::system_clock::now());
+		auto	diff = std::chrono::system_clock::now() - client.getTimeToExe();
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() >= 5000)
+		{
+			std::cout << "child = " << client.getChildId() << std::endl;
+			if (kill(client.getChildId(), SIGTERM) == -1)
+				std::cerr << RED; perror("kill"); std::cerr << RESET;
+			client.setChildReady(false);
+			client.setStatusCode("408");
+			return (false);
+		}
 		client.setChildReady(true);
 		return (true);
 	}
@@ -146,7 +181,7 @@ bool	Server::waitingroom(Client &client)
 
 		if (WEXITSTATUS(status))
 		{
-			// client.setStatusCode(std::to_string(WEXITSTATUS(status)));
+			std::cout << "here" << std::endl;
 			client.setStatusCode("500");
 			return (false);
 		}

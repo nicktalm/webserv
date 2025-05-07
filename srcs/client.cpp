@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/05 11:44:35 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 14:55:45 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ Client::Client(void)
 	_pathInfo = "";
 	_locationInfo = {};
 	_header = {};
+	_timeToExe = std::chrono::system_clock::time_point{};
 }
 
 Client::~Client(void) {}
@@ -300,6 +301,7 @@ void	Client::clear(void)
 	_exePath.clear();
 	_pathInfo.clear();
 	_header.clear();
+	_timeToExe = std::chrono::system_clock::time_point{};
 
 	_exeCGI = false;
 	_responseHeader = false;
