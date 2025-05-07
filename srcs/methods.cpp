@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   methods.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 00:23:32 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/05/08 00:32:08 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,6 @@ std::string Server::handlePOST(Client &client)
 	if (client.getCGI())
 		return (this->checkCGI(client));
 
-	std::cout << "lol" << std::endl;
 	client.setStatusCode("405");
 	return (this->handleERROR(client));
 }

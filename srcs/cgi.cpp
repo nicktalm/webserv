@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/07 21:50:40 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 00:31:12 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,7 +133,6 @@ void	Server::childProcess(Client &client, int *pipeIn, int *pipeOut)
 		exit(1);
 	}
 	client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
-	std::cerr << "before execve" << std::endl;
 	if (execve(scriptname.c_str(), args, envp.data()) == -1)
 	{
 		std::cerr << RED; perror("execve"); std::cerr << RESET;

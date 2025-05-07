@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 00:16:51 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 00:29:17 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,7 +186,6 @@ bool	Client::checkFile(std::string &fullDir, std::string file)
 {
 	struct stat	info;
 
-	std::cout << "fulldir = " << fullDir << std::endl;
 	if (file.empty() && !this->_locationInfo.autoindex)
 	{
 		if (!this->_locationInfo.index.empty())
@@ -194,7 +193,6 @@ bool	Client::checkFile(std::string &fullDir, std::string file)
 		else if (_reDirHeader.empty())
 			return (this->_statusCode = "403", false);
 	}
-	std::cout << "file = " << file << std::endl;
 	if (access((fullDir + file).c_str(), F_OK))
 		return (this->_statusCode = "404", false);
 	stat((fullDir + file).c_str(), &info);
