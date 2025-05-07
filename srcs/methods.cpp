@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   methods.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/07 17:20:56 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 23:49:53 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,7 +141,7 @@ std::string Server::handleDELETE(Client &client)
 		return (handleERROR(client));
 	}
 	else
-		std::cout << GREEN << "DELETE successful" << RESET << std::endl;
+		log(4, "File deleted successfully:", path.c_str());
 	client.setReady(true);
 	client.setStatusCode("204");
 	return (this->handleERROR(client));
