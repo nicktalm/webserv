@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42heilbronn.de>       +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/04/30 15:04:42 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 20:57:07 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,9 +52,14 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 	t_location current_location;
 	bool in_server_block = false, in_location_block = false;
 	bool expect_server_brace = false, expect_location_brace = false;
+	static int brace_count = 0;
 
 	while (std::getline(file, line))
 	{
+		if (line.find('{') != std::string::npos)
+			++brace_count;
+		else if (line.find('}') != std::string::npos)
+			--brace_count;
 		line = trim(line);
 		line = line.substr(0, line.find(";")); // Remove semicolons
 		if (line.empty() || line[0] == '#')
@@ -76,6 +81,12 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 			else
 				process_server_directives(line, current_config);
 		}
+	}
+
+	if (brace_count != 0)
+	{
+		std::cerr << "Error: Unmatched braces in configuration file" << std::endl;
+		return false;
 	}
 	if (in_server_block)
 	{
