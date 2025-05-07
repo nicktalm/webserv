@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/29 11:06:10 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/07 17:20:56 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 21:36:59 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,11 +28,13 @@ std::string	Server::handleGET(Client &client)
 			tmpHeader << client.getProtocol() << " " + client.getStatusCode() << " " << client.getErrorMsg(client.getStatusCode()) << "\r\n";
 			tmpHeader << "Server: " << this->_config.server_name << "\r\n";
 			tmpHeader << "Date: " << utils::getDate() << "\r\n";
+			tmpHeader << "Connection: keep-alive" << "\r\n";
 
 			if ((client.getLocationInfo().autoindex && client.getPath().back() == '/') || client.getCGI())
 				tmpHeader << "Content-Type: text/html\r\n" << "Transfer-Encoding: chunked\r\n";
 			else if (!client.getReDir().empty())
 			{
+				std::cout << "here" << std::endl;
 				tmpHeader << client.getReDir() << "\r\n";
 				client.setReady(true);
 			}
@@ -119,6 +121,7 @@ std::string Server::handlePOST(Client &client)
 	if (client.getCGI())
 		return (this->checkCGI(client));
 
+	std::cout << "lol" << std::endl;
 	client.setStatusCode("405");
 	return (this->handleERROR(client));
 }

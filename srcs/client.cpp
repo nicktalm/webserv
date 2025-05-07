@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/07 14:55:45 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 23:34:22 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,10 @@ bool	Client::checkLocation(std::string &fullDir, const std::string &mainRoot)
 			_statusCode = redir.first;
 	}
 	else if (methods.size() > 0 && std::find(methods.begin(), methods.end(), this->_method) != methods.end())
+	{
+		std::cout << "fail" << std::endl;
 		return (_statusCode = "405", false);
+	}
 
 	if (!this->_locationInfo.root.empty())
 		fullDir.insert(0, this->_locationInfo.root);
@@ -183,13 +186,15 @@ bool	Client::checkFile(std::string &fullDir, std::string file)
 {
 	struct stat	info;
 
+	std::cout << "fulldir = " << fullDir << std::endl;
 	if (file.empty() && !this->_locationInfo.autoindex)
 	{
 		if (!this->_locationInfo.index.empty())
 			file = this->_locationInfo.index;
-		else
+		else if (_reDirHeader.empty())
 			return (this->_statusCode = "403", false);
 	}
+	std::cout << "file = " << file << std::endl;
 	if (access((fullDir + file).c_str(), F_OK))
 		return (this->_statusCode = "404", false);
 	stat((fullDir + file).c_str(), &info);
