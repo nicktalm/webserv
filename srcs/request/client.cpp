@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/07 23:34:22 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 00:16:51 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@
 #include <iomanip>
 #include <sys/stat.h>
 #include <algorithm>
-#include "../include/client.hpp"
-#include "../include/utils.hpp"
+#include "../../include/client.hpp"
+#include "../../include/utils.hpp"
 
 Client::Client(void)
 {

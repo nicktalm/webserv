@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/07 23:32:03 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 00:17:04 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <iterator>
-#include "../include/server.hpp"
+#include "../../include/server.hpp"
 
 void Server::request(std::vector<pollfd>::iterator pollClient)
 {
@@ -49,8 +49,6 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			buffer[bytesRead] = '\0';
 			_clientsInfo[pollClient->fd].appendMsg(buffer, bytesRead);
 			_clientsInfo[pollClient->fd].parseRequest(pollClient->fd, _config);
-			std::cout << "statusCode = " << _clientsInfo[pollClient->fd].getStatusCode() << std::endl;
-			std::cout << "listen = " << _clientsInfo[pollClient->fd].getListen() << std::endl;
 			if (!_clientsInfo[pollClient->fd].getListen()
 						|| (_clientsInfo[pollClient->fd].getStatusCode()[0] == '4' && _clientsInfo[pollClient->fd].getStatusCode() != "413")
 						|| _clientsInfo[pollClient->fd].getStatusCode()[0] == '5')
@@ -68,7 +66,6 @@ void	Server::IO_Error(int bytesRead, std::vector<pollfd>::iterator find)
 
 void	Client::parseRequest(int fd, const t_config config)
 {
-	// std::cout << "msg size = " << _clientsMsg.size() << std::endl;
 	if (!_headerReady && _clientsMsg.find("\r\n\r\n") != std::string::npos)
 		this->headerParsing(fd, config);
 	else if (_headerReady)

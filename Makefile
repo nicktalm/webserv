@@ -11,10 +11,10 @@ OBJDIR = objs/
 SRCS := main.cpp \
 		server.cpp \
 		config.cpp \
-		client.cpp \
+		request/client.cpp \
 		utils.cpp \
 		response/response.cpp \
-		request.cpp \
+		request/request.cpp \
 		cgi.cpp \
 		methods.cpp
 
