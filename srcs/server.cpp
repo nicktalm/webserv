@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 00:23:40 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 00:24:41 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ Server::Server(t_config config) : _config(config)
 	std::stringstream	tmp;
 	int					yes = 1;
 
-	std::cout << GREEN << "Starting server on port " << config.port << RESET << std::endl;
+	log(4, "Server created:", config.server_name.c_str());
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; // don't care IPv4 or IPv6
@@ -75,7 +75,7 @@ Server::~Server(void)
 		if (it.base() != _clientsFd.end())
 			this->disconnect(it.base());
 	}
-	std::cout << YELLOW << "Server closed" << RESET << std::endl;
+	log(0, "Server closed:", _config.server_name.c_str());
 	close(_clientsFd.begin()->fd);
 	_clientsFd.erase(_clientsFd.begin());
 	freeaddrinfo(_res);
@@ -230,7 +230,7 @@ std::string Server::create_response(const t_response &response)
 
 void	Server::disconnect(std::vector<pollfd>::iterator find)
 {
-	std::cout << YELLOW << "Client disconnected: " << find->fd << RESET << std::endl;
+	log(0, "Client disconnected:", find->fd);
 	auto del = _clientsInfo.find(find->fd);
 	if (del != _clientsInfo.end())
 		_clientsInfo.erase(del);

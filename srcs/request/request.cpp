@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/08 00:17:04 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 00:26:00 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <netdb.h>
 #include <iterator>
 #include "../../include/server.hpp"
+#include "../../include/utils.hpp"
 
 void Server::request(std::vector<pollfd>::iterator pollClient)
 {
@@ -29,7 +30,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 			std::cerr << RED << "Client accept failed" << RESET << std::endl;
 		else
 		{
-			std::cout << BLUE << "New client connected: " << clientFd << RESET << std::endl;
+			log(0, "New client connected:", clientFd);
 			if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
 			{
 				std::cerr << RED; perror("fcntl"); std::cerr << RESET;
