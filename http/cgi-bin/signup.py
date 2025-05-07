@@ -5,7 +5,7 @@ import sys
 import urllib.parse
 
 # File to store registered users
-USER_FILE = "./http/users/users.txt"
+USER_FILE = "users/users.txt"
 
 # POST-Datenlänge herausfinden
 content_length = int(os.environ.get('CONTENT_LENGTH', 0))

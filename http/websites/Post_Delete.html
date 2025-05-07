@@ -8,7 +8,7 @@
     <script>
         function sendDelete(){
             file = document.getElementById('input1').value;
-            const url = `/upload/${encodeURIComponent(file)}`;
+            const url = `/cgi-bin/upload/${encodeURIComponent(file)}`;
             fetch(url, {method: 'DELETE'});
             return url;
         }

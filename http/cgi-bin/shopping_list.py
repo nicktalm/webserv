@@ -4,8 +4,8 @@ import sys
 import os
 import urllib.parse
 
-USERS_FILE = "./http/users/users.txt"
-DATA_DIR = "./http/users/data_shopping"
+USERS_FILE = "users/users.txt"
+DATA_DIR = "users/data_shopping"
 
 # Cookie auslesen
 cookie_header = os.environ.get("HTTP_COOKIE", "").strip()

@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Setze den Upload-Ordner (achte darauf, dass dieser Schreibrechte hat!)
-$upload_dir = "http/upload";
+$upload_dir = "upload";
 
 // Stelle sicher, dass der Upload-Ordner existiert
 if (!is_dir($upload_dir)) {

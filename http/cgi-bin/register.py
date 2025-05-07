@@ -5,7 +5,7 @@ import sys
 import urllib.parse
 
 # File to store registered users
-USER_FILE = "./http/users/users.txt"  # Replace with the actual path
+USER_FILE = "users/users.txt"  # Replace with the actual path
 
 # Output HTTP headers
 print("Status: 200 OK")

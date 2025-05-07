@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/07 15:22:10 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/07 16:32:55 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,23 @@ void	Server::childProcess(Client &client, int *pipeIn, int *pipeOut)
 	std::string	scriptPath = client.getPath();
 	char *const args[] = {const_cast<char *>(scriptPath.c_str()), nullptr};
 
+	size_t pos = scriptPath.find_last_of('/');
+	std::string scriptname = (pos != std::string::npos) ? scriptPath.substr(pos + 1) : scriptPath;
+	if (pos != std::string::npos)
+	{
+		std::string dirPath = scriptPath.substr(0, pos);
+		if (chdir(dirPath.c_str()) == -1)
+		{
+			std::cerr << RED; perror("chdir"); std::cerr << RESET;
+			exit(1);
+		}
+	}
+	else
+	{
+		std::cerr << RED << "Invalid script path" << RESET << std::endl;
+		exit(1);
+	}
+
 	if (!client.handleFd(dup2, pipeIn[0], STDIN_FILENO))
 	{
 		client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
@@ -115,8 +132,7 @@ void	Server::childProcess(Client &client, int *pipeIn, int *pipeOut)
 	}
 
 	client.handleFds(close, pipeIn[0], pipeIn[1], pipeOut[0], pipeOut[1]);
-
-	if (execve(scriptPath.c_str(), args, envp.data()) == -1)
+	if (execve(scriptname.c_str(), args, envp.data()) == -1)
 	{
 		std::cerr << RED; perror("execve"); std::cerr << RESET;
 		exit(1);

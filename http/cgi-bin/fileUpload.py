@@ -7,7 +7,7 @@ import cgitb
 cgitb.enable()
 
 # Setze den Upload-Ordner (achte darauf, dass dieser Schreibrechte hat!)
-UPLOAD_DIR = "http/upload"
+UPLOAD_DIR = "upload"
 
 # Stelle sicher, dass der Upload-Ordner existiert
 os.makedirs(UPLOAD_DIR, exist_ok=True)
