@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/05 11:45:31 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/07 14:50:15 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 12:38:59 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,6 @@ class Client : public Response
 		void		urlEncoded(void);
 		void		queryStr(void);
 		void		pathInfo(void);
-		void		printStatus(void);
 
 		template<typename Func, typename... ARGS>
 		bool	handleFd(Func func, ARGS... args)
@@ -104,7 +103,7 @@ class Client : public Response
 		std::string								getExePath(void) const {return (_exePath);};
 		std::string								getPathInfo(void) const {return (_pathInfo);};
 		std::map<std::string, std::string>		getHeader(void) const {return (_header);};
-		t_location								getLocationInfo(void) const {return (_locationInfo);};
+		t_location								&getLocationInfo(void) {return (_locationInfo);};
 		std::chrono::system_clock::time_point	getTimeToExe(void) const {return (_timeToExe);};
 		
 		// setter

@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/08 00:31:12 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 12:42:55 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,7 +199,6 @@ bool	Server::waitingroom(Client &client)
 
 		if (WEXITSTATUS(status))
 		{
-			std::cout << "test = " << WEXITSTATUS(status) << std::endl;
 			client.setStatusCode("500");
 			return (false);
 		}

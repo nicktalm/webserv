@@ -1,0 +1,10 @@
+{
+	"status": "success",
+	"message": "File uploaded successfully",
+	"data": {
+	  "id": 12345,
+	  "name": "Sample JSON File",
+	  "type": "example"
+	}
+  }
+  

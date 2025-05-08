@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/08 00:26:00 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 12:42:11 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,17 +154,6 @@ void	Client::headerParsing(int fd, const t_config config)
 	else
 		_statusCode = "404";
 	_headerReady = true;
-}
-
-void	Client::printStatus(void)
-{
-		std::time_t			now = std::time(nullptr);
-		std::tm				*local_time = std::localtime(&now);
-		std::stringstream	status;
-		
-		status << std::put_time(local_time, "%H:%M:%S")
-				<< " " << _method << " " << _statusCode << " client id: " << _fd;
-		std::cout << status.str() << std::endl;
 }
 
 void	Client::checkPath(const t_config config)
