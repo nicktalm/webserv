@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/05/07 20:57:07 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/05/08 18:05:47 by lglauch          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 		return false;
 	}
 	add_default_location(files);
-	debug_parsed_configurations(files);
+	// debug_parsed_configurations(files);
 	return true;
 }
 
