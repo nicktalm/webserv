@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lglauch <lglauch@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 14:35:17 by ntalmon           #+#    #+#             */
-/*   Updated: 2025/05/08 18:05:47 by lglauch          ###   ########.fr       */
+/*   Updated: 2025/05/08 18:31:49 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ bool check_config(const std::string& config_path, std::vector<t_config>& files)
 		return false;
 	}
 	add_default_location(files);
-	// debug_parsed_configurations(files);
+	debug_parsed_configurations(files);
 	return true;
 }
 
@@ -245,10 +245,7 @@ void process_server_directives(const std::string& line, t_config& current_config
 	{
 		std::string value;
 		iss >> value;
-		try { current_config.port = std::stoi(value); }
-		catch (const std::exception&) { 
-			std::cerr << "Error: Invalid port number: " << value << std::endl; 
-		}
+		current_config.port = value;
 	}
 	else if (key == "root")
 		iss >> current_config.root;

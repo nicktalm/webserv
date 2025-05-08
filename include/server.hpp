@@ -32,7 +32,7 @@ class Server
 		~Server(void);
 
 		int			getSocketfd(void) {return _socketFd;};
-		int			getPort(void) {return _config.port;};
+		std::string	getPort(void) {return _config.port;};
 		std::string	getRoot(void) {return (_config.root);};
 		void		request(std::vector<pollfd>::iterator clientFd);
 		void		run(void);

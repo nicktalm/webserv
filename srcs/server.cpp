@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 17:57:35 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 18:48:42 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,16 +30,25 @@ Server::Server(t_config config) : _config(config)
 	addrinfo			hints;
 	std::stringstream	tmp;
 	int					yes = 1;
+	std::string			costum_name = "";
 
-	log(4, "Server created:", config.server_name.c_str(), ":", config.port);
+	log(4, "Server created:", config.port);
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; // don't care IPv4 or IPv6
 	hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
 	hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
-	tmp << config.port;
-	int status = getaddrinfo(config.server_name.c_str(), tmp.str().c_str(), &hints, &_res);
+	size_t pos = config.port.find(':');
+	if (pos != std::string::npos)
+	{
+		costum_name = config.port.substr(0, pos);
+		tmp << config.port.substr(pos + 1);
+	}
+	else
+		tmp << config.port;
+	config.port = tmp.str();
+	int status = getaddrinfo(costum_name.c_str(), tmp.str().c_str(), &hints, &_res);
 	if (status != 0)
 	{
 		std::stringstream	error;

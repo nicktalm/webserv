@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:23:41 by lglauch           #+#    #+#             */
-/*   Updated: 2025/05/08 12:42:55 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 18:40:07 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,7 +216,7 @@ void	Server::createEnv(Client &client, std::vector<std::string> &envpStrings, st
 	envpStrings.push_back("QUERY_STRING=" + client.getQuery());
 	envpStrings.push_back("SCRIPT_NAME=" + client.getPath());
 	envpStrings.push_back("SERVER_NAME=" + _config.server_name);
-	envpStrings.push_back("SERVER_PORT=" + std::to_string(_config.port));
+	envpStrings.push_back("SERVER_PORT=" + _config.port);
 	envpStrings.push_back("SERVER_PROTOCOL=" + client.getProtocol());
 	envpStrings.push_back("HTTP_COOKIE=" + client.getHeader()["Cookie"]);
 	envpStrings.push_back("REQUEST_METHOD=" + client.getMethod());

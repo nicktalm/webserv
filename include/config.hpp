@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/31 15:27:29 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 11:56:04 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 18:31:32 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ typedef struct s_location
 typedef struct s_config
 {
 	char max_size_unit_server = ' ';
-	int port = 0;
+	std::string port = "";
 	long max_size_server = 0;
 	std::string server_name = "";
 	std::string index = "";
