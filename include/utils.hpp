@@ -19,8 +19,8 @@
 #define COLOR_SUCCESS	"\033[1;32m"
 
 // Emojis
-#define ICON_INFO			"ℹ️"
-#define ICON_WARN			"✋🏼"
+#define ICON_INFO		"ℹ️"
+#define ICON_WARN		"✋🏼"
 #define ICON_ERROR		"❌"
 #define ICON_REQUEST	"❓"
 #define ICON_SUCCESS	"✅"

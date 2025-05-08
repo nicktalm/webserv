@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/20 08:58:47 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 12:41:15 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 12:58:13 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,9 +146,7 @@ bool	Client::checkLocation(std::string &fullDir, const std::string &mainRoot)
 			_statusCode = redir.first;
 	}
 	else if (methods.size() > 0 && std::find(methods.begin(), methods.end(), this->_method) != methods.end())
-	{
 		return (_statusCode = "405", false);
-	}
 
 	if (!this->_locationInfo.root.empty())
 		fullDir.insert(0, this->_locationInfo.root);
