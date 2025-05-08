@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 14:38:57 by ntalmon          ###   ########.fr       */
+/*   Updated: 2025/05/08 17:57:35 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,7 +189,7 @@ void	Server::response(Client &client, std::vector<pollfd>::iterator pollClient)
 	// Send as much as possible
 	if (!response.empty())
 	{
-		bytes = send(client.getFd(), response.c_str() + bytesSent, remaining, 0);
+		bytes = send(client.getFd(), response.c_str() + bytesSent, remaining, MSG_DONTWAIT);
 		if (bytes <= 0)
 		{
 			std::cout << RED << "send failed" << RESET << std::endl;

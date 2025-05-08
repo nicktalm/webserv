@@ -6,7 +6,7 @@
 /*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:23:02 by lucabohn          #+#    #+#             */
-/*   Updated: 2025/05/08 12:42:11 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 17:57:42 by lbohm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ void Server::request(std::vector<pollfd>::iterator pollClient)
 	}
 	else //existing client trys to connect
 	{
-		int bytesRead = recv(pollClient->fd, buffer, sizeof(buffer), 0);
+		int bytesRead = recv(pollClient->fd, buffer, sizeof(buffer), MSG_DONTWAIT);
 		if (bytesRead < 0 || (bytesRead == 0 && _clientsInfo[pollClient->fd].getMsg().empty()))
 			IO_Error(bytesRead, pollClient);
 		else
