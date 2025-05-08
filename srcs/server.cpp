@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lbohm <lbohm@student.42.fr>                +#+  +:+       +#+        */
+/*   By: ntalmon <ntalmon@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 13:34:05 by lbohm             #+#    #+#             */
-/*   Updated: 2025/05/08 00:29:31 by lbohm            ###   ########.fr       */
+/*   Updated: 2025/05/08 14:38:57 by ntalmon          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ Server::Server(t_config config) : _config(config)
 	std::stringstream	tmp;
 	int					yes = 1;
 
-	log(4, "Server created:", config.server_name.c_str());
+	log(4, "Server created:", config.server_name.c_str(), ":", config.port);
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; // don't care IPv4 or IPv6
